@@ -45,6 +45,7 @@ This firmware is using the [WisBlock API](https://github.com/beegee-tokyo/WisBlo
 | [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️ | WisBlock MG812 CO2 Gas sensor | - |
 | [RAK12009](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12009/Overview/) ⤴️ | WisBlock MQ3 Alcohol Gas sensor | - |
 | [RAK12010](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12010/Overview/) ⤴️ | WisBlock Ambient Light sensor | - |
+| [RAK12014](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12014/Overview/) ⤴️ | WisBlock Laser ToF sensor | - |
 | [RAK12023/RAK12035](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12023/Overview/) ⤴️ | WisBlock Soil Moisture and Temperature sensor | WisBlock Soil Sensor Solution |
 | [RAK12047](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12047/Overview/) ⤴️ | WisBlock VOC sensor | - |
 | [RAK12500](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12500/Overview/) ⤴️ | WisBlock GNSS Sensor | WisBlock Tracker for LoRaWAN |
@@ -78,7 +79,8 @@ The MCU and LoRa transceiver go into sleep mode between measurement cycles to sa
 - [Adafruit LPS2X](https://registry.platformio.org/libraries/adafruit/Adafruit%20LPS2X) ⤴️
 - [Adafruit MCP23017 Arduino Library](https://registry.platformio.org/libraries/adafruit/Adafruit%20MCP23017%20Arduino%20Library) ⤴️
 - [Adafruit Unified Sensor](https://registry.platformio.org/libraries/adafruit/Adafruit%20Unified%20Sensor) ⤴️
-- [ClosedCube OPT3001](https://registry.platformio.org/libraries/closedcube/ClosedCube%20OPT3001) ⤴️
+- [ClosedCube OPT3001](https://github.com/beegee-tokyo/ClosedCube_OPT3001_Arduino) ⤴️
+- [Pololu VL53L0X](https://registry.platformio.org/libraries/pololu/VL53L0X) ⤴️
 - [RAK12035_SoilMoisture](https://registry.platformio.org/libraries/beegee-tokyo/RAK12035_SoilMoisture) ⤴️
 - [RAKwireless MQx library](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20MQx%20library) ⤴️
 - [RAKwireless VEML Light Sensor](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20VEML%20Light%20Sensor) ⤴️
@@ -165,11 +167,13 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | Illuminance 2            | 15        | 101        | 2 bytes  | 1 lux unsigned                                    | RAK12010          |
 | VOC                      | 16        | _**138**_  | 2 bytes  | VOC index                                         | RAK12047          |
 | MQ2 Gas                  | 17        | 2          | 2 bytes  | 0.01 signed                                       | RAK12004          |
-| MQ2 Gas Percentage       | 17        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12004          |
-| MG812 Gas                | 18        | 2          | 2 bytes  | 0.01 signed                                       | RAK12008          |
-| MG812 Gas Percentage     | 17        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12008          |
-| MQ3 Alcohol Gas          | 19        | 2          | 2 bytes  | 0.01 signed                                       | RAK12009          |
-| MQ3 Alcohol Gas Perc.    | 17        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12009          |
+| MQ2 Gas Percentage       | 18        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12004          |
+| MG812 Gas                | 19        | 2          | 2 bytes  | 0.01 signed                                       | RAK12008          |
+| MG812 Gas Percentage     | 20        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12008          |
+| MQ3 Alcohol Gas          | 21        | 2          | 2 bytes  | 0.01 signed                                       | RAK12009          |
+| MQ3 Alcohol Gas Perc.    | 22        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12009          |
+| ToF distance             | 23        | 2          | 2 bytes  | 0.01 signed                                       | RAK12014          | 
+| ToF Data Valid           | 24        | 102        | 1 bytes  | bool                                              | RAK12014          | 
 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
