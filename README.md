@@ -3,7 +3,7 @@
 | :-: | :-: | :-: |     
 
 This is a new approach for WisBlock. It scans the I2C bus and Serial to detect which WisBlock modules are attached to the WisBlock base and creates an LoRaWAN payload in Cayenne LPP with the data of the found modules. 
-This code can be used as without changes for    
+This code can be used without changes for    
 | Kit/Solution | Setup Guide |
 | --           | --          |
 | [WisBlock Kit 1](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-1-weather-monitor) ⤴️  | [Setup Kit 1](#setup_weather) |
@@ -181,7 +181,7 @@ Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the fo
 
 # Compiled output
 The compiled files are located in the [./Generated](./Generated) folder. Each successful compiled version is named as      
-**`WisBlock_WEA_Vx.y.z_YYYY.MM.dd.hh.mm.ss`**    
+**`WisBlock_SENS_Vx.y.z_YYYY.MM.dd.hh.mm.ss`**    
 x.y.z is the version number. The version number is setup in the [./platformio.ini](./platformio.ini) file.    
 YYYY.MM.dd.hh.mm.ss is the timestamp of the compilation.
 

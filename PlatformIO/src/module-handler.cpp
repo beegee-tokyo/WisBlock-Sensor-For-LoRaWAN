@@ -28,7 +28,7 @@ sensors_t found_sensors[] = {
 	{0x50, 0, false}, //  9 ✔ RAK12008 MG812 CO2 gas sensor
 	{0x55, 0, false}, // 10 ✔ RAK12009 MQ3 Alcohol gas sensor
 	{0x57, 0, false}, // 11 RAK12012 MAX30102 heart rate sensor
-	{0x52, 0, false}, // 12 RAK12014 Laser ToF sensor
+	{0x52, 0, false}, // 12 ✔ RAK12014 Laser ToF sensor
 	{0x54, 0, false}, // 13 RAK12016 Flex sensor
 	{0x53, 0, false}, // 14 RAK12019 LTR390 light sensor
 	{0x47, 0, false}, // 15 RAK13004 PWM expander module
@@ -53,6 +53,7 @@ bool has_rak12004 = false;
 bool has_rak12008 = false;
 bool has_rak12009 = false;
 bool has_rak12010 = false;
+bool has_rak12014 = false;
 bool has_rak12047 = false;
 bool has_rak14003 = false;
 
@@ -195,6 +196,14 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[TOF_ID].found_sensor == true)
+	{
+		if (init_rak12014())
+		{
+			has_rak12014 = true;
+		}
+	}
+
 	if (found_sensors[SOIL_ID].found_sensor == true)
 	{
 		if (init_rak12035())
@@ -234,6 +243,10 @@ void find_modules(void)
 	}
 }
 
+/**
+ * @brief AT command feedback about found modules
+ * 
+ */
 void announce_modules(void)
 {
 	if (!has_rak1901)
@@ -333,6 +346,17 @@ void announce_modules(void)
 		read_rak12010();
 	}
 
+	if (!has_rak12014)
+	{
+		MYLOG("APP", "VL53L01 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12014 OK\n");
+		read_rak12014();
+	}
+
 	if (!has_rak14003)
 	{
 		MYLOG("APP", "LED_BAR error");
@@ -406,5 +430,68 @@ void announce_modules(void)
 	else
 	{
 		AT_PRINTF("+EVT:RAK12047 OK\n");
+	}
+}
+
+/**
+ * @brief Read values from the found modules
+ * 
+ */
+void get_sensor_values(void)
+{
+	if (has_rak1906)
+	{
+		// Start reading environment data
+		start_rak1906();
+	}
+	if (has_rak1901)
+	{
+		// Read environment data
+		read_rak1901();
+	}
+	if (has_rak1903)
+	{
+		// Read environment data
+		read_rak1903();
+	}
+	if (has_rak12010)
+	{
+		// Read environment data
+		read_rak12010();
+	}
+	if (has_rak1902)
+	{
+		// Read environment data
+		read_rak1902();
+	}
+	if (has_rak12004)
+	{
+		// Get the MQ2 sensor values
+		read_rak12004();
+	}
+	if (has_rak12008)
+	{
+		// Get the MG812 sensor values
+		read_rak12008();
+	}
+	if (has_rak12009)
+	{
+		// Get the MQ3 sensor values
+		read_rak12009();
+	}
+	if (has_rak12014)
+	{
+		// Get the VL53L)1 sensor values
+		read_rak12014();
+	}
+	if (has_soil)
+	{
+		// Get the soil moisture sensor values
+		read_rak12035();
+	}
+	if (has_rak12047)
+	{
+		// Get the voc sensor values
+		read_rak12047();
 	}
 }

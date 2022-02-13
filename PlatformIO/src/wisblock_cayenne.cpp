@@ -10,8 +10,8 @@
  */
 #include "wisblock_cayenne.h"
 
-/** uint16_t level union */
-union int_union_s
+	/** uint16_t level union */
+	union int_union_s
 {
 	uint16_t val16 = 0;
 	uint8_t val8[2];
@@ -154,8 +154,8 @@ uint8_t WisCayenne::addGNSS_H(uint32_t latitude, uint32_t longitude, uint16_t al
 	int_union_s batt_level;
 
 	batt_level.val16 = battery;
-	_buffer[_cursor++] = batt_level.val8[1];
 	_buffer[_cursor++] = batt_level.val8[0];
+	_buffer[_cursor++] = batt_level.val8[1];
 
 	return _cursor;
 }

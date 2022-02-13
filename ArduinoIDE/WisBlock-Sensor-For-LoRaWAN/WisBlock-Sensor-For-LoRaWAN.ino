@@ -165,7 +165,7 @@ void app_event_handler(void)
 	// Timer triggered event
 	if ((g_task_event_type & STATUS) == STATUS)
 	{
-		if (has_rak1906)
+		if (has_rak1906 && !g_is_helium)
 		{
 			// Startup the BME680
 			start_rak1906();
@@ -184,48 +184,10 @@ void app_event_handler(void)
 
 		if (!low_batt_protection)
 		{
-			if (!has_gnss || !g_is_helium)
+			if (!g_is_helium)
 			{
-				if (has_rak1906)
-				{
-					// Start reading environment data
-					start_rak1906();
-				}
-				if (has_rak1901)
-			{
-					// Read environment data
-					read_rak1901();
-				}
-				if (has_rak1903)
-				{
-					// Read environment data
-					read_rak1903();
-				}
-				if (has_rak12010)
-				{
-					// Read environment data
-					read_rak12010();
-				}
-				if (has_rak1902)
-				{
-					// Read environment data
-					read_rak1902();
-				}
-				if (has_rak12004)
-				{
-					// Get the MQ2 sensor values
-					read_rak12004();
-				}
-				if (has_soil)
-				{
-					// Get the soil moisture sensor values
-					read_rak12035();
-				}
-				if (has_rak12047)
-				{
-					// Get the voc sensor values
-					read_rak12047();
-				}
+				// Get values from the connected modules
+				get_sensor_values();
 			}
 			if (has_gnss)
 			{
@@ -318,9 +280,10 @@ void app_event_handler(void)
 		{
 			// If BLE is enabled, restart Advertising
 			restart_advertising(15);
+			return;
 		}
 
-		if (has_gnss && g_lpwan_has_joined)
+		if (has_gnss)
 		{
 			// If GNSS solution, check if new location data can be sent
 			if (g_lpwan_has_joined)
@@ -370,9 +333,11 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_GNSS_FIN;
 
+		if (!g_is_helium)
+		{ 
 		// Get Environment data
 		read_rak1906();
-
+		}
 		// Remember last time sending
 		last_pos_send = millis();
 		// Just in case

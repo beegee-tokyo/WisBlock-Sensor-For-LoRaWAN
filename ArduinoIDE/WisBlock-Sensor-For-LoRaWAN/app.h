@@ -119,6 +119,8 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_CO2_PERC 20
 #define LPP_CHANNEL_ALC 21
 #define LPP_CHANNEL_ALC_PERC 22
+#define LPP_CHANNEL_TOF 23
+#define LPP_CHANNEL_TOF_VALID 24
 
 extern WisCayenne g_solution_data;
 
@@ -144,11 +146,14 @@ bool init_rak12008(void);
 void read_rak12008(void);
 bool init_rak12009(void);
 void read_rak12009(void);
+bool init_rak12014(void);
+void read_rak12014(void);
 bool init_rak14003(void);
 void set_rak14003(uint8_t *leds);
 
 void find_modules(void);
 void announce_modules(void);
+void get_sensor_values(void);
 
 // Flags for sensors found */
 extern bool has_rak1906;
@@ -162,6 +167,7 @@ extern bool has_rak12008;
 extern bool has_rak12009;
 extern bool has_soil;
 extern bool has_rak12010;
+extern bool has_rak12014;
 extern bool has_rak12047;
 extern bool has_rak14003;
 
@@ -178,6 +184,7 @@ extern bool has_rak14003;
 #define MG812_ID 9
 #define MQ3_ID 10
 #define BAR_ID 18
+#define TOF_ID 12
 
 /**
 	{0x18, 0, false}, //  0 RAK1904 accelerometer
@@ -229,7 +236,7 @@ uint16_t set_calib_rak12035(bool is_dry, uint16_t calib_val);
 extern bool has_rak1904;
 
 /** Accelerometer stuff */
-#define INT1_PIN WB_IO6
+#define INT1_PIN WB_IO3
 bool init_rak1904(void);
 void clear_int_rak1904(void);
 

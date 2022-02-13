@@ -208,6 +208,9 @@ bool poll_gnss(void)
 	bool has_pos = false;
 	bool has_alt = false;
 
+#if FAKE_GPS > 0
+	check_limit = 1000;
+#endif
 	while ((millis() - time_out) < check_limit)
 	{
 		if (g_gnss_option == RAK12500_GNSS)
@@ -342,35 +345,35 @@ bool poll_gnss(void)
 	else
 	{
 		// No location found
+#if FAKE_GPS > 0
+		MYLOG("GNSS", "Faking GPS");
+		// 14.4213730, 121.0069140, 35.000
+		latitude = 144213730;
+		longitude = 1210069140;
+		altitude = 35000;
+		accuracy = 100;
 
-		/// \todo Enable below to get a fake GPS position if no location fix could be obtained
-		// 	MYLOG("GNSS", "Faking GPS");
-		// 	// 14.4213730, 121.0069140, 35.000
-		// 	latitude = 144213730;
-		// 	longitude = 1210069140;
-		// 	altitude = 35000;
-		//  accuracy = 100;
-
-		// if (!g_is_helium)
-		// {
-		// 	if (g_gps_prec_6)
-		// 	{
-		// 		// Save extended precision, not Cayenne LPP compatible
-		// 		datapacket.addGPS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
-		// 	}
-		// 	else
-		// 	{
-		// 		// Save default Cayenne LPP precision
-		// 		datapacket.addGPS_4(LPP_CHANNEL_GPS, latitude, longitude, altitude);
-		// 	}
-		// }
-		// else
-		// {
-		// 	// Save default Cayenne LPP precision
-		// 	datapacket.addGPS_H(latitude, longitude, altitude, accuracy, read_batt());
-		// }
-		// last_read_ok = true;
-		// return true;
+		if (!g_is_helium)
+		{
+			if (g_gps_prec_6)
+			{
+				// Save extended precision, not Cayenne LPP compatible
+				g_solution_data.addGNSS_6(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+			}
+			else
+			{
+				// Save default Cayenne LPP precision
+				g_solution_data.addGNSS_4(LPP_CHANNEL_GPS, latitude, longitude, altitude);
+			}
+		}
+		else
+		{
+			// Save default Cayenne LPP precision
+			g_solution_data.addGNSS_H(latitude, longitude, altitude, accuracy, read_batt());
+		}
+		last_read_ok = true;
+		return true;
+#endif
 	}
 
 	MYLOG("GNSS", "No valid location found");
@@ -407,7 +410,11 @@ void gnss_task(void *pvParameters)
 	{
 		if (xSemaphoreTake(g_gnss_sem, portMAX_DELAY) == pdTRUE)
 		{
-			MYLOG("GNSS", "GNSS Task wake up");
+			if (g_is_helium)
+			{
+				g_solution_data.reset();
+			}
+			MYLOG("GNSS", "GNSS Task wake up, packet size is %d", g_solution_data.getSize());
 			AT_PRINTF("+EVT:START_LOCATION\n");
 			// Get location
 			bool got_location = poll_gnss();
