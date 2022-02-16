@@ -9,6 +9,7 @@
  *
  */
 #include "app.h"
+#include "module_handler.h"
 
 /**
  * @brief List of all supported WisBlock modules
@@ -39,6 +40,12 @@ sensors_t found_sensors[] = {
 	{0x60, 0, false}, // 20 RAK16000 DC current sensor
 	{0x61, 0, false}, // 21 RAK16001 ADC sensor
 	{0x59, 0, false}, // 22 ✔ RAK12047 VOC sensor
+	{0x68, 0, false}, // 23 ✔ RAK12025 Gyroscope
+	{0x73, 0, false}, // 24 ✔ RAK14008 Gesture sensor
+	{0x59, 0, false}, // 25 RAK12001 Fingerprint sensor
+	{0x59, 0, false}, // 26 RAK12032 T-Fork sensor
+	{0x59, 0, false}, // 27 RAK13600 NFC
+	{0x59, 0, false}, // 28 RAK16002 Coulomb sensor
 					  //  {0x20, 0, false}, // RAK13003 IO expander module address conflict with RAK12035
 };
 
@@ -46,22 +53,18 @@ bool has_rak1906 = false;
 bool has_rak1901 = false;
 bool has_rak1902 = false;
 bool has_rak1903 = false;
-bool has_gnss = false;
+bool has_rak1910_rak12500 = false;
 bool has_rak1904 = false;
-bool has_soil = false;
+bool has_rak12035 = false;
 bool has_rak12004 = false;
 bool has_rak12008 = false;
 bool has_rak12009 = false;
 bool has_rak12010 = false;
 bool has_rak12014 = false;
+bool has_rak12025 = false;
 bool has_rak12047 = false;
 bool has_rak14003 = false;
-
-extern bool init_result;
-extern time_t min_delay;
-extern time_t last_pos_send;
-extern SoftwareTimer delayed_sending;
-void send_delayed(TimerHandle_t unused);
+bool has_rak14008 = false;
 
 /**
  * @brief Scan both I2C bus for devices
@@ -204,11 +207,19 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[GYRO_ID].found_sensor == true)
+	{
+		if (init_rak12025())
+		{
+			has_rak12025 = true;
+		}
+	}
+
 	if (found_sensors[SOIL_ID].found_sensor == true)
 	{
 		if (init_rak12035())
 		{
-			has_soil = true;
+			has_rak12035 = true;
 			snprintf(g_ble_dev_name, 9, "RAK_SOIL");
 		}
 	}
@@ -221,9 +232,17 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[GESTURE_ID].found_sensor == true)
+	{
+		if (init_rak14008())
+		{
+			has_rak14008 = true;
+		}
+	}
+
 	if (init_gnss())
 	{
-		has_gnss = true;
+		has_rak1910_rak12500 = true;
 		snprintf(g_ble_dev_name, 9, "RAK_GNSS");
 	}
 	else
@@ -357,6 +376,17 @@ void announce_modules(void)
 		read_rak12014();
 	}
 
+	if (!has_rak12025)
+	{
+		MYLOG("APP", "I3G4240D error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12025 OK\n");
+		read_rak12025();
+	}
+
 	if (!has_rak14003)
 	{
 		MYLOG("APP", "LED_BAR error");
@@ -369,7 +399,17 @@ void announce_modules(void)
 		set_rak14003(led_stat);
 	}
 
-	if (!has_gnss)
+	if (!has_rak14008)
+	{
+		MYLOG("APP", "PAJ7620 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK14008 OK\n");
+	}
+
+	if (!has_rak1910_rak12500)
 	{
 		MYLOG("APP", "GNSS error");
 		init_result = false;
@@ -412,7 +452,7 @@ void announce_modules(void)
 		delayed_sending.begin(min_delay, send_delayed, NULL, false);
 	}
 
-	if (!has_soil)
+	if (!has_rak12035)
 	{
 		MYLOG("APP", "Soil Sensor error");
 		init_result = false;
@@ -481,10 +521,15 @@ void get_sensor_values(void)
 	}
 	if (has_rak12014)
 	{
-		// Get the VL53L)1 sensor values
+		// Get the VL53L01 sensor values
 		read_rak12014();
 	}
-	if (has_soil)
+	if (has_rak12025)
+	{
+		// Get the I3G4240D sensor values
+		read_rak12025();
+	}
+	if (has_rak12035)
 	{
 		// Get the soil moisture sensor values
 		read_rak12035();
@@ -493,5 +538,10 @@ void get_sensor_values(void)
 	{
 		// Get the voc sensor values
 		read_rak12047();
+	}
+	if (has_rak14008)
+	{
+		// Get the gesture sensor values
+		read_rak14008();
 	}
 }

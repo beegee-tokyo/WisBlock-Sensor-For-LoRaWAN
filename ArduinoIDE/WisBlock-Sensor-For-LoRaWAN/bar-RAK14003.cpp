@@ -57,6 +57,7 @@ bool init_rak14003(void)
 		mcp.digitalWrite(i, HIGH); // Turn off all LEDs.
 		mcp.pinMode(i, OUTPUT);	   // Set pins as output.
 	}
+	return true;
 }
 
 /**

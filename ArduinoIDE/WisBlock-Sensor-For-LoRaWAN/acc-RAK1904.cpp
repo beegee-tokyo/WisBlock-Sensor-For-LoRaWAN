@@ -91,7 +91,7 @@ bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 bool init_rak1904(void)
 {
 	// Setup interrupt pin
-	pinMode(INT1_PIN, INPUT);
+	pinMode(ACC_INT_PIN, INPUT);
 
 	if (found_sensors[ACC_ID].i2c_num == 1)
 	{
@@ -174,7 +174,7 @@ bool init_rak1904(void)
 	clear_int_rak1904();
 
 	// Set the interrupt callback function
-	attachInterrupt(INT1_PIN, int_callback_rak1904, RISING);
+	attachInterrupt(ACC_INT_PIN, int_callback_rak1904, RISING);
 
 	return true;
 }
@@ -186,7 +186,7 @@ bool init_rak1904(void)
  */
 void int_callback_rak1904(void)
 {
-	api_wake_loop(ACC_TRIGGER);
+	api_wake_loop(MOTION_TRIGGER);
 }
 
 /**

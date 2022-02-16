@@ -106,11 +106,11 @@ bool init_app(void)
 	read_gps_settings();
 
 	AT_PRINTF("============================\n");
-	if (has_soil)
+	if (has_rak12035)
 	{
 		AT_PRINTF("Soil Moisture Solution\n");
 	}
-	else if (has_gnss)
+	else if (has_rak1910_rak12500)
 	{
 		if (g_is_helium)
 		{
@@ -189,7 +189,7 @@ void app_event_handler(void)
 				// Get values from the connected modules
 				get_sensor_values();
 			}
-			if (has_gnss)
+			if (has_rak1910_rak12500)
 			{
 				// Start the GNSS location tracking
 				xSemaphoreGive(g_gnss_sem);
@@ -216,7 +216,19 @@ void app_event_handler(void)
 			MYLOG("APP", "Battery protection deactivated");
 		}
 
-		if (!has_gnss)
+		// Just as an example, RAK14008 is used to display the status of the battery
+		uint8_t led_status[10] = {0};
+
+		for (int idx = 9, lev = 1; idx >= 0; idx--, lev++)
+		{
+			if (batt_level_f > (4200 - (lev * 420)))
+			{
+				led_status[idx] = 1;
+			}
+		}
+		set_rak14003(led_status);
+
+		if (!has_rak1910_rak12500)
 		{
 			if (has_rak1906)
 			{
@@ -270,60 +282,66 @@ void app_event_handler(void)
 	}
 
 	// ACC trigger event
-	if ((g_task_event_type & ACC_TRIGGER) == ACC_TRIGGER)
+	if ((g_task_event_type & MOTION_TRIGGER) == MOTION_TRIGGER)
 	{
-		g_task_event_type &= N_ACC_TRIGGER;
-		MYLOG("APP", "ACC triggered");
-		clear_int_rak1904();
+		g_task_event_type &= N_MOTION_TRIGGER;
 
-		if (has_soil && g_enable_ble)
+		if (has_rak1904)
+		{
+			MYLOG("APP", "ACC triggered");
+			clear_int_rak1904();
+		}
+		if (has_rak12025)
+		{
+			MYLOG("APP", "Gyro triggered");
+			clear_int_rak12025();
+		}
+
+		if (has_rak12035 && g_enable_ble)
 		{
 			// If BLE is enabled, restart Advertising
 			restart_advertising(15);
 			return;
 		}
 
-		if (has_gnss)
+		// Check if new data can be sent
+		if (g_lpwan_has_joined)
 		{
-			// If GNSS solution, check if new location data can be sent
-			if (g_lpwan_has_joined)
+			// Check time since last send
+			bool send_now = true;
+			if (g_lorawan_settings.send_repeat_time != 0)
 			{
-				// Check time since last send
-				bool send_now = true;
-				if (g_lorawan_settings.send_repeat_time != 0)
+				if ((millis() - last_pos_send) < min_delay)
 				{
-					if ((millis() - last_pos_send) < min_delay)
+					send_now = false;
+					if (!delayed_active)
 					{
-						send_now = false;
-						if (!delayed_active)
-						{
-							delayed_sending.stop();
-							MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
-							MYLOG("APP", "Max delay time %d", (int)min_delay);
-							time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
-							MYLOG("APP", "Wait time %ld", (long)wait_time);
+						delayed_sending.stop();
+						MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
+						MYLOG("APP", "Max delay time %d", (int)min_delay);
+						time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
+						MYLOG("APP", "Wait time %ld", (long)wait_time);
 
-							MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
-							delayed_sending.setPeriod(wait_time);
-							delayed_sending.start();
-							delayed_active = true;
-						}
+						MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
+						delayed_sending.setPeriod(wait_time);
+						delayed_sending.start();
+						delayed_active = true;
 					}
 				}
-				if (send_now)
-				{
-					// Remember last send time
-					last_pos_send = millis();
+			}
+			if (send_now)
+			{
+				// Remember last send time
+				last_pos_send = millis();
 
-					// Trigger a GNSS reading and packet sending
-					g_task_event_type |= STATUS;
-				}
+				// Trigger a data reading and packet sending
+				g_task_event_type |= STATUS;
+			}
 
-				// Reset the standard timer
-				if (g_lorawan_settings.send_repeat_time != 0)
-				{
-					g_task_wakeup_timer.reset();
-				}
+			// Reset the standard timer
+			if (g_lorawan_settings.send_repeat_time != 0)
+			{
+				g_task_wakeup_timer.reset();
 			}
 		}
 	}
@@ -333,8 +351,8 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_GNSS_FIN;
 
-		if (!g_is_helium)
-		{ 
+		if (!g_is_helium && has_rak1906)
+		{
 			// Get Environment data
 			read_rak1906();
 		}

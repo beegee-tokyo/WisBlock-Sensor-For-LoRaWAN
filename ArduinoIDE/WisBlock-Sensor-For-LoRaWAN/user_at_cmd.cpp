@@ -267,13 +267,13 @@ atcmd_t g_user_at_cmd_list[] = {
 
 void init_user_at(void)
 {
-	if (has_soil)
+	if (has_rak12035)
 	{
 		MYLOG("AT", "Adding Soil Sensor user AT commands");
 		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
 		memcpy((void *)g_user_at_cmd_list, (void *)g_user_at_cmd_list_soil, sizeof(g_user_at_cmd_list_soil));
 	}
-	else if (has_gnss)
+	else if (has_rak1910_rak12500)
 	{
 		MYLOG("AT", "Adding GNSS user AT commands");
 		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
@@ -283,7 +283,7 @@ void init_user_at(void)
 	{
 		g_user_at_cmd_num = 0;
 	}
-	if (has_soil && has_gnss)
+	if (has_rak12035 && has_rak1910_rak12500)
 	{
 		MYLOG("AT", "Adding GNSS && Soil Sensor user AT commands");
 		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t) + sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
