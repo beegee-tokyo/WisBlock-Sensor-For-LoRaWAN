@@ -9,7 +9,7 @@
  *
  */
 #include "app.h"
-#include "ADC121C021.h"
+#include <ADC121C021.h>
 
 #define MG812_ADDRESS 0x50
 

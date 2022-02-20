@@ -19,7 +19,7 @@ void int_callback_rak14008(void);
 RevEng_PAJ7620 gesture_sensor = RevEng_PAJ7620();
 
 /**
- * @brief Initialize LIS3DH 3-axis
+ * @brief Initialize Gesture sensor
  * acceleration sensor
  *
  * @return true If sensor was found and is initialized
@@ -63,7 +63,9 @@ void int_callback_rak14008(void)
 }
 
 /**
- * @brief Clear ACC interrupt register to enable next wakeup
+ * @brief Read detected guesture values
+ *     Data is added to Cayenne LPP payload as channels
+ *     LPP_CHANNEL_GESTURE
  *
  */
 void read_rak14008(void)

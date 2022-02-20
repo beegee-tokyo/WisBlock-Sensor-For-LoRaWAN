@@ -102,7 +102,9 @@ bool init_rak12035(void)
 
 /**
  * @brief Read sensor values from RAK12035
- *        Saves values in the Cayenne LPP structure
+ *     Data is added to Cayenne LPP payload as channel
+ *     LPP_CHANNEL_SOIL_TEMP, LPP_CHANNEL_SOIL_HUMID
+ *     LPP_CHANNEL_SOIL_HUMID_RAW, LPP_CHANNEL_SOIL_VALID
  *
  */
 void read_rak12035(void)

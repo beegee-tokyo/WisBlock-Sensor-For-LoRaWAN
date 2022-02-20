@@ -234,7 +234,7 @@ static int at_set_wet(char *str)
  *
  * @return int 0
  */
-static int at_query_wet()
+static int at_query_wet(void)
 {
 	// Wet calibration value query
 	AT_PRINTF("Wet Calibration Value: %d", get_calib_rak12035(false));
@@ -248,46 +248,205 @@ atcmd_t g_user_at_cmd_list_soil[] = {
 	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet},
 };
 
+static int at_set_rtc(char *str)
+{
+	uint16_t year;
+	uint8_t month;
+	uint8_t date;
+	uint8_t hour;
+	uint8_t minute;
+
+	char *param;
+
+	param = strtok(str, ":");
+
+	// year:month:date:hour:minute
+
+	if (param != NULL)
+	{
+		/* Check year */
+		year = strtoul(param, NULL, 0);
+
+		if (year > 3000)
+		{
+			return AT_ERRNO_PARA_VAL;
+		}
+
+		/* Check month */
+		param = strtok(NULL, ":");
+		if (param != NULL)
+		{
+			month = strtoul(param, NULL, 0);
+
+			if ((month < 1) || (month > 12))
+			{
+				return AT_ERRNO_PARA_VAL;
+			}
+
+			// Check day
+			param = strtok(NULL, ":");
+			if (param != NULL)
+			{
+				date = strtoul(param, NULL, 0);
+
+				if ((date < 1) || (date > 31))
+				{
+					return AT_ERRNO_PARA_VAL;
+				}
+
+				// Check hour
+				param = strtok(NULL, ":");
+				if (param != NULL)
+				{
+					hour = strtoul(param, NULL, 0);
+
+					if (hour > 24)
+					{
+						return AT_ERRNO_PARA_VAL;
+					}
+
+					// Check minute
+					param = strtok(NULL, ":");
+					if (param != NULL)
+					{
+						minute = strtoul(param, NULL, 0);
+
+						if (minute > 59)
+						{
+							return AT_ERRNO_PARA_VAL;
+						}
+
+						set_rak12002(year, month, date, hour, minute);
+
+						return 0;
+					}
+				}
+			}
+		}
+	}
+	return AT_ERRNO_PARA_NUM;
+}
+
+static int at_query_rtc(void)
+{
+	// Get date/time from the RTC
+	read_rak12002();
+	AT_PRINTF("%d.%d.%d %d:%d:%d", g_date_time.year, g_date_time.month, g_date_time.date, g_date_time.hour, g_date_time.minute, g_date_time.second);
+	return 0;
+}
+
+atcmd_t g_user_at_cmd_list_rtc[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// GNSS commands
+	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, NULL},
+};
+
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = 0;
 
-atcmd_t g_user_at_cmd_list[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-	{"+dummy", "No function", NULL, NULL, NULL},
-};
+atcmd_t *g_user_at_cmd_list;
+
+// atcmd_t g_user_at_cmd_list[] = {
+// 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// 	{"+dummy", "No function", NULL, NULL, NULL},
+// };
+
+#define TEST_ALL_CMDS 0
 
 void init_user_at(void)
 {
-	if (has_rak12035)
+#if TEST_ALL_CMDS == 1
+	bool _has_rak12035 = found_sensors[SOIL_ID].found_sensor;
+	bool _has_rak1910_rak12500 = found_sensors[GNSS_ID].found_sensor;
+	bool _has_rak12002 = found_sensors[RTC_ID].found_sensor;
+	found_sensors[SOIL_ID].found_sensor = true;
+	found_sensors[GNSS_ID].found_sensor = true;
+	found_sensors[RTC_ID].found_sensor = true;
+#endif
+
+	uint16_t index_next_cmds = 0;
+	uint16_t required_structure_size = 0;
+	// Get required size of structure
+	if (found_sensors[SOIL_ID].found_sensor)
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_soil);
+
+		MYLOG("AT", "Structure size %d", required_structure_size);
+	}
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_gps);
+
+		MYLOG("AT", "Structure size %d", required_structure_size);
+	}
+	if (found_sensors[RTC_ID].found_sensor)
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_rtc);
+
+		MYLOG("AT", "Structure size %d", required_structure_size);
+	}
+
+	// Reserve memory for the structure
+	g_user_at_cmd_list = (atcmd_t *)malloc(required_structure_size);
+
+	// Add AT commands to structure
+	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		MYLOG("AT", "Adding Soil Sensor user AT commands");
-		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
-		memcpy((void *)g_user_at_cmd_list, (void *)g_user_at_cmd_list_soil, sizeof(g_user_at_cmd_list_soil));
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_soil, sizeof(g_user_at_cmd_list_soil));
+		index_next_cmds += sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
+		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
 	}
-	else if (has_rak1910_rak12500)
+	if (found_sensors[GNSS_ID].found_sensor)
 	{
 		MYLOG("AT", "Adding GNSS user AT commands");
-		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
-		memcpy((void *)g_user_at_cmd_list, (void *)g_user_at_cmd_list_gps, sizeof(g_user_at_cmd_list_gps));
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_gps, sizeof(g_user_at_cmd_list_gps));
+		index_next_cmds += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
+		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
 	}
-	else
+	if (found_sensors[RTC_ID].found_sensor)
 	{
-		g_user_at_cmd_num = 0;
+		MYLOG("AT", "Adding RTC user AT commands");
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_rtc, sizeof(g_user_at_cmd_list_rtc));
+		index_next_cmds += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
+		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
 	}
-	if (has_rak12035 && has_rak1910_rak12500)
-	{
-		MYLOG("AT", "Adding GNSS && Soil Sensor user AT commands");
-		g_user_at_cmd_num = sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t) + sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
-		memcpy((void *)&g_user_at_cmd_list[0], (void *)g_user_at_cmd_list_gps, sizeof(g_user_at_cmd_list_gps));
-		memcpy((void *)&g_user_at_cmd_list[sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t)], (void *)g_user_at_cmd_list_soil, sizeof(g_user_at_cmd_list_soil));
-	}
+
+#if TEST_ALL_CMDS == 1
+	found_sensors[SOIL_ID].found_sensor = _has_rak12035;
+	found_sensors[GNSS_ID].found_sensor = _has_rak1910_rak12500;
+	found_sensors[RTC_ID].found_sensor = _has_rak12002;
+#endif
 }

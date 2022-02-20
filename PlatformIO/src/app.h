@@ -86,4 +86,16 @@ union batt_s
 	uint8_t batt8[2];
 };
 
+/** RTC date/time structure */
+struct date_time_s
+{
+	uint16_t year;
+	uint8_t month;
+	uint8_t weekday;
+	uint8_t date;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t second;
+};
+extern date_time_s g_date_time;
 #endif

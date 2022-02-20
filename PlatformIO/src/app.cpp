@@ -49,6 +49,8 @@ WisCayenne g_solution_data(255);
 /** Initialization result */
 bool init_result = true;
 
+char disp_txt[64] = {0};
+
 /**
  * @brief Application specific setup functions
  *
@@ -106,11 +108,11 @@ bool init_app(void)
 	read_gps_settings();
 
 	AT_PRINTF("============================\n");
-	if (has_rak12035)
+	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		AT_PRINTF("Soil Moisture Solution\n");
 	}
-	else if (has_rak1910_rak12500)
+	else if (found_sensors[GNSS_ID].found_sensor)
 	{
 		if (g_is_helium)
 		{
@@ -121,15 +123,15 @@ bool init_app(void)
 			AT_PRINTF("LPWAN Tracker Solution\n");
 		}
 	}
-	else if (has_rak1906)
+	else if (found_sensors[ENV_ID].found_sensor)
 	{
 		AT_PRINTF("LPWAN Environment Solution\n");
 	}
-	else if (has_rak1902)
+	else if (found_sensors[PRESS_ID].found_sensor)
 	{
 		AT_PRINTF("LPWAN Weather Sensor\n");
 	}
-	else if (has_rak12047)
+	else if (found_sensors[VOC_ID].found_sensor)
 	{
 		AT_PRINTF("LPWAN VOC Sensor\n");
 	}
@@ -152,6 +154,19 @@ bool init_app(void)
 	// Reset the packet
 	g_solution_data.reset();
 
+	if (found_sensors[OLED_ID].found_sensor)
+	{
+		if (found_sensors[RTC_ID].found_sensor)
+		{
+			read_rak12002();
+			snprintf(disp_txt, 64, "%d:%02d Init finished", g_date_time.hour, g_date_time.minute);
+		}
+		else
+		{
+			snprintf(disp_txt, 64, "Init finished");
+		}
+		rak1921_add_line(disp_txt);
+	}
 	return init_result;
 }
 
@@ -165,7 +180,7 @@ void app_event_handler(void)
 	// Timer triggered event
 	if ((g_task_event_type & STATUS) == STATUS)
 	{
-		if (has_rak1906 && !g_is_helium)
+		if (found_sensors[ENV_ID].found_sensor && !g_is_helium)
 		{
 			// Startup the BME680
 			start_rak1906();
@@ -189,7 +204,7 @@ void app_event_handler(void)
 				// Get values from the connected modules
 				get_sensor_values();
 			}
-			if (has_rak1910_rak12500)
+			if (found_sensors[GNSS_ID].found_sensor)
 			{
 				// Start the GNSS location tracking
 				xSemaphoreGive(g_gnss_sem);
@@ -199,6 +214,20 @@ void app_event_handler(void)
 		// Get battery level
 		float batt_level_f = read_batt();
 		g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
+
+		if (found_sensors[OLED_ID].found_sensor)
+		{
+			if (found_sensors[RTC_ID].found_sensor)
+			{
+				read_rak12002();
+				snprintf(disp_txt, 64, "%d:%02d Bat %.3fV", g_date_time.hour, g_date_time.minute, batt_level_f / 1000);
+			}
+			else
+			{
+				snprintf(disp_txt, 64, "Battery %.3fV", batt_level_f / 1000);
+			}
+			rak1921_add_line(disp_txt);
+		}
 
 		// Protection against battery drain
 		if (batt_level_f < 2900)
@@ -228,9 +257,9 @@ void app_event_handler(void)
 		}
 		set_rak14003(led_status);
 
-		if (!has_rak1910_rak12500)
+		if (!found_sensors[GNSS_ID].found_sensor)
 		{
-			if (has_rak1906)
+			if (found_sensors[ENV_ID].found_sensor)
 			{
 				// Read environment data
 				read_rak1906();
@@ -243,6 +272,19 @@ void app_event_handler(void)
 				switch (result)
 				{
 				case LMH_SUCCESS:
+					if (found_sensors[OLED_ID].found_sensor)
+					{
+						if (found_sensors[RTC_ID].found_sensor)
+						{
+							read_rak12002();
+							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize());
+						}
+						else
+						{
+							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize());
+						}
+						rak1921_add_line(disp_txt);
+					}
 					MYLOG("APP", "Packet enqueued");
 					break;
 				case LMH_BUSY:
@@ -260,6 +302,19 @@ void app_event_handler(void)
 				// Send packet over LoRa
 				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
 				{
+					if (found_sensors[OLED_ID].found_sensor)
+					{
+						if (found_sensors[RTC_ID].found_sensor)
+						{
+							read_rak12002();
+							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize());
+						}
+						else
+						{
+							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize());
+						}
+						rak1921_add_line(disp_txt);
+					}
 					MYLOG("APP", "Packet enqueued");
 				}
 				else
@@ -286,24 +341,37 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_MOTION_TRIGGER;
 
-		if (has_rak1904)
+		if ((g_task_event_type & TOUCH_EVENT) == TOUCH_EVENT)
 		{
-			MYLOG("APP", "ACC triggered");
-			clear_int_rak1904();
+			g_task_event_type &= N_TOUCH_EVENT;
+			if (found_sensors[TOUCH_ID].found_sensor)
+			{
+				MYLOG("APP", "TOUCH triggered");
+				read_rak14002();
+			}
 		}
-		if (has_rak12025)
+		else
 		{
-			MYLOG("APP", "Gyro triggered");
-			clear_int_rak12025();
+			if (found_sensors[ACC_ID].found_sensor)
+			{
+				MYLOG("APP", "ACC triggered");
+				clear_int_rak1904();
+			}
+			if (found_sensors[GYRO_ID].found_sensor)
+			{
+				MYLOG("APP", "Gyro triggered");
+				clear_int_rak12025();
+			}
+
+			if (found_sensors[SOIL_ID].found_sensor && g_enable_ble)
+			{
+				// If BLE is enabled, restart Advertising
+				restart_advertising(15);
+				return;
+			}
 		}
 
-		if (has_rak12035 && g_enable_ble)
-		{
-			// If BLE is enabled, restart Advertising
-			restart_advertising(15);
-			return;
-		}
-
+		MYLOG("APP", "Check send time delay");
 		// Check if new data can be sent
 		if (g_lpwan_has_joined)
 		{
@@ -331,11 +399,16 @@ void app_event_handler(void)
 			}
 			if (send_now)
 			{
+				MYLOG("APP", "Send now");
 				// Remember last send time
 				last_pos_send = millis();
 
 				// Trigger a data reading and packet sending
 				g_task_event_type |= STATUS;
+			}
+			else
+			{
+				MYLOG("APP", "Send delayed");
 			}
 
 			// Reset the standard timer
@@ -351,7 +424,7 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_GNSS_FIN;
 
-		if (!g_is_helium && has_rak1906)
+		if (!g_is_helium && found_sensors[ENV_ID].found_sensor)
 		{
 			// Get Environment data
 			read_rak1906();
@@ -445,6 +518,19 @@ void lora_data_handler(void)
 		g_task_event_type &= N_LORA_JOIN_FIN;
 		if (g_join_result)
 		{
+			if (found_sensors[OLED_ID].found_sensor)
+			{
+				if (found_sensors[RTC_ID].found_sensor)
+				{
+					read_rak12002();
+					snprintf(disp_txt, 64, "%d:%02d Join success", g_date_time.hour, g_date_time.minute);
+				}
+				else
+				{
+					snprintf(disp_txt, 64, "Join success");
+				}
+				rak1921_add_line(disp_txt);
+			}
 			MYLOG("APP", "Successfully joined network");
 			AT_PRINTF("+EVT:JOINED\n");
 			last_pos_send = millis();
@@ -469,7 +555,7 @@ void lora_data_handler(void)
 	{
 		g_task_event_type &= N_LORA_TX_FIN;
 
-		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+		MYLOG("APP", "LoRa TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
 
 		if ((g_lorawan_settings.confirmed_msg_enabled) && (g_lorawan_settings.lorawan_enable))
 		{

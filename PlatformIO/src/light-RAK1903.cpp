@@ -111,12 +111,14 @@ bool init_rak1903(void)
 	}
 	else
 	{
-		Wire1.begin();
-		if (opt3001.begin(OPT3001_ADDRESS, Wire1) != NO_ERROR)
-		{
-			MYLOG("LIGHT", "Could not initialize SHTC3");
-			return false;
-		}
+		// ClosedCube OPT3001 library supports only use of Wire
+		return false;
+		// Wire1.begin();
+		// if (opt3001.begin(OPT3001_ADDRESS, Wire1) != NO_ERROR)
+		// {
+		// 	MYLOG("LIGHT", "Could not initialize SHTC3");
+		// 	return false;
+		// }
 	}
 
 	OPT3001_Config newConfig;

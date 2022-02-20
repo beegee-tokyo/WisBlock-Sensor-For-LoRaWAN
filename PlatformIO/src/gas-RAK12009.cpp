@@ -9,7 +9,7 @@
  *
  */
 #include "app.h"
-#include "ADC121C021.h"
+#include <ADC121C021.h>
 
 /** Gas sensor I2C address */
 #define MQ3_ADDRESS 0x55

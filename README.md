@@ -82,8 +82,14 @@ The MCU and LoRa transceiver go into sleep mode between measurement cycles to sa
 - [Adafruit MCP23017 Arduino Library](https://registry.platformio.org/libraries/adafruit/Adafruit%20MCP23017%20Arduino%20Library) ⤴️
 - [Adafruit Unified Sensor](https://registry.platformio.org/libraries/adafruit/Adafruit%20Unified%20Sensor) ⤴️
 - [ClosedCube OPT3001](https://github.com/beegee-tokyo/ClosedCube_OPT3001_Arduino) ⤴️
+- [Coulomb Counter](https://registry.platformio.org/libraries/seeed-studio/Grove%20-%20Coulomb%20Counter%20for%203.3V%20to%205V%20LTC2941) ⤴️
+- [INA219_WE](https://registry.platformio.org/libraries/wollewald/INA219_WE) ⤴️
+- [Melopero RV3028](https://registry.platformio.org/libraries/melopero/Melopero%20RV3028) ⤴️
+- [nRF52_OLED](https://registry.platformio.org/libraries/beegee-tokyo/nRF52_OLED) ⤴️
 - [Pololu VL53L0X](https://registry.platformio.org/libraries/pololu/VL53L0X) ⤴️
+- [RAK12019_LTR390_UV_Light](https://registry.platformio.org/libraries/beegee-tokyo/RAK12019_LTR390_UV_Light) ⤴️
 - [RAK12035_SoilMoisture](https://registry.platformio.org/libraries/beegee-tokyo/RAK12035_SoilMoisture) ⤴️
+- [RAKwireless CAP1293 Touch Pad library](https://registry.platformio.org/libraries/beegee-tokyo/Arduino%20CAP1293%20Touch%20Pad%20library) ⤴️
 - [RAK I3G4250D Gyroscope](https://registry.platformio.org/libraries/beegee-tokyo/RAK%20I3G4250D%20Gyroscope) ⤴️
 - [RAKwireless MQx library](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20MQx%20library) ⤴️
 - [RAKwireless VEML Light Sensor](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20VEML%20Light%20Sensor) ⤴️
@@ -103,9 +109,6 @@ The complete project for PIO is in the PlatformIO folder.
 ### _REMARK_
 When using PlatformIO, the libraries are all listed in the **`platformio.ini`** and are automatically installed when the project is compiled.     
 When using Arduino IDE all libraries need to be installed manually using the Arduino Library Manager.
-
-### _IMPORTANT_
-When using Arduino IDE the library for the RAK1903 OPT3001 light library needs to be manually installed from https://github.com/beegee-tokyo/ClosedCube_OPT3001_Arduino. This is a version of the library that supports different I2C bus. The original ClosedCube OPT3001 library installed with the Arduino IDE library manager will be throwing a compilation error when used.
 
 ----
 
@@ -178,7 +181,17 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | MQ3 Alcohol Gas Perc.    | 22        | _**120**_  | 1 bytes  | 1-100% unsigned                                   | RAK12009          |
 | ToF distance             | 23        | 2          | 2 bytes  | 0.01 signed                                       | RAK12014          | 
 | ToF Data Valid           | 24        | 102        | 1 bytes  | bool                                              | RAK12014          | 
-| Gyro triggered           | 25        | _**134**_  | 6 bytes  | 2 bytes per axis, 0.01 °/s                        | RAK14008          | 
+| Gyro triggered           | 25        | _**134**_  | 6 bytes  | 2 bytes per axis, 0.01 °/s                        | RAK2025           | 
+| Gesture detected         | 26        | 0          | 1 byte   | 1 byte with id of gesture                         | RAK14008          | 
+| LTR390 UVI value         | 27        | 2          | 2 byte   | 0.01 signed                                       | RAK12019          | 
+| LTR390 UVS value         | 28        | 101        | 2 bytes  | 1 lux unsigned                                    | RAK12019          | 
+| INA219 Current           | 29        | 2          | 2 byte   | 0.01 signed                                       | RAK16000          | 
+| INA219 Voltage           | 30        | 2          | 2 byte   | 0.01 signed                                       | RAK16000          | 
+| INA219 Power             | 31        | 2          | 2 byte   | 0.01 signed                                       | RAK16000          | 
+| Touchpad left            | 32        | 102        | 1 bytes  | bool                                              | RAK14002          | 
+| Touchpad middle          | 33        | 102        | 1 bytes  | bool                                              | RAK14002          | 
+| Touchpad right           | 34        | 102        | 1 bytes  | bool                                              | RAK14002          | 
+
 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.

@@ -26,7 +26,7 @@ union analog_s
 analog_s analog_val;
 
 /**
- * @brief Initialize the BME680 sensor
+ * @brief Initialize the VL53L01 sensor
  *
  * @return true if sensor was found
  * @return false if sensor was not found

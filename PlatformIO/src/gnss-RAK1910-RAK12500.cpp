@@ -9,7 +9,7 @@
  *
  */
 #include "app.h"
-#include "TinyGPS++.h"
+#include <TinyGPS++.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 
 /** Instance for RAK1910 GNSS sensor */
@@ -53,7 +53,7 @@ bool init_gnss(void)
 
 	if (g_gnss_option == NO_GNSS_INIT)
 	{
-		if (found_sensors[GNSS_ID].found_sensor == true)
+		if (found_sensors[GNSS_ID].found_sensor)
 		{
 			if (found_sensors[GNSS_ID].i2c_num == 1)
 			{
@@ -105,9 +105,9 @@ bool init_gnss(void)
 		time_t timeout = millis();
 		while ((millis() - timeout) < 1000)
 		{
-			// char gnss = Serial1.read();
-			// Serial.print((int)gnss);
-			if (Serial1.read() != -1)
+			char gnss = Serial1.read();
+			// Serial.printf("%02x\n",gnss);
+			if ((gnss >= 0x20) && (gnss <= 0x7F))
 			{
 				g_gnss_option = RAK1910_GNSS;
 				MYLOG("GNSS", "Got data from RAK1910 after %ld", (uint32_t)(millis() - timeout));
@@ -126,9 +126,9 @@ bool init_gnss(void)
 		timeout = millis();
 		while ((millis() - timeout) < 1000)
 		{
-			// char gnss = Serial2.read();
-			// Serial.print((int)gnss);
-			if (Serial2.read() != -1)
+			char gnss = Serial2.read();
+			// Serial.printf("%02x\n", gnss);
+			if ((gnss >= 0x20) && (gnss <= 0x7F))
 			{
 				g_gnss_option = RAK1910_GNSS;
 				MYLOG("GNSS", "Got data from RAK1910 after %ld", (uint32_t)(millis() - timeout));

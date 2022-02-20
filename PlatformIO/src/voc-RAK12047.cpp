@@ -158,7 +158,7 @@ void do_read_rak12047(void)
 	uint16_t defaultT = 0x6666;
 	float rak1901_values[2] = {0.0};
 
-	if (has_rak1901)
+	if (found_sensors[TEMP_ID].found_sensor)
 	{
 		get_rak1901_values(rak1901_values);
 		// MYLOG("VOC", "Rh: %.2f T: %.2f", humidity, temperature);

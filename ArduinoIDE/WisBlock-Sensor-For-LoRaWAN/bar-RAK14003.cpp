@@ -9,7 +9,7 @@
  * 
  */
 #include "app.h"
-#include "Adafruit_MCP23X17.h"
+#include <Adafruit_MCP23X17.h>
 
 /** LED bar chip I2C address */
 #define IIC_ADDRESS 0X04

@@ -100,6 +100,8 @@ void clear_int_rak12025(void)
 
 /**
  * @brief Get Gyro measurements
+ *     Data is added to Cayenne LPP payload as channels
+ *     LPP_CHANNEL_GYRO
  * 
  */
 void read_rak12025(void)

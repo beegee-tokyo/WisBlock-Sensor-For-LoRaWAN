@@ -1,5 +1,5 @@
 /**
- * @file acc.cpp
+ * @file acc-RAK1904.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief 3-axis accelerometer functions
  * @version 0.3
@@ -10,7 +10,7 @@
  */
 #include "app.h"
 
-#include <SPI.h>
+#include <Wire.h>
 #include <Adafruit_LIS3DH.h>
 #include <Adafruit_Sensor.h>
 

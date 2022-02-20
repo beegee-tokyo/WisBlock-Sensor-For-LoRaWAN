@@ -26,6 +26,8 @@ void send_delayed(TimerHandle_t unused);
 #define N_GNSS_FIN 0b1011111111111111
 #define VOC_REQ 0b0010000000000000
 #define N_VOC_REQ 0b1101111111111111
+#define TOUCH_EVENT      0b0001000000000000
+#define N_TOUCH_EVENT    0b1110111111111111
 
 typedef struct sensors_s
 {
@@ -65,6 +67,14 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_TOF_VALID 24
 #define LPP_CHANNEL_GYRO 25
 #define LPP_CHANNEL_GESTURE 26
+#define LPP_CHANNEL_UVI 27
+#define LPP_CHANNEL_UVS 28
+#define LPP_CHANNEL_CURRENT_CURRENT 29
+#define LPP_CHANNEL_CURRENT_VOLTAGE 30
+#define LPP_CHANNEL_CURRENT_POWER 31
+#define LPP_CHANNEL_TOUCH_1 32
+#define LPP_CHANNEL_TOUCH_2 33
+#define LPP_CHANNEL_TOUCH_3 34
 
 extern WisCayenne g_solution_data;
 
@@ -82,99 +92,70 @@ void clear_int_rak1904(void);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
-bool init_rak12010(void);
-void read_rak12010();
-bool init_rak12047(void);
-void read_rak12047(void);
-void do_read_rak12047(void);
+bool init_rak1921(void);
+void rak1921_add_line(char *line);
+void rak1921_show(void);
+void rak1921_write_header(char *header_line);
+bool init_rak12002(void);
+void set_rak12002(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t minute);
+void read_rak12002(void);
 bool init_rak12004(void);
 void read_rak12004(void);
 bool init_rak12008(void);
 void read_rak12008(void);
 bool init_rak12009(void);
 void read_rak12009(void);
+bool init_rak12010(void);
+void read_rak12010();
 bool init_rak12014(void);
 void read_rak12014(void);
+bool init_rak12019(void);
+void read_rak12019();
 #define GYRO_INT_PIN WB_IO4
 bool init_rak12025(void);
 void read_rak12025(void);
 void clear_int_rak12025(void);
+bool init_rak12047(void);
+void read_rak12047(void);
+void do_read_rak12047(void);
+#define TOUCH_INT_PIN WB_IO6
+bool init_rak14002(void);
+void read_rak14002(void);
+void get_rak14002(void);
 bool init_rak14003(void);
 void set_rak14003(uint8_t *leds);
+#define GESTURE_INT_PIN WB_IO4
 bool init_rak14008(void);
 void read_rak14008(void);
-#define GESTURE_INT_PIN WB_IO4
+bool init_rak16000(void);
+void read_rak16000(void);
 
 void find_modules(void);
 void announce_modules(void);
 void get_sensor_values(void);
 
-// Flags for sensors found */
-extern bool has_rak1906;
-extern bool has_rak1901;
-extern bool has_rak1902;
-extern bool has_rak1903;
-extern bool has_rak1904;
-extern bool has_rak1910_rak12500;
-extern bool has_rak12004;
-extern bool has_rak12008;
-extern bool has_rak12009;
-extern bool has_rak12035;
-extern bool has_rak12010;
-extern bool has_rak12014;
-extern bool has_rak12025;
-extern bool has_rak12047;
-extern bool has_rak14003;
-extern bool has_rak14008;
-
-#define ACC_ID 0
-#define LIGHT_ID 1
-#define GNSS_ID 2
-#define PRESS_ID 3
-#define TEMP_ID 4
-#define ENV_ID 5
-#define SOIL_ID 6
-#define LIGHT2_ID 7
-#define VOC_ID 22
-#define MQ2_ID 8
-#define MG812_ID 9
-#define MQ3_ID 10
-#define BAR_ID 18
-#define TOF_ID 12
-#define GYRO_ID 23
-#define GESTURE_ID 24
-
-/**
-	{0x18, 0, false}, //  0 RAK1904 accelerometer
-	{0x44, 0, false}, //  1 RAK1903 light sensor
-	{0x42, 0, false}, //  2 RAK12500 GNSS sensor
-	{0x5c, 0, false}, //  3 RAK1902 barometric pressure sensor
-	{0x70, 0, false}, //  4 RAK1901 temperature & humidity sensor
-	{0x76, 0, false}, //  5 RAK1906 environment sensor
-	{0x20, 0, false}, //  6 RAK12035 soil moisture sensor
-	{0x10, 0, false}, //  7 RAK12010 light sensor
-	{0x51, 0, false}, //  8 RAK12004 MQ2 gas sensor
-	{0x52, 0, false}, //  9 RAK12008 MG812 gas sensor
-	{0x55, 0, false}, // 10 RAK12009 Alcohol gas sensor
-	{0x57, 0, false}, // 11 RAK12012 MAX30102 heart rate sensor
-	{0x52, 0, false}, // 12 RAK12014 Laser ToF sensor
-	{0x54, 0, false}, // 13 RAK12016 Flex sensor
-	{0x53, 0, false}, // 14 RAK12019 LTR390 light sensor
-	{0x47, 0, false}, // 15 RAK13004 PWM expander module
-	{0x38, 0, false}, // 16 RAK14001 RGB LED module
-	{0x50, 0, false}, // 17 RAK14002 Touch Button module
-	{0x24, 0, false}, // 18 RAK14003 LED bargraph module
-	{0x5F, 0, false}, // 19 RAK14004 Keypad interface
-	{0x60, 0, false}, // 20 RAK16000 DC current sensor
-	{0x61, 0, false}, // 21 RAK16001 ADC sensor
-	{0x59, 0, false}, // 22 RAK12047 VOC sensor
-	{0x59, 0, false}, // 23 RAK12025 Gyroscope
-	{0x59, 0, false}, // 24 RAK14008 Gesture sensor
-	{0x59, 0, false}, // 25 RAK12001 Fingerprint sensor
-	{0x59, 0, false}, // 26 RAK12032 T-Fork sensor
-	{0x59, 0, false}, // 27 RAK13600 NFC
-	{0x59, 0, false}, // 28 RAK16002 Coulomb sensor
-*/
+// Index for known I2C devices
+#define ACC_ID 0	  // RAK1904 accelerometer
+#define LIGHT_ID 1	  // RAK1903 light sensor
+#define GNSS_ID 2	  // RAK12500 GNSS sensor
+#define PRESS_ID 3	  // RAK1902 barometric pressure sensor
+#define TEMP_ID 4	  // RAK1901 temperature & humidity sensor
+#define ENV_ID 5	  // RAK1906 environment sensor
+#define SOIL_ID 6	  // RAK12035 soil moisture sensor
+#define LIGHT2_ID 7	  // RAK12010 light sensor
+#define MQ2_ID 8	  // RAK12004 MQ2 CO2 gas sensor
+#define MG812_ID 9	  // RAK12008 MG812 CO2 gas sensor
+#define MQ3_ID 10	  // RAK12009 MQ3 Alcohol gas sensor
+#define TOF_ID 11	  // RAK12014 Laser ToF sensor
+#define RTC_ID 12	  // RAK12002 RTC module
+#define BAR_ID 13	  // RAK14003 LED bargraph module
+#define VOC_ID 14	  // RAK12047 VOC sensor
+#define GYRO_ID 15	  // RAK12025 Gyroscope
+#define GESTURE_ID 16 // RAK14008 Gesture sensor
+#define OLED_ID 17	  // RAK1921 OLED display
+#define UVL_ID 18	  // RAK12019 UV light sensor
+#define TOUCH_ID 19	  // RAK14002 Touch Pad
+#define CURRENT_ID 20 // RAK16000 current sensor
 
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */
