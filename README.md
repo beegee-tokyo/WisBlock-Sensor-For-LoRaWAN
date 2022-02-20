@@ -164,11 +164,11 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | Battery value            | 1         | _**116**_  | 2 bytes  | 0.01 V Unsigned MSB                               | RAK4631           |
 | Humidity                 | 2         | 104        | 1 bytes  | in %RH                                            | RAK1901           |
 | Temperature              | 3         | 103        | 2 bytes  | in °C                                             | RAK1901           |
-| Barmetric Pressure       | 4         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1902           |
+| Barometric Pressure       | 4         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1902           |
 | Illuminance              | 5         | 101        | 2 bytes  | 1 lux unsigned                                    | RAK1903           |
 | Humidity 2               | 6         | 104        | 1 bytes  | in %RH                                            | RAK1901           |
 | Temperature 2            | 7         | 103        | 2 bytes  | in °C                                             | RAK1901           |
-| Barmetric Pressure 2     | 8         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1902           |
+| Barometric Pressure 2     | 8         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1902           |
 | Gas Resistance 2         | 9         | 101        | 2 bytes  | 1 lux unsigned                                    | RAK1903           |
 | GNSS stand. resolution   | 10        | 136        | 9 bytes  | 3 byte lon/lat 0.0001 °, 3 bytes alt 0.01 meter   | RAK1910, RAK12500 |
 | GNSS enhanced resolution | 10        | _**137**_  | 11 bytes | 4 byte lon/lat 0.000001 °, 3 bytes alt 0.01 meter | RAK1910, RAK12500 |
