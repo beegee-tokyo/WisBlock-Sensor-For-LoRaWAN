@@ -58,7 +58,7 @@ bool init_rak12014(void)
 		MYLOG("ToF", "Failed to detect and initialize sensor!");
 		// Sensor off
 		digitalWrite(WB_IO4, LOW);
-		api_deinit_gpio(WB_IO4);
+		// api_deinit_gpio(WB_IO4);
 
 		return false;
 	}

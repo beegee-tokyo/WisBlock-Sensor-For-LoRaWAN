@@ -43,7 +43,7 @@ bool init_rak12008(void)
 		{
 			MYLOG("MG812", "MG812 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12008
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -54,7 +54,7 @@ bool init_rak12008(void)
 		{
 			MYLOG("MG812", "MG812 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12008
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}

@@ -41,7 +41,7 @@ bool init_rak12004(void)
 		{
 			MYLOG("MQ2", "MQ2 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12004
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -52,7 +52,7 @@ bool init_rak12004(void)
 		{
 			MYLOG("MQ2", "MQ2 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12004
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}

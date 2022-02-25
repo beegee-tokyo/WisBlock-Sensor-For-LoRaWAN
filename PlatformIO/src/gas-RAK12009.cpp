@@ -36,7 +36,7 @@ bool init_rak12009(void)
 		{
 			MYLOG("MQ3", "MQ3 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12009
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -47,7 +47,7 @@ bool init_rak12009(void)
 		{
 			MYLOG("MQ3", "MQ3 not found");
 			digitalWrite(EN_PIN, LOW); // power down RAK12009
-			api_deinit_gpio(EN_PIN);
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}

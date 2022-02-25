@@ -332,13 +332,13 @@ void find_modules(void)
 
 	if ((num_dev == 0) && !found_sensors[GNSS_ID].found_sensor)
 	{
-		api_deinit_gpio(WB_IO2);
+		// api_deinit_gpio(WB_IO2);
 		Wire.end();
-		api_deinit_gpio(PIN_WIRE_SDA);
-		api_deinit_gpio(PIN_WIRE_SCL);
+		// api_deinit_gpio(PIN_WIRE_SDA);
+		// api_deinit_gpio(PIN_WIRE_SCL);
 		Wire1.end();
-		api_deinit_gpio(PIN_WIRE1_SDA);
-		api_deinit_gpio(PIN_WIRE1_SCL);
+		// api_deinit_gpio(PIN_WIRE1_SDA);
+		// api_deinit_gpio(PIN_WIRE1_SCL);
 	}
 }
 

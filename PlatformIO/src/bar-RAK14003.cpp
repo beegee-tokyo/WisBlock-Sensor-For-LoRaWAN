@@ -40,7 +40,7 @@ bool init_rak14003(void)
 		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire))
 		{
 			MYLOG("LED_BAR", "LED_BAR not found");
-			api_deinit_gpio(WB_IO4);
+			// api_deinit_gpio(WB_IO4);
 			return false;
 		}
 	}
@@ -50,7 +50,7 @@ bool init_rak14003(void)
 		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire1))
 		{
 			MYLOG("LED_BAR", "LED_BAR not found");
-			api_deinit_gpio(WB_IO4);
+			// api_deinit_gpio(WB_IO4);
 			return false;
 		}
 	}
