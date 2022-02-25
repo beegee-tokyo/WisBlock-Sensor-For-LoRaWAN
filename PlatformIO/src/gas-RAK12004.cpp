@@ -24,7 +24,7 @@ float PPMpercentage;
 
 /**
  * @brief Initialize MQ2 gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */
@@ -40,6 +40,8 @@ bool init_rak12004(void)
 		if (!MQ2.begin(MQ2_ADDRESS, Wire))
 		{
 			MYLOG("MQ2", "MQ2 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12004
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -49,6 +51,8 @@ bool init_rak12004(void)
 		if (!MQ2.begin(MQ2_ADDRESS, Wire1))
 		{
 			MYLOG("MQ2", "MQ2 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12004
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}

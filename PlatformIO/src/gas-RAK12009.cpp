@@ -19,7 +19,7 @@ ADC121C021 MQ3;
 
 /**
  * @brief Initialize gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */
@@ -35,6 +35,8 @@ bool init_rak12009(void)
 		if (!MQ3.begin(MQ3_ADDRESS, Wire))
 		{
 			MYLOG("MQ3", "MQ3 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12009
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -44,6 +46,8 @@ bool init_rak12009(void)
 		if (!MQ3.begin(MQ3_ADDRESS, Wire1))
 		{
 			MYLOG("MQ3", "MQ3 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12009
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}

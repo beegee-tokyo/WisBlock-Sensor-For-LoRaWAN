@@ -77,16 +77,17 @@ void setup_app(void)
 
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
-	pinMode(EN_PIN, OUTPUT);
-	digitalWrite(EN_PIN, HIGH); // power on RAK12004
 
 	delay(500);
 
 	// Scan the I2C interfaces for devices
 	find_modules();
 
-	// Initialize the User AT command list
-	init_user_at();
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		// Initialize the User AT command list
+		init_user_at();
+	}
 
 	// Enable BLE
 	g_enable_ble = true;
@@ -104,8 +105,11 @@ bool init_app(void)
 
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
 
-	// Get precision settings
-	read_gps_settings();
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		// Get precision settings
+		read_gps_settings();
+	}
 
 	AT_PRINTF("============================\n");
 	if (found_sensors[SOIL_ID].found_sensor)
@@ -414,7 +418,7 @@ void app_event_handler(void)
 			// Reset the standard timer
 			if (g_lorawan_settings.send_repeat_time != 0)
 			{
-				g_task_wakeup_timer.reset();
+				api_timer_restart(g_lorawan_settings.send_repeat_time);
 			}
 		}
 	}

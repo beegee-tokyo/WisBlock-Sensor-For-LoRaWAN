@@ -26,7 +26,7 @@ float sensorVoltage;
 
 /**
  * @brief Initialize the gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */
@@ -42,6 +42,8 @@ bool init_rak12008(void)
 		if (!MG812.begin(MG812_ADDRESS, Wire))
 		{
 			MYLOG("MG812", "MG812 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12008
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -51,6 +53,8 @@ bool init_rak12008(void)
 		if (!MG812.begin(MG812_ADDRESS, Wire1))
 		{
 			MYLOG("MG812", "MG812 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12008
+			api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
@@ -72,7 +76,6 @@ void read_rak12008(void)
 	MYLOG("MG812", "MG812 sensor PPM Value is: %3.2f\r\n", sensorPPM);
 	PPMpercentage = sensorPPM / 10000;
 	MYLOG("MG812", "MG812 PPM percentage Value is:%3.2f%%\r\n", PPMpercentage);
-
 
 	g_solution_data.addAnalogInput(LPP_CHANNEL_CO2, sensorPPM);
 	g_solution_data.addPercentage(LPP_CHANNEL_CO2_PERC, PPMpercentage);

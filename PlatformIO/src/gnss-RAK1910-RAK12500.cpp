@@ -117,6 +117,8 @@ bool init_gnss(void)
 		}
 		MYLOG("GNSS", "Got no data from RAK1910 on Serial1 in %ld", (uint32_t)(millis() - timeout));
 
+		Serial1.end();
+
 		Serial2.begin(9600);
 		delay(100);
 
@@ -137,6 +139,8 @@ bool init_gnss(void)
 			delay(500);
 		}
 		MYLOG("GNSS", "Got no data from RAK1910 on Serial2 in %ld", (uint32_t)(millis() - timeout));
+
+		Serial2.end();
 	}
 	else
 	{
