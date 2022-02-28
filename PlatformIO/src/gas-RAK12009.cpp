@@ -42,6 +42,7 @@ bool init_rak12009(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!MQ3.begin(MQ3_ADDRESS, Wire1))
 		{
@@ -50,6 +51,9 @@ bool init_rak12009(void)
 			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	//**************init MQ3 *****************************************************
 	// Set math model to calculate the PPM concentration and the value of constants

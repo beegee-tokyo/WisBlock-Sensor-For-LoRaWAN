@@ -47,6 +47,7 @@ bool init_rak12004(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!MQ2.begin(MQ2_ADDRESS, Wire1))
 		{
@@ -55,6 +56,9 @@ bool init_rak12004(void)
 			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	//**************init MQ2 *****************************************************
 	MQ2.setRL(Gas_RL);

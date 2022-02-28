@@ -86,6 +86,7 @@ void find_modules(void)
 			num_dev++;
 		}
 	}
+#if WIRE_INTERFACES_COUNT > 1
 	Wire1.begin();
 	Wire1.setClock(400000);
 	for (byte address = 1; address < 127; address++)
@@ -113,6 +114,7 @@ void find_modules(void)
 			num_dev++;
 		}
 	}
+#endif
 	MYLOG("SCAN", "Found %d sensors", num_dev);
 
 	// Initialize the modules found
@@ -237,11 +239,11 @@ void find_modules(void)
 	{
 		// Try TOF sensor first
 		if (!init_rak12014())
-	{
+		{
 			// No ToF found, try RTC clock
 			found_sensors[TOF_ID].found_sensor = false;
 			if (init_rak12002())
-		{
+			{
 				found_sensors[RTC_ID].found_sensor = true;
 			}
 		}
@@ -297,16 +299,16 @@ void find_modules(void)
 	}
 	else
 	{
-	if (init_gnss())
-	{
+		if (init_gnss())
+		{
 			found_sensors[GNSS_ID].found_sensor = true;
-		snprintf(g_ble_dev_name, 9, "RAK_GNSS");
-	}
-	else
-	{
+			snprintf(g_ble_dev_name, 9, "RAK_GNSS");
+		}
+		else
+		{
 			found_sensors[GNSS_ID].found_sensor = false;
-		MYLOG("APP", "GNSS failed");
-	}
+			MYLOG("APP", "GNSS failed");
+		}
 	}
 	if (found_sensors[VOC_ID].found_sensor)
 	{
@@ -328,6 +330,19 @@ void find_modules(void)
 		{
 			found_sensors[CURRENT_ID].found_sensor = false;
 		}
+	}
+
+	if ((num_dev == 0) && !found_sensors[GNSS_ID].found_sensor)
+	{
+		// api_deinit_gpio(WB_IO2);
+		Wire.end();
+		// api_deinit_gpio(PIN_WIRE_SDA);
+		// api_deinit_gpio(PIN_WIRE_SCL);
+#if WIRE_INTERFACES_COUNT > 1
+		Wire1.end();
+// api_deinit_gpio(PIN_WIRE1_SDA);
+// api_deinit_gpio(PIN_WIRE1_SCL);
+#endif
 	}
 }
 
@@ -566,22 +581,22 @@ void announce_modules(void)
 	}
 
 	if (!found_sensors[TOUCH_ID].found_sensor)
-		{
+	{
 		MYLOG("APP", "Touch Pad error");
 		init_result = false;
-		}
-		else
-		{
+	}
+	else
+	{
 		AT_PRINTF("+EVT:RAK14002 OK\n");
-		}
+	}
 
 	if (!found_sensors[BAR_ID].found_sensor)
-		{
+	{
 		MYLOG("APP", "LED_BAR error");
 		init_result = false;
-		}
-		else
-		{
+	}
+	else
+	{
 		AT_PRINTF("+EVT:RAK14003 OK\n");
 		uint8_t led_stat[10] = {0};
 		set_rak14003(led_stat);

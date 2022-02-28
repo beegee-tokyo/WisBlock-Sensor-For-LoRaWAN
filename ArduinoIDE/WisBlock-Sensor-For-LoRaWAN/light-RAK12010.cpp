@@ -33,12 +33,16 @@ bool init_rak12010(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!VEML.begin(&Wire1))
 		{
 			MYLOG("VEML", "VEML7700 not found");
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	if (!VEML.begin())
 	{

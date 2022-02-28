@@ -49,6 +49,7 @@ bool init_rak12008(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!MG812.begin(MG812_ADDRESS, Wire1))
 		{
@@ -57,6 +58,9 @@ bool init_rak12008(void)
 			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	return true;
 }

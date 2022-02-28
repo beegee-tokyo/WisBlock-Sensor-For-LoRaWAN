@@ -39,11 +39,15 @@ bool init_rak1901(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		if (shtc3.begin(Wire1) != SHTC3_Status_Nominal)
 		{
 			MYLOG("T_H", "Could not initialize SHTC3");
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	return true;
 }

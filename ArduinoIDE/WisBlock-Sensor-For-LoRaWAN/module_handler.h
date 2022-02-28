@@ -20,12 +20,12 @@ extern SoftwareTimer delayed_sending;
 void send_delayed(TimerHandle_t unused);
 
 /** Wakeup triggers for application events */
-#define MOTION_TRIGGER 0b1000000000000000
+#define MOTION_TRIGGER   0b1000000000000000
 #define N_MOTION_TRIGGER 0b0111111111111111
-#define GNSS_FIN 0b0100000000000000
-#define N_GNSS_FIN 0b1011111111111111
-#define VOC_REQ 0b0010000000000000
-#define N_VOC_REQ 0b1101111111111111
+#define GNSS_FIN         0b0100000000000000
+#define N_GNSS_FIN       0b1011111111111111
+#define VOC_REQ          0b0010000000000000
+#define N_VOC_REQ        0b1101111111111111
 #define TOUCH_EVENT      0b0001000000000000
 #define N_TOUCH_EVENT    0b1110111111111111
 

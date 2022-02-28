@@ -15,8 +15,10 @@
 
 /** BME680 instance for Wire */
 Adafruit_BME680 bme_1(&Wire);
+#if WIRE_INTERFACES_COUNT > 1
 /** BME680 instance for Wire1 */
 Adafruit_BME680 bme_2(&Wire1);
+#endif
 /** Pointer to used instance */
 Adafruit_BME680 *bme;
 
@@ -38,8 +40,12 @@ bool init_rak1906(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		bme = &bme_2;
 		Wire1.begin();
+#else
+		return false;
+#endif
 	}
 
 	if (!bme->begin(0x76))

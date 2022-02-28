@@ -52,8 +52,12 @@ bool init_rak12035(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		soil_sensor.setup(Wire1);
+#else
+		return false;
+#endif
 	}
 
 	// Initialize the sensor
@@ -122,7 +126,11 @@ void read_rak12035(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
+#else
+		return false;
+#endif
 	}
 
 	// Wake up the sensor
@@ -214,7 +222,11 @@ uint16_t start_calib_rak12035(bool is_dry)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
+#else
+		return false;
+#endif
 	}
 
 	if (!soil_sensor.sensor_on())

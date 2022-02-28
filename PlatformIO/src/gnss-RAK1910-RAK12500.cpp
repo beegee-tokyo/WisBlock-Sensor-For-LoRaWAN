@@ -70,6 +70,7 @@ bool init_gnss(void)
 			}
 			else
 			{
+#if WIRE_INTERFACES_COUNT > 1
 				Wire1.begin();
 				if (!my_gnss.begin(Wire1))
 				{
@@ -80,6 +81,9 @@ bool init_gnss(void)
 				{
 					i2c_gnss = true;
 				}
+#else
+				return false;
+#endif
 			}
 			if (i2c_gnss)
 			{
@@ -100,7 +104,6 @@ bool init_gnss(void)
 		delay(100);
 
 		Serial1.print("START");
-
 
 		time_t timeout = millis();
 		while ((millis() - timeout) < 1000)
@@ -152,7 +155,11 @@ bool init_gnss(void)
 			}
 			else
 			{
+#if WIRE_INTERFACES_COUNT > 1
 				my_gnss.begin(Wire1);
+#else
+				return false;
+#endif
 			}
 		}
 		else

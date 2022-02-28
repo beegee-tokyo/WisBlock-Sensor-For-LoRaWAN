@@ -86,6 +86,7 @@ void find_modules(void)
 			num_dev++;
 		}
 	}
+#if WIRE_INTERFACES_COUNT > 1
 	Wire1.begin();
 	Wire1.setClock(400000);
 	for (byte address = 1; address < 127; address++)
@@ -113,6 +114,7 @@ void find_modules(void)
 			num_dev++;
 		}
 	}
+#endif
 	MYLOG("SCAN", "Found %d sensors", num_dev);
 
 	// Initialize the modules found
@@ -336,9 +338,11 @@ void find_modules(void)
 		Wire.end();
 		// api_deinit_gpio(PIN_WIRE_SDA);
 		// api_deinit_gpio(PIN_WIRE_SCL);
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.end();
-		// api_deinit_gpio(PIN_WIRE1_SDA);
-		// api_deinit_gpio(PIN_WIRE1_SCL);
+// api_deinit_gpio(PIN_WIRE1_SDA);
+// api_deinit_gpio(PIN_WIRE1_SCL);
+#endif
 	}
 }
 

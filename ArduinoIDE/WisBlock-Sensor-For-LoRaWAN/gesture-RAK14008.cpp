@@ -37,7 +37,11 @@ bool init_rak14008(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		error = gesture_sensor.begin(&Wire1);
+#else
+		return false;
+#endif
 	}
 
 	if (error != 1)

@@ -1,14 +1,14 @@
 /**
  * @file app.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
- * @brief Application specific functions. Mandatory to have init_app(), 
+ * @brief Application specific functions. Mandatory to have init_app(),
  *        app_event_handler(), ble_data_handler(), lora_data_handler()
  *        and lora_tx_finished()
  * @version 0.2
  * @date 2022-01-30
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "app.h"
@@ -53,7 +53,7 @@ char disp_txt[64] = {0};
 
 /**
  * @brief Application specific setup functions
- * 
+ *
  */
 void setup_app(void)
 {
@@ -77,16 +77,17 @@ void setup_app(void)
 
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
-	pinMode(EN_PIN, OUTPUT);
-	digitalWrite(EN_PIN, HIGH); // power on RAK12004
 
 	delay(500);
 
 	// Scan the I2C interfaces for devices
 	find_modules();
 
-	// Initialize the User AT command list
-	init_user_at();
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		// Initialize the User AT command list
+		init_user_at();
+	}
 
 	// Enable BLE
 	g_enable_ble = true;
@@ -94,7 +95,7 @@ void setup_app(void)
 
 /**
  * @brief Application specific initializations
- * 
+ *
  * @return true Initialization success
  * @return false Initialization failure
  */
@@ -104,8 +105,11 @@ bool init_app(void)
 
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
 
-	// Get precision settings
-	read_gps_settings();
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		// Get precision settings
+		read_gps_settings();
+	}
 
 	AT_PRINTF("============================\n");
 	if (found_sensors[SOIL_ID].found_sensor)
@@ -122,7 +126,7 @@ bool init_app(void)
 		{
 			AT_PRINTF("LPWAN Tracker Solution\n");
 		}
-		}
+	}
 	else if (found_sensors[ENV_ID].found_sensor)
 	{
 		AT_PRINTF("LPWAN Environment Solution\n");
@@ -134,9 +138,9 @@ bool init_app(void)
 	else if (found_sensors[VOC_ID].found_sensor)
 	{
 		AT_PRINTF("LPWAN VOC Sensor\n");
-		}
-		else
-		{
+	}
+	else
+	{
 		AT_PRINTF("LPWAN WisBlock Node\n");
 	}
 	AT_PRINTF("Built with RAK's WisBlock\n");
@@ -266,12 +270,12 @@ void app_event_handler(void)
 			}
 
 			MYLOG("APP", "Packetsize %d", g_solution_data.getSize());
-		if (g_lorawan_settings.lorawan_enable)
-		{
+			if (g_lorawan_settings.lorawan_enable)
+			{
 				lmh_error_status result = send_lora_packet(g_solution_data.getBuffer(), g_solution_data.getSize());
-			switch (result)
-			{
-			case LMH_SUCCESS:
+				switch (result)
+				{
+				case LMH_SUCCESS:
 					if (found_sensors[OLED_ID].found_sensor)
 					{
 						if (found_sensors[RTC_ID].found_sensor)
@@ -285,44 +289,44 @@ void app_event_handler(void)
 						}
 						rak1921_add_line(disp_txt);
 					}
-				MYLOG("APP", "Packet enqueued");
-				break;
-			case LMH_BUSY:
-				MYLOG("APP", "LoRa transceiver is busy");
-				AT_PRINTF("+EVT:BUSY\n");
-				break;
-			case LMH_ERROR:
-				AT_PRINTF("+EVT:SIZE_ERROR\n");
-				MYLOG("APP", "Packet error, too big to send with current DR");
-				break;
-			}
-		}
-		else
-		{
-			// Send packet over LoRa
-				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
-			{
-					if (found_sensors[OLED_ID].found_sensor)
-					{
-						if (found_sensors[RTC_ID].found_sensor)
-						{
-							read_rak12002();
-							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize());
-						}
-						else
-						{
-							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize());
-						}
-						rak1921_add_line(disp_txt);
-					}
-				MYLOG("APP", "Packet enqueued");
+					MYLOG("APP", "Packet enqueued");
+					break;
+				case LMH_BUSY:
+					MYLOG("APP", "LoRa transceiver is busy");
+					AT_PRINTF("+EVT:BUSY\n");
+					break;
+				case LMH_ERROR:
+					AT_PRINTF("+EVT:SIZE_ERROR\n");
+					MYLOG("APP", "Packet error, too big to send with current DR");
+					break;
+				}
 			}
 			else
 			{
-				AT_PRINTF("+EVT:SIZE_ERROR\n");
-				MYLOG("APP", "Packet too big");
+				// Send packet over LoRa
+				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
+				{
+					if (found_sensors[OLED_ID].found_sensor)
+					{
+						if (found_sensors[RTC_ID].found_sensor)
+						{
+							read_rak12002();
+							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize());
+						}
+						else
+						{
+							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize());
+						}
+						rak1921_add_line(disp_txt);
+					}
+					MYLOG("APP", "Packet enqueued");
+				}
+				else
+				{
+					AT_PRINTF("+EVT:SIZE_ERROR\n");
+					MYLOG("APP", "Packet too big");
+				}
 			}
-		}
 			// Reset the packet
 			g_solution_data.reset();
 		}
@@ -353,71 +357,71 @@ void app_event_handler(void)
 		else
 		{
 			if (found_sensors[ACC_ID].found_sensor)
-		{
-		MYLOG("APP", "ACC triggered");
-		clear_int_rak1904();
-		}
+			{
+				MYLOG("APP", "ACC triggered");
+				clear_int_rak1904();
+			}
 			if (found_sensors[GYRO_ID].found_sensor)
-		{
-			MYLOG("APP", "Gyro triggered");
-			clear_int_rak12025();
-		}
+			{
+				MYLOG("APP", "Gyro triggered");
+				clear_int_rak12025();
+			}
 
 			if (found_sensors[SOIL_ID].found_sensor && g_enable_ble)
-		{
-			// If BLE is enabled, restart Advertising
-			restart_advertising(15);
-			return;
-		}
+			{
+				// If BLE is enabled, restart Advertising
+				restart_advertising(15);
+				return;
+			}
 		}
 
 		MYLOG("APP", "Check send time delay");
 		// Check if new data can be sent
-			if (g_lpwan_has_joined)
+		if (g_lpwan_has_joined)
+		{
+			// Check time since last send
+			bool send_now = true;
+			if (g_lorawan_settings.send_repeat_time != 0)
 			{
-				// Check time since last send
-				bool send_now = true;
-				if (g_lorawan_settings.send_repeat_time != 0)
+				if ((millis() - last_pos_send) < min_delay)
 				{
-					if ((millis() - last_pos_send) < min_delay)
+					send_now = false;
+					if (!delayed_active)
 					{
-						send_now = false;
-						if (!delayed_active)
-						{
-							delayed_sending.stop();
-							MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
-							MYLOG("APP", "Max delay time %d", (int)min_delay);
-							time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
-							MYLOG("APP", "Wait time %ld", (long)wait_time);
+						delayed_sending.stop();
+						MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
+						MYLOG("APP", "Max delay time %d", (int)min_delay);
+						time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
+						MYLOG("APP", "Wait time %ld", (long)wait_time);
 
-							MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
-							delayed_sending.setPeriod(wait_time);
-							delayed_sending.start();
-							delayed_active = true;
-						}
+						MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
+						delayed_sending.setPeriod(wait_time);
+						delayed_sending.start();
+						delayed_active = true;
 					}
 				}
-				if (send_now)
-				{
+			}
+			if (send_now)
+			{
 				MYLOG("APP", "Send now");
-					// Remember last send time
-					last_pos_send = millis();
+				// Remember last send time
+				last_pos_send = millis();
 
 				// Trigger a data reading and packet sending
-					g_task_event_type |= STATUS;
-				}
+				g_task_event_type |= STATUS;
+			}
 			else
 			{
 				MYLOG("APP", "Send delayed");
 			}
 
-				// Reset the standard timer
-				if (g_lorawan_settings.send_repeat_time != 0)
-				{
-					g_task_wakeup_timer.reset();
-				}
+			// Reset the standard timer
+			if (g_lorawan_settings.send_repeat_time != 0)
+			{
+				api_timer_restart(g_lorawan_settings.send_repeat_time);
 			}
 		}
+	}
 
 	// GNSS location search finished
 	if ((g_task_event_type & GNSS_FIN) == GNSS_FIN)
@@ -425,9 +429,9 @@ void app_event_handler(void)
 		g_task_event_type &= N_GNSS_FIN;
 
 		if (!g_is_helium && found_sensors[ENV_ID].found_sensor)
-		{ 
-		// Get Environment data
-		read_rak1906();
+		{
+			// Get Environment data
+			read_rak1906();
 		}
 		// Remember last time sending
 		last_pos_send = millis();
@@ -482,7 +486,7 @@ void app_event_handler(void)
 
 /**
  * @brief Handle BLE UART data
- * 
+ *
  */
 void ble_data_handler(void)
 {
@@ -507,7 +511,7 @@ void ble_data_handler(void)
 
 /**
  * @brief Handle received LoRa Data
- * 
+ *
  */
 void lora_data_handler(void)
 {
@@ -618,8 +622,8 @@ void lora_data_handler(void)
 /**
  * @brief Timer function used to avoid sending packages too often.
  * 			Delays the next package by 10 seconds
- * 
- * @param unused 
+ *
+ * @param unused
  * 			Timer handle, not used
  */
 void send_delayed(TimerHandle_t unused)

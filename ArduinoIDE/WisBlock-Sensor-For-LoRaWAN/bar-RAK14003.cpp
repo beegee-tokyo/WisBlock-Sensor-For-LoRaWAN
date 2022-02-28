@@ -40,17 +40,25 @@ bool init_rak14003(void)
 		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire))
 		{
 			MYLOG("LED_BAR", "LED_BAR not found");
+			digitalWrite(WB_IO4, LOW);
+			// api_deinit_gpio(WB_IO4);
 			return false;
 		}
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire1))
 		{
 			MYLOG("LED_BAR", "LED_BAR not found");
+			digitalWrite(WB_IO4, LOW);
+			// api_deinit_gpio(WB_IO4);
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	for (int i = 0; i < 16; i++)
 	{
@@ -65,7 +73,7 @@ bool init_rak14003(void)
  * 
  * @param leds 10 byte array, 1 = LED on, 0 = LED off
  */
-void set_rak14003(uint8_t * leds)
+void set_rak14003(uint8_t *leds)
 {
 	for (uint8_t idx = 0; idx < 10; idx++)
 	{

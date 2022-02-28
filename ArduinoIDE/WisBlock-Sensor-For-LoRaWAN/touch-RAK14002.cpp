@@ -42,8 +42,12 @@ bool init_rak14002(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		init_result = touch_pad.begin(Wire1);
+#else
+		return false;
+#endif
 	}
 
 	if (!init_result)

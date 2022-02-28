@@ -33,10 +33,12 @@ uint8_t current_line = 0;
 
 /** Display class using Wire */
 SSD1306Wire oled_display_1(0x3c, PIN_WIRE_SDA, PIN_WIRE_SCL, GEOMETRY_128_64, &Wire);
+#if WIRE_INTERFACES_COUNT > 1
 /** Display class using Wire1 */
 SSD1306Wire oled_display_2(0x3c, PIN_WIRE_SDA, PIN_WIRE_SCL, GEOMETRY_128_64, &Wire1);
+#endif
 /** Pointer to used display class */
-SSD1306Wire * oled_display;
+SSD1306Wire *oled_display;
 
 /**
  * @brief Initialize the display
@@ -53,8 +55,12 @@ bool init_rak1921(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		oled_display = &oled_display_2;
+#else
+		return false;
+#endif
 	}
 
 	delay(500); // Give display reset some time
@@ -76,7 +82,7 @@ bool init_rak1921(void)
 /**
  * @brief Write the top line of the display
  */
-void rak1921_write_header(char * header_line)
+void rak1921_write_header(char *header_line)
 {
 	taskENTER_CRITICAL();
 	oled_display->setFont(ArialMT_Plain_10);

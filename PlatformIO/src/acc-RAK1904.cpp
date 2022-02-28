@@ -4,9 +4,9 @@
  * @brief 3-axis accelerometer functions
  * @version 0.3
  * @date 2022-01-29
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 
@@ -19,8 +19,10 @@ void int_callback_rak1904(void);
 
 /** Sensor instance using Wire */
 Adafruit_LIS3DH acc_sensor_1(&Wire);
+#if WIRE_INTERFACES_COUNT > 1
 /** Sensor instance using Wire1 */
 Adafruit_LIS3DH acc_sensor_2(&Wire1);
+#endif
 /** Pointer to used instance */
 Adafruit_LIS3DH *acc_sensor;
 
@@ -38,7 +40,7 @@ TwoWire *usedWire;
  */
 bool rak1904_writeRegister(uint8_t chip_reg, uint8_t dataToWrite)
 {
-	//Write the byte
+	// Write the byte
 	usedWire->beginTransmission(LIS3DH_DEFAULT_ADDRESS);
 	usedWire->write(chip_reg);
 	usedWire->write(dataToWrite);
@@ -61,7 +63,7 @@ bool rak1904_writeRegister(uint8_t chip_reg, uint8_t dataToWrite)
  */
 bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 {
-	//Return value
+	// Return value
 	uint8_t result;
 	uint8_t numBytes = 1;
 
@@ -82,9 +84,9 @@ bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 }
 
 /**
- * @brief Initialize LIS3DH 3-axis 
+ * @brief Initialize LIS3DH 3-axis
  * acceleration sensor
- * 
+ *
  * @return true If sensor was found and is initialized
  * @return false If sensor initialization failed
  */
@@ -101,9 +103,13 @@ bool init_rak1904(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		acc_sensor = &acc_sensor_2;
 		Wire1.begin();
 		usedWire = &Wire1;
+#else
+		return false;
+#endif
 	}
 
 	acc_sensor->setDataRate(LIS3DH_DATARATE_10_HZ);
@@ -120,9 +126,9 @@ bool init_rak1904(void)
 	acc_sensor->enableDRDY(false, 2);
 
 	uint8_t data_to_write = 0;
-	data_to_write |= 0x20;							  //Z high
-	data_to_write |= 0x08;							  //Y high
-	data_to_write |= 0x02;							  //X high
+	data_to_write |= 0x20;									  // Z high
+	data_to_write |= 0x08;									  // Y high
+	data_to_write |= 0x02;									  // X high
 	rak1904_writeRegister(LIS3DH_REG_INT1CFG, data_to_write); // Enable interrupts on high tresholds for x, y and z
 
 	// Set interrupt trigger range
@@ -143,14 +149,14 @@ bool init_rak1904(void)
 	rak1904_writeRegister(LIS3DH_REG_INT1DUR, data_to_write);
 
 	rak1904_readRegister(&data_to_write, LIS3DH_REG_CTRL5);
-	data_to_write &= 0xF3;							//Clear bits of interest
-	data_to_write |= 0x08;							//Latch interrupt (Cleared by reading int1_src)
+	data_to_write &= 0xF3;									// Clear bits of interest
+	data_to_write |= 0x08;									// Latch interrupt (Cleared by reading int1_src)
 	rak1904_writeRegister(LIS3DH_REG_CTRL5, data_to_write); // Set interrupt to latching
 
 	// Select interrupt pin 1
 	data_to_write = 0;
-	data_to_write |= 0x40; //AOI1 event (Generator 1 interrupt on pin 1)
-	data_to_write |= 0x20; //AOI2 event ()
+	data_to_write |= 0x40; // AOI1 event (Generator 1 interrupt on pin 1)
+	data_to_write |= 0x20; // AOI2 event ()
 	rak1904_writeRegister(LIS3DH_REG_CTRL3, data_to_write);
 
 	// No interrupt on pin 2
@@ -182,7 +188,7 @@ bool init_rak1904(void)
 /**
  * @brief ACC interrupt handler
  * @note gives semaphore to wake up main loop
- * 
+ *
  */
 void int_callback_rak1904(void)
 {
@@ -191,7 +197,7 @@ void int_callback_rak1904(void)
 
 /**
  * @brief Clear ACC interrupt register to enable next wakeup
- * 
+ *
  */
 void clear_int_rak1904(void)
 {

@@ -15,8 +15,10 @@
 
 /** Current sensor instance using Wire */
 INA219_WE ina219_1 = (Wire, I2C_ADDRESS);
+#if WIRE_INTERFACES_COUNT > 1
 /** Current sensor instance using Wire1 */
 INA219_WE ina219_2 = (Wire1, I2C_ADDRESS);
+#endif
 /** Pointer to used instance */
 INA219_WE *ina219;
 
@@ -47,8 +49,12 @@ bool init_rak16000(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		ina219 = &ina219_2;
+#else
+		return false;
+#endif
 	}
 
 	if (!ina219->init())

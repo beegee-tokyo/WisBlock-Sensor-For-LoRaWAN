@@ -40,17 +40,25 @@ bool init_rak12004(void)
 		if (!MQ2.begin(MQ2_ADDRESS, Wire))
 		{
 			MYLOG("MQ2", "MQ2 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12004
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		if (!MQ2.begin(MQ2_ADDRESS, Wire1))
 		{
 			MYLOG("MQ2", "MQ2 not found");
+			digitalWrite(EN_PIN, LOW); // power down RAK12004
+			// api_deinit_gpio(EN_PIN);
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 	//**************init MQ2 *****************************************************
 	MQ2.setRL(Gas_RL);

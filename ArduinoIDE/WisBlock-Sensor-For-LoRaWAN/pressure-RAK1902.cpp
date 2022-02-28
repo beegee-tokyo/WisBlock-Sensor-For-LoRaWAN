@@ -33,11 +33,15 @@ bool init_rak1902(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		if (!lps22hb.begin_I2C(0x5c, &Wire1))
 		{
 			MYLOG("PRESS", "Could not initialize LPS2X on Wire1");
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 
 	lps22hb.setDataRate(LPS22_RATE_ONE_SHOT); // LPS22_RATE_ONE_SHOT

@@ -48,8 +48,12 @@ bool init_rak12014(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		tof_sensor.setBus(&Wire1);
 		Wire1.begin();
+#else
+		return false;
+#endif
 	}
 
 	tof_sensor.setTimeout(500);

@@ -42,8 +42,12 @@ bool init_rak14002(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		init_result = touch_pad.begin(Wire1);
+#else
+		return false;
+#endif
 	}
 
 	if (!init_result)
@@ -69,7 +73,7 @@ bool init_rak14002(void)
  *     Data is added to Cayenne LPP payload as channels
  *     LPP_CHANNEL_TOUCH_1, LPP_CHANNEL_TOUCH_2
  *     LPP_CHANNEL_TOUCH_3
- * 
+ *
  */
 void get_rak14002(void)
 {
@@ -83,7 +87,7 @@ void get_rak14002(void)
 
 /**
  * @brief Read status of the touch pads after an touch interrupt
- * 
+ *
  */
 void read_rak14002(void)
 {

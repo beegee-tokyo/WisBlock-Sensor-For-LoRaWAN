@@ -10,8 +10,8 @@
  */
 #include "wisblock_cayenne.h"
 
-	/** uint16_t level union */
-	union int_union_s
+/** uint16_t level union */
+union int_union_s
 {
 	uint16_t val16 = 0;
 	uint8_t val8[2];

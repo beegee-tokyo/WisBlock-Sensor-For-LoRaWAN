@@ -19,8 +19,10 @@ void int_callback_rak1904(void);
 
 /** Sensor instance using Wire */
 Adafruit_LIS3DH acc_sensor_1(&Wire);
+#if WIRE_INTERFACES_COUNT > 1
 /** Sensor instance using Wire1 */
 Adafruit_LIS3DH acc_sensor_2(&Wire1);
+#endif
 /** Pointer to used instance */
 Adafruit_LIS3DH *acc_sensor;
 
@@ -101,9 +103,13 @@ bool init_rak1904(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		acc_sensor = &acc_sensor_2;
 		Wire1.begin();
 		usedWire = &Wire1;
+#else
+		return false;
+#endif
 	}
 
 	acc_sensor->setDataRate(LIS3DH_DATARATE_10_HZ);
@@ -120,9 +126,9 @@ bool init_rak1904(void)
 	acc_sensor->enableDRDY(false, 2);
 
 	uint8_t data_to_write = 0;
-	data_to_write |= 0x20;							  //Z high
-	data_to_write |= 0x08;							  //Y high
-	data_to_write |= 0x02;							  //X high
+	data_to_write |= 0x20;									  // Z high
+	data_to_write |= 0x08;									  // Y high
+	data_to_write |= 0x02;									  // X high
 	rak1904_writeRegister(LIS3DH_REG_INT1CFG, data_to_write); // Enable interrupts on high tresholds for x, y and z
 
 	// Set interrupt trigger range
@@ -143,8 +149,8 @@ bool init_rak1904(void)
 	rak1904_writeRegister(LIS3DH_REG_INT1DUR, data_to_write);
 
 	rak1904_readRegister(&data_to_write, LIS3DH_REG_CTRL5);
-	data_to_write &= 0xF3;							//Clear bits of interest
-	data_to_write |= 0x08;							//Latch interrupt (Cleared by reading int1_src)
+	data_to_write &= 0xF3;									// Clear bits of interest
+	data_to_write |= 0x08;									// Latch interrupt (Cleared by reading int1_src)
 	rak1904_writeRegister(LIS3DH_REG_CTRL5, data_to_write); // Set interrupt to latching
 
 	// Select interrupt pin 1

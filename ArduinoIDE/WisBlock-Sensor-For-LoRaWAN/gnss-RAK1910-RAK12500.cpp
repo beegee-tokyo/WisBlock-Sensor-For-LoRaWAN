@@ -70,6 +70,7 @@ bool init_gnss(void)
 			}
 			else
 			{
+#if WIRE_INTERFACES_COUNT > 1
 				Wire1.begin();
 				if (!my_gnss.begin(Wire1))
 				{
@@ -80,6 +81,9 @@ bool init_gnss(void)
 				{
 					i2c_gnss = true;
 				}
+#else
+				return false;
+#endif
 			}
 			if (i2c_gnss)
 			{
@@ -101,7 +105,6 @@ bool init_gnss(void)
 
 		Serial1.print("START");
 
-
 		time_t timeout = millis();
 		while ((millis() - timeout) < 1000)
 		{
@@ -116,6 +119,8 @@ bool init_gnss(void)
 			delay(500);
 		}
 		MYLOG("GNSS", "Got no data from RAK1910 on Serial1 in %ld", (uint32_t)(millis() - timeout));
+
+		Serial1.end();
 
 		Serial2.begin(9600);
 		delay(100);
@@ -137,6 +142,8 @@ bool init_gnss(void)
 			delay(500);
 		}
 		MYLOG("GNSS", "Got no data from RAK1910 on Serial2 in %ld", (uint32_t)(millis() - timeout));
+
+		Serial2.end();
 	}
 	else
 	{

@@ -13,10 +13,12 @@
 
 /** Light sensor instance using Wire*/
 UVlight_LTR390 ltr_1 = UVlight_LTR390();
+#if WIRE_INTERFACES_COUNT > 1
 /** Light sensor instance using Wire*/
 UVlight_LTR390 ltr_2 = UVlight_LTR390(&Wire1);
+#endif
 /** Pointer to used sensor instance */
-UVlight_LTR390 * ltr;
+UVlight_LTR390 *ltr;
 
 /**
  * @brief Initialize UV light sensor
@@ -38,6 +40,7 @@ bool init_rak12019(void)
 	}
 	else
 	{
+#if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 		ltr = &ltr_2;
 		if (!ltr->init())
@@ -45,6 +48,9 @@ bool init_rak12019(void)
 			MYLOG("LTR", "LTR390 not found");
 			return false;
 		}
+#else
+		return false;
+#endif
 	}
 
 	MYLOG("LTR", "Found LTR390");
