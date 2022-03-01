@@ -83,11 +83,8 @@ void setup_app(void)
 	// Scan the I2C interfaces for devices
 	find_modules();
 
-	if (found_sensors[GNSS_ID].found_sensor)
-	{
-		// Initialize the User AT command list
-		init_user_at();
-	}
+	// Initialize the User AT command list
+	init_user_at();
 
 	// Enable BLE
 	g_enable_ble = true;
@@ -171,7 +168,7 @@ bool init_app(void)
 		}
 		rak1921_add_line(disp_txt);
 	}
-	return init_result;
+	return true;
 }
 
 /**
@@ -188,6 +185,11 @@ void app_event_handler(void)
 		{
 			// Startup the BME680
 			start_rak1906();
+		}
+		if (found_sensors[PRESS_ID].found_sensor && !g_is_helium)
+		{
+			// Startup the LPS22HB
+			start_rak1902();
 		}
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
@@ -418,6 +420,7 @@ void app_event_handler(void)
 			// Reset the standard timer
 			if (g_lorawan_settings.send_repeat_time != 0)
 			{
+				MYLOG("APP", "Timer restarted");
 				api_timer_restart(g_lorawan_settings.send_repeat_time);
 			}
 		}

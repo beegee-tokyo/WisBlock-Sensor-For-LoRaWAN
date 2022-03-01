@@ -120,3 +120,27 @@ bool read_rak1906()
 #endif
 	return true;
 }
+
+/**
+ * @brief Calculate and return the altitude
+ *        based on the barometric pressure
+ *        Requires to have MSL set 
+ * 
+ * @return uint16_t 
+ */
+uint16_t get_alt_rak1906(void)
+{
+	MYLOG("BME", "Compute altitude\n");
+	// pressure in HPa
+	float pressure = bme->pressure / 100.0;
+	MYLOG("BME", "P: %.2f", bme->pressure / 100.0);
+
+	float A = pressure / at_MSL; // (1013.25) by default;
+	float B = 1 / 5.25588;
+	float C = pow(A, B);
+	C = 1.0 - C;
+	C = C / 0.0000225577;
+	uint16_t new_val = C * 100;
+	MYLOG("BME", "Altitude: %.2f m / %d cm", C, new_val);
+	return new_val;
+}

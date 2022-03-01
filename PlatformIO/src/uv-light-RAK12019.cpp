@@ -98,13 +98,13 @@ void read_rak12019(void)
 	{
 		if (ltr->getMode() == LTR390_MODE_ALS)
 		{
-			MYLOG("LTR", "Lux Data:%0.2f-----Als Data:%d", ltr->getLUX(), ltr->readALS()); // calculate the lux
+			MYLOG("LTR", "Lux Data:%0.2f-----Als Data:%ld", ltr->getLUX(), ltr->readALS()); // calculate the lux
 		}
 		else
 		{
 			_uvi_read = ltr->getUVI();
 			_uvs_read = ltr->readUVS();
-			MYLOG("LTR", "Uvi Data:%0.2f-----Uvs Data:%d", _uvi_read, _uvs_read);
+			MYLOG("LTR", "Uvi Data:%0.2f-----Uvs Data:%ld", _uvi_read, _uvs_read);
 		}
 	}
 

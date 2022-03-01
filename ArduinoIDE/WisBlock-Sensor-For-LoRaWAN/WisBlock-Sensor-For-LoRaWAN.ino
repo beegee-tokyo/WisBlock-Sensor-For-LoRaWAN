@@ -10,6 +10,39 @@
  * @copyright Copyright (c) 2022
  *
  */
+/*******************************************************************/
+/*******************************************************************/
+/** For Arduino IDE these libraries need to be installed manually: */
+/*******************************************************************/
+/*******************************************************************/
+// SX126x-Arduino                         //Click here to install the library => http://librarymanager/All#SX126x-Arduino
+// WisBlock-API                           //Click here to install the library => http://librarymanager/All#WisBlock-API
+// SparkFun SHTC3                         //Click here to install the library => http://librarymanager/All#SparkFun_SHTC3
+// Adafruit LPS2X                         //Click here to install the library => http://librarymanager/All#Adafruit_LPS2X
+// Adafruit BME680                        //Click here to install the library => http://librarymanager/All#Adafruit_BME680
+// CayenneLPP                             //Click here to install the library => http://librarymanager/All#CayenneLPP
+// SparkFun u-blox GNSS                   //Click here to install the library => http://librarymanager/All#SparkFun_u-blox_GNSS
+// TinyGPSPlus                            //Click here to install the library => http://librarymanager/All#TinyGPSPlus
+// Adafruit LIS3DH                        //Click here to install the library => http://librarymanager/All#Adafruit_LIS3DH
+// RAK12035_SoilMoisture                  //Click here to install the library => http://librarymanager/All#RAK12035_SoilMoisture
+// RAKwireless VEML Light Sensor          //Click here to install the library => http://librarymanager/All#RAKwireless_VEML_Light_Sensor
+// Sensirion Core                         //Click here to install the library => http://librarymanager/All#Sensirion_Core
+// Sensirion Gas Index Algorithm          //Click here to install the library => http://librarymanager/All#Sensirion_Gas_Index_Algorithm
+// Sensirion I2C SGP40                    //Click here to install the library => http://librarymanager/All#Sensirion_I2C_SGP40
+// RAKwireless MQx                        //Click here to install the library => http://librarymanager/All#RAKwireless_MQx
+// Adafruit MCP23017                      //Click here to install the library => http://librarymanager/All#Adafruit_MCP23017
+// VL53L0X                                //Click here to install the library => http://librarymanager/All#VL53L0X (CHOOSE THE ONE FROM POLOLU)
+// RAK I3G4250D                           //Click here to install the library => http://librarymanager/All#RAK_I3G4250D
+// RevEng PAJ7620                         //Click here to install the library => http://librarymanager/All#RevEng_PAJ7620
+// nRF52_OLED                             //Click here to install the library => http://librarymanager/All#nRF52_OLED
+// Melopero RV3028                        //Click here to install the library => http://librarymanager/All#Melopero_RV3028
+// Coulomb Counter for 3.3V to 5V LTC2941 //Click here to install the library => http://librarymanager/All#Grove_Coulomb-Counter
+// RAK12019_LTR390                        //Click here to install the library => http://librarymanager/All#RAK12019_LTR390
+// INA219_WE                              //Click here to install the library => http://librarymanager/All#INA219_WE
+// RAKwireless CAP1293                    //Click here to install the library => http://librarymanager/All#RAKwireless_CAP1293
+// Bolder Flight Systems MPU9250          //Click here to install the library => http://librarymanager/All#Bolder_Flight_Systems_MPU9250
+// ClosedCube_OPT3001                     //Click here to install the library => http://librarymanager/All#ClosedCube_OPT3001
+/*******************************************************************/
 
 #include "app.h"
 
@@ -83,11 +116,8 @@ void setup_app(void)
 	// Scan the I2C interfaces for devices
 	find_modules();
 
-	if (found_sensors[GNSS_ID].found_sensor)
-	{
-		// Initialize the User AT command list
-		init_user_at();
-	}
+	// Initialize the User AT command list
+	init_user_at();
 
 	// Enable BLE
 	g_enable_ble = true;
@@ -171,7 +201,7 @@ bool init_app(void)
 		}
 		rak1921_add_line(disp_txt);
 	}
-	return init_result;
+	return true;
 }
 
 /**
@@ -188,6 +218,11 @@ void app_event_handler(void)
 		{
 			// Startup the BME680
 			start_rak1906();
+		}
+		if (found_sensors[PRESS_ID].found_sensor && !g_is_helium)
+		{
+			// Startup the LPS22HB
+			start_rak1902();
 		}
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
@@ -418,6 +453,7 @@ void app_event_handler(void)
 			// Reset the standard timer
 			if (g_lorawan_settings.send_repeat_time != 0)
 			{
+				MYLOG("APP", "Timer restarted");
 				api_timer_restart(g_lorawan_settings.send_repeat_time);
 			}
 		}

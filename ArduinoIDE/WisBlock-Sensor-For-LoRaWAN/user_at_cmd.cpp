@@ -248,6 +248,12 @@ atcmd_t g_user_at_cmd_list_soil[] = {
 	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet},
 };
 
+/**
+ * @brief Set RTC time
+ *
+ * @param str time as string, format <year>:<month>:<date>:<hour>:<minute>
+ * @return int 0 if successful, otherwise error value
+ */
 static int at_set_rtc(char *str)
 {
 	uint16_t year;
@@ -327,6 +333,11 @@ static int at_set_rtc(char *str)
 	return AT_ERRNO_PARA_NUM;
 }
 
+/**
+ * @brief Get RTC time
+ *
+ * @return int 0
+ */
 static int at_query_rtc(void)
 {
 	// Get date/time from the RTC
@@ -341,47 +352,70 @@ atcmd_t g_user_at_cmd_list_rtc[] = {
 	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, NULL},
 };
 
+/**
+ * @brief Get altitude
+ * @author kongduino
+ *
+ * @return int 0
+ */
+static int at_query_alt()
+{
+	if (found_sensors[PRESS_ID].found_sensor)
+	{
+		AT_PRINTF("Altitude RAK1902: %d cm\r\n", get_alt_rak1902());
+	}
+	if (found_sensors[ENV_ID].found_sensor)
+	{
+		AT_PRINTF("Altitude RAK1906: %d cm\r\n", get_alt_rak1906());
+	}
+	return 0;
+}
+
+/** Mean Sea Level Pressure */
+float at_MSL = 1013.25;
+
+/**
+ * @brief Set MSL
+ * @author kongduino
+ *
+ * @return int 0
+ */
+static int at_set_msl(char *str)
+{
+	long v = strtol(str, NULL, 0);
+	if ((v < 84000) || (v > 105000))
+	{
+		// in Pa, ie default 101325
+		return AT_ERRNO_PARA_VAL;
+	}
+	at_MSL = v / 100.0;
+	return 0;
+}
+
+/**
+ * @brief Structure for environment AT commands
+ * @author kongduino
+ *
+ */
+atcmd_t g_user_at_cmd_list_env[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// ENV commands
+	{"+ALT", "Get Altitude", at_query_alt, NULL, NULL},
+	{"+MSL", "Set MSL value", NULL, at_set_msl, NULL},
+};
+
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = 0;
 
+/** Pointer to the combined user AT command structure */
 atcmd_t *g_user_at_cmd_list;
-
-// atcmd_t g_user_at_cmd_list[] = {
-// 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// 	{"+dummy", "No function", NULL, NULL, NULL},
-// };
 
 #define TEST_ALL_CMDS 0
 
+/**
+ * @brief Initialize the user defined AT command list
+ *
+ */
 void init_user_at(void)
 {
 #if TEST_ALL_CMDS == 1
@@ -414,6 +448,11 @@ void init_user_at(void)
 
 		MYLOG("AT", "Structure size %d", required_structure_size);
 	}
+	if ((found_sensors[ENV_ID].found_sensor) || (found_sensors[PRESS_ID].found_sensor))
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_env);
+		MYLOG("AT", "Structure size %d", required_structure_size);
+	}
 
 	// Reserve memory for the structure
 	g_user_at_cmd_list = (atcmd_t *)malloc(required_structure_size);
@@ -442,6 +481,15 @@ void init_user_at(void)
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_rtc, sizeof(g_user_at_cmd_list_rtc));
 		index_next_cmds += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
 		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
+	}
+	if (found_sensors[ENV_ID].found_sensor)
+	{
+		MYLOG("AT", "Adding ENV user AT commands");
+		AT_PRINTF("\nAdding ENV user AT commands\n");
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_env, sizeof(g_user_at_cmd_list_env));
+		index_next_cmds += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
+		MYLOG("AT", "Index after adding env %d", index_next_cmds);
 	}
 
 #if TEST_ALL_CMDS == 1

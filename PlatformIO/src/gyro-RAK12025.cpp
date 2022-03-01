@@ -92,6 +92,10 @@ void int_callback_rak12025(void)
 	api_wake_loop(MOTION_TRIGGER);
 }
 
+/**
+ * @brief Reset the interrupt on the I3G4250D chip
+ * 
+ */
 void clear_int_rak12025(void)
 {
 	// gyro_sensor->I3G4250D_GetInterruptSrc();

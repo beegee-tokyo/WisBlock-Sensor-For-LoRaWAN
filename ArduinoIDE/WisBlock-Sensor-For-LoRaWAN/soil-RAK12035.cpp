@@ -129,7 +129,7 @@ void read_rak12035(void)
 #if WIRE_INTERFACES_COUNT > 1
 		Wire1.begin();
 #else
-		return false;
+		return;
 #endif
 	}
 

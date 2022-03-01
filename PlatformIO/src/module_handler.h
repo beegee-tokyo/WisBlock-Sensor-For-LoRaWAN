@@ -83,7 +83,9 @@ bool init_rak1901(void);
 void read_rak1901(void);
 void get_rak1901_values(float *values);
 bool init_rak1902(void);
+void start_rak1902(void);
 void read_rak1902(void);
+uint16_t get_alt_rak1902(void);
 bool init_rak1903(void);
 void read_rak1903();
 #define ACC_INT_PIN WB_IO3
@@ -92,6 +94,7 @@ void clear_int_rak1904(void);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
+uint16_t get_alt_rak1906(void);
 bool init_rak1921(void);
 void rak1921_add_line(char *line);
 void rak1921_show(void);
@@ -171,6 +174,10 @@ void get_sensor_values(void);
 
 extern float sensorPPM;
 extern float PPMpercentage;
+
+// Environment and barometric pressure sensor stuff
+extern float at_MSL;
+
 
 /** Soil sensor stuff */
 bool init_rak12035(void);

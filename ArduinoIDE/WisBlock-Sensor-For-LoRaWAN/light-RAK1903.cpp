@@ -103,7 +103,7 @@ bool init_rak1903(void)
 	if (found_sensors[LIGHT_ID].i2c_num == 1)
 	{
 		Wire.begin();
-		if (opt3001.begin(OPT3001_ADDRESS, Wire) != NO_ERROR)
+		if (opt3001.begin(OPT3001_ADDRESS) != NO_ERROR)
 		{
 			MYLOG("LIGHT", "Could not initialize SHTC3");
 			return false;

@@ -155,7 +155,11 @@ bool init_gnss(void)
 			}
 			else
 			{
+#if WIRE_INTERFACES_COUNT > 1
 				my_gnss.begin(Wire1);
+#else
+				return false;
+#endif
 			}
 		}
 		else
