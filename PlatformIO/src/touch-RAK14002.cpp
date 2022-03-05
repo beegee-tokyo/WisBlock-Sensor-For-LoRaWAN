@@ -56,6 +56,9 @@ bool init_rak14002(void)
 		return false;
 	}
 
+	// Set max sensitivity
+	touch_pad.setSensitivity(SENSITIVITY_128X);
+
 	// Set interupt pin as input
 	pinMode(TOUCH_INT_PIN, INPUT);
 	// Set the interrupt callback function

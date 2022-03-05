@@ -4,9 +4,9 @@
  * @brief 3-axis accelerometer functions
  * @version 0.3
  * @date 2022-01-29
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 
@@ -40,7 +40,7 @@ TwoWire *usedWire;
  */
 bool rak1904_writeRegister(uint8_t chip_reg, uint8_t dataToWrite)
 {
-	//Write the byte
+	// Write the byte
 	usedWire->beginTransmission(LIS3DH_DEFAULT_ADDRESS);
 	usedWire->write(chip_reg);
 	usedWire->write(dataToWrite);
@@ -63,7 +63,7 @@ bool rak1904_writeRegister(uint8_t chip_reg, uint8_t dataToWrite)
  */
 bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 {
-	//Return value
+	// Return value
 	uint8_t result;
 	uint8_t numBytes = 1;
 
@@ -84,9 +84,9 @@ bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 }
 
 /**
- * @brief Initialize LIS3DH 3-axis 
+ * @brief Initialize LIS3DH 3-axis
  * acceleration sensor
- * 
+ *
  * @return true If sensor was found and is initialized
  * @return false If sensor initialization failed
  */
@@ -155,8 +155,8 @@ bool init_rak1904(void)
 
 	// Select interrupt pin 1
 	data_to_write = 0;
-	data_to_write |= 0x40; //AOI1 event (Generator 1 interrupt on pin 1)
-	data_to_write |= 0x20; //AOI2 event ()
+	data_to_write |= 0x40; // AOI1 event (Generator 1 interrupt on pin 1)
+	data_to_write |= 0x20; // AOI2 event ()
 	rak1904_writeRegister(LIS3DH_REG_CTRL3, data_to_write);
 
 	// No interrupt on pin 2
@@ -188,7 +188,7 @@ bool init_rak1904(void)
 /**
  * @brief ACC interrupt handler
  * @note gives semaphore to wake up main loop
- * 
+ *
  */
 void int_callback_rak1904(void)
 {
@@ -197,7 +197,7 @@ void int_callback_rak1904(void)
 
 /**
  * @brief Clear ACC interrupt register to enable next wakeup
- * 
+ *
  */
 void clear_int_rak1904(void)
 {

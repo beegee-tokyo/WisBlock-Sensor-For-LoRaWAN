@@ -4,9 +4,9 @@
  * @brief Initialization and usage of RAK12002 RTC module
  * @version 0.1
  * @date 2022-02-18
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 #include <Melopero_RV3028.h>
@@ -18,7 +18,7 @@ date_time_s g_date_time;
 
 /**
  * @brief Initialize the RTC
- * 
+ *
  * @return true if success
  * @return false if failed
  */
@@ -59,7 +59,7 @@ bool init_rak12002(void)
 
 /**
  * @brief Set the RAK12002 date and time
- * 
+ *
  * @param year in 4 digit format, e.g. 2020
  * @param month 1 to 12
  * @param date 1 to 31
@@ -74,9 +74,9 @@ void set_rak12002(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint
 }
 
 /**
- * @brief Update g_data_time structure with current the date 
+ * @brief Update g_data_time structure with current the date
  *        and time from the RTC
- * 
+ *
  */
 void read_rak12002(void)
 {

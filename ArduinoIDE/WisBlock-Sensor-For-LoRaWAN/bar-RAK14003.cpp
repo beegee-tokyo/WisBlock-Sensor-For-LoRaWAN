@@ -4,9 +4,9 @@
  * @brief Initialize RAK14003 LED bar display and set function
  * @version 0.1
  * @date 2022-02-11
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 #include <Adafruit_MCP23X17.h>
@@ -70,7 +70,7 @@ bool init_rak14003(void)
 
 /**
  * @brief Set which LED's are on or off
- * 
+ *
  * @param leds 10 byte array, 1 = LED on, 0 = LED off
  */
 void set_rak14003(uint8_t *leds)

@@ -19,7 +19,7 @@ ADC121C021 MQ3;
 
 /**
  * @brief Initialize gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */

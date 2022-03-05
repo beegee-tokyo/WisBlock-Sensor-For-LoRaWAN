@@ -56,6 +56,9 @@ bool init_rak14002(void)
 		return false;
 	}
 
+	// Set max sensitivity
+	touch_pad.setSensitivity(SENSITIVITY_128X);
+
 	// Set interupt pin as input
 	pinMode(TOUCH_INT_PIN, INPUT);
 	// Set the interrupt callback function
@@ -73,7 +76,7 @@ bool init_rak14002(void)
  *     Data is added to Cayenne LPP payload as channels
  *     LPP_CHANNEL_TOUCH_1, LPP_CHANNEL_TOUCH_2
  *     LPP_CHANNEL_TOUCH_3
- * 
+ *
  */
 void get_rak14002(void)
 {
@@ -87,7 +90,7 @@ void get_rak14002(void)
 
 /**
  * @brief Read status of the touch pads after an touch interrupt
- * 
+ *
  */
 void read_rak14002(void)
 {

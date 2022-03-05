@@ -26,7 +26,7 @@ float sensorVoltage;
 
 /**
  * @brief Initialize the gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */

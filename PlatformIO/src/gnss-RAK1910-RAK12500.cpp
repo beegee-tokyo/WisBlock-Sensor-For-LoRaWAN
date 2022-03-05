@@ -425,7 +425,7 @@ void gnss_task(void *pvParameters)
 			{
 				g_solution_data.reset();
 			}
-			MYLOG("GNSS", "GNSS Task wake up, packet size is %d", g_solution_data.getSize());
+			MYLOG("GNSS", "GNSS Task wake up");
 			AT_PRINTF("+EVT:START_LOCATION\n");
 			// Get location
 			bool got_location = poll_gnss();

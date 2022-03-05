@@ -94,7 +94,7 @@ void int_callback_rak12025(void)
 
 /**
  * @brief Reset the interrupt on the I3G4250D chip
- * 
+ *
  */
 void clear_int_rak12025(void)
 {

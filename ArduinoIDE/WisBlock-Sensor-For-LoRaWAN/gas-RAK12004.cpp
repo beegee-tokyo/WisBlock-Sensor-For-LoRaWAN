@@ -24,7 +24,7 @@ float PPMpercentage;
 
 /**
  * @brief Initialize MQ2 gas sensor
- * 
+ *
  * @return true success
  * @return false failed
  */

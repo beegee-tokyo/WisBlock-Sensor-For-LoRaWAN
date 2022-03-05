@@ -446,6 +446,21 @@ void announce_modules(void)
 
 		// // Set delayed sending to 1/2 of programmed send interval or 30 seconds
 		// delayed_sending.begin(min_delay, send_delayed, NULL, false);
+		char mode_text[64] = {0};
+		if (g_gps_prec_6 && !g_is_helium)
+		{
+			snprintf(mode_text, 64, "+EVT:PREC_6_DIG\n");
+		}
+		else if (!g_gps_prec_6 && !g_is_helium)
+		{
+			snprintf(mode_text, 64, "+EVT:PREC_4_DIG\n");
+		}
+		else
+		{
+			snprintf(mode_text, 64, "+EVT:HELIUM_MAPPER\n");
+		}
+		AT_PRINTF(mode_text);
+		AT_PRINTF("============================\n");
 	}
 
 	// Delayed sending timer is used by several modules

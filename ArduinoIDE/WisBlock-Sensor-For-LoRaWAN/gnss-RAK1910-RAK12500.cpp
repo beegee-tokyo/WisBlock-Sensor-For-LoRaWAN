@@ -4,9 +4,9 @@
  * @brief GNSS functions and task
  * @version 0.3
  * @date 2022-01-29
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 #include <TinyGPS++.h>
@@ -39,7 +39,7 @@ uint8_t g_gnss_option = 0;
 
 /**
  * @brief Initialize GNSS module
- * 
+ *
  * @return true if GNSS module was found
  * @return false if no GNSS module was found
  */
@@ -89,10 +89,10 @@ bool init_gnss(void)
 			{
 				MYLOG("GNSS", "RAK12500 found on I2C");
 				i2c_gnss = true;
-				my_gnss.setI2COutput(COM_TYPE_UBX); //Set the I2C port to output UBX only (turn off NMEA noise)
+				my_gnss.setI2COutput(COM_TYPE_UBX); // Set the I2C port to output UBX only (turn off NMEA noise)
 				g_gnss_option = RAK12500_GNSS;
 
-				my_gnss.saveConfiguration(); //Save the current settings to flash and BBR
+				my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
 
 				my_gnss.setMeasurementRate(500);
 				return true;
@@ -175,7 +175,7 @@ bool init_gnss(void)
 
 /**
  * @brief Check GNSS module for position
- * 
+ *
  * @return true Valid position found
  * @return false No valid position
  */
@@ -403,7 +403,7 @@ bool poll_gnss(void)
 
 /**
  * @brief Task to read from GNSS module without stopping the loop
- * 
+ *
  * @param pvParameters unused
  */
 void gnss_task(void *pvParameters)
@@ -425,7 +425,7 @@ void gnss_task(void *pvParameters)
 			{
 				g_solution_data.reset();
 			}
-			MYLOG("GNSS", "GNSS Task wake up, packet size is %d", g_solution_data.getSize());
+			MYLOG("GNSS", "GNSS Task wake up");
 			AT_PRINTF("+EVT:START_LOCATION\n");
 			// Get location
 			bool got_location = poll_gnss();

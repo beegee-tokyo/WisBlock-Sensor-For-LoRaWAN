@@ -201,8 +201,7 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 
-Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [Cayenne_Ext_LPP](./Cayenne_Ext_LPP) ⤴️
-
+Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [decoders](./decoders) ⤴️
 
 ----
 
@@ -290,8 +289,7 @@ This guide can be used for **WisBlock Kit 2**, **WisBlock Kit 3**, **WisBlock GN
 
 ## Installing the modules
 The RAK1904 module _**MUST**_ be installed in     
-Slot C of RAK5005-O, RAK19007 or RAK19001
-Slot A of RAK19003
+Slot C of RAK5005-O, RAK19007, RAK19003 or RAK19001
 
 If using the RAK1910, it _**MUST**_ be installed in      
 Slot A of RAK5005-O        
@@ -305,6 +303,9 @@ For installation guides, following the Quick Start Guides in the [RAKwireless Do
 
 ## Firmware setup
 Setup the device using the [AT command interface](#over-usb) or the [BLE application](#over-ble)
+
+RAK11700 GNSS Tracker for LoRaWAN is the default start mode for this setup.     
+If building the Helium Mapper Kit, the mode _**MUST**_ be changed with the below AT command:
 
 The solution can be set to 3 different working modes using the AT command **`AT+GNSS`**:
 
@@ -342,6 +343,4 @@ Install the modules in any matching slot, following the Quick Start Guides in th
 
 ## Firmware setup
 Setup the device using the [AT command interface](#over-usb) or the [BLE application](#over-ble)
-
-----
 

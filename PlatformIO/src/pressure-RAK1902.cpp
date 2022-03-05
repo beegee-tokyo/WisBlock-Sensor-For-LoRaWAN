@@ -66,13 +66,13 @@ void read_rak1902(void)
 	sensors_event_t temp;
 	sensors_event_t pressure;
 
-time_t time_out = millis();
+	time_t time_out = millis();
 	bool good_reading = lps22hb.getEvent(&pressure, &temp);
 	while (!good_reading)
 	{
 		good_reading = lps22hb.getEvent(&pressure, &temp);
 		delay(100);
-		if ((millis()-time_out) > 1000)
+		if ((millis() - time_out) > 1000)
 		{
 			MYLOG("PRESS", "Timeout reading");
 			return;
@@ -82,7 +82,7 @@ time_t time_out = millis();
 
 	uint16_t press_int = (uint16_t)(pressure.pressure * 10);
 
-	MYLOG("PRESS", "P: %.2f", (float)press_int / 10.0);
+	MYLOG("PRESS", "P: %.2f MSL: %.2f", (float)press_int / 10.0, at_MSL);
 
 	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, press_int);
 
@@ -94,19 +94,33 @@ time_t time_out = millis();
  *        based on the barometric pressure
  *        Requires to have MSL set
  *
- * @return uint16_t
+ * @return uint16_t altitude in cm
  */
 uint16_t get_alt_rak1902(void)
 {
+	// Get latest values
+	start_rak1902();
+	delay(250);
+
 	MYLOG("PRESS", "Compute altitude");
 	sensors_event_t temp;
 	sensors_event_t pressure;
 	// pressure in HPa
-	lps22hb.getEvent(&pressure, &temp);
+	time_t time_out = millis();
+	bool good_reading = lps22hb.getEvent(&pressure, &temp);
+	while (!good_reading)
+	{
+		good_reading = lps22hb.getEvent(&pressure, &temp);
+		delay(100);
+		if ((millis() - time_out) > 1000)
+		{
+			MYLOG("PRESS", "Timeout reading");
+			return 0xFFFF;
+		}
+	}
 	MYLOG("PRESS", "P: %.2f", pressure.pressure);
-	
-	float read_pressure = pressure.pressure;
-	float A = read_pressure / at_MSL; // (1013.25) by default;
+
+	float A = pressure.pressure / at_MSL; // (1013.25) by default;
 	float B = 1 / 5.25588;
 	float C = pow(A, B);
 	C = 1.0 - C;

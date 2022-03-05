@@ -100,26 +100,32 @@ ClosedCube_OPT3001 opt3001;
  */
 bool init_rak1903(void)
 {
-	if (found_sensors[LIGHT_ID].i2c_num == 1)
+	Wire.begin();
+	if (opt3001.begin(OPT3001_ADDRESS) != NO_ERROR)
 	{
-		Wire.begin();
-		if (opt3001.begin(OPT3001_ADDRESS) != NO_ERROR)
-		{
-			MYLOG("LIGHT", "Could not initialize SHTC3");
-			return false;
-		}
-	}
-	else
-	{
-		// ClosedCube OPT3001 library supports only use of Wire
+		MYLOG("LIGHT", "Could not initialize SHTC3");
 		return false;
-		// Wire1.begin();
-		// if (opt3001.begin(OPT3001_ADDRESS, Wire1) != NO_ERROR)
-		// {
-		// 	MYLOG("LIGHT", "Could not initialize SHTC3");
-		// 	return false;
-		// }
 	}
+	// if (found_sensors[LIGHT_ID].i2c_num == 1)
+	// {
+	// 	Wire.begin();
+	// 	if (opt3001.begin(OPT3001_ADDRESS, Wire) != NO_ERROR)
+	// 	{
+	// 		MYLOG("LIGHT", "Could not initialize SHTC3");
+	// 		return false;
+	// 	}
+	// }
+	// else
+	// {
+	// ClosedCube OPT3001 library supports only use of Wire
+	// return false;
+	// Wire1.begin();
+	// if (opt3001.begin(OPT3001_ADDRESS, Wire1) != NO_ERROR)
+	// {
+	// 	MYLOG("LIGHT", "Could not initialize SHTC3");
+	// 	return false;
+	// }
+	// }
 
 	OPT3001_Config newConfig;
 

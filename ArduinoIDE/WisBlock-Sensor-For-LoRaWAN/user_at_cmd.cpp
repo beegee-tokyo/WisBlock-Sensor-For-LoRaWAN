@@ -360,19 +360,41 @@ atcmd_t g_user_at_cmd_list_rtc[] = {
  */
 static int at_query_alt()
 {
+	uint16_t result;
 	if (found_sensors[PRESS_ID].found_sensor)
 	{
-		AT_PRINTF("Altitude RAK1902: %d cm\r\n", get_alt_rak1902());
+		result = get_alt_rak1902();
+		if (result == 0xFFFF)
+		{
+			return AT_ERRNO_EXEC_FAIL;
+		}
+		AT_PRINTF("Altitude RAK1902: %d cm\r\n", result);
 	}
 	if (found_sensors[ENV_ID].found_sensor)
 	{
-		AT_PRINTF("Altitude RAK1906: %d cm\r\n", get_alt_rak1906());
+		result = get_alt_rak1906();
+		if (result == 0xFFFF)
+		{
+			return AT_ERRNO_EXEC_FAIL;
+		}
+		AT_PRINTF("Altitude RAK1906: %d cm\r\n", result);
 	}
 	return 0;
 }
 
 /** Mean Sea Level Pressure */
 float at_MSL = 1013.25;
+
+/**
+ * @brief Query the current MSL value
+ *
+ * @return int 0
+ */
+static int at_query_msl()
+{
+	AT_PRINTF("MSL: %d\r\n", at_MSL * 100);
+	return 0;
+}
 
 /**
  * @brief Set MSL
@@ -401,7 +423,7 @@ atcmd_t g_user_at_cmd_list_env[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// ENV commands
 	{"+ALT", "Get Altitude", at_query_alt, NULL, NULL},
-	{"+MSL", "Set MSL value", NULL, at_set_msl, NULL},
+	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, NULL},
 };
 
 /** Number of user defined AT commands */
@@ -485,7 +507,6 @@ void init_user_at(void)
 	if (found_sensors[ENV_ID].found_sensor)
 	{
 		MYLOG("AT", "Adding ENV user AT commands");
-		AT_PRINTF("\nAdding ENV user AT commands\n");
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_env, sizeof(g_user_at_cmd_list_env));
 		index_next_cmds += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);

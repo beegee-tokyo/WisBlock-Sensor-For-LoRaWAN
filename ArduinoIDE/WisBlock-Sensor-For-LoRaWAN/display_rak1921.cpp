@@ -4,9 +4,9 @@
  * @brief Initialization and usage of RAK1921 OLED
  * @version 0.1
  * @date 2022-02-18
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "app.h"
 #include <nRF_SSD1306Wire.h>

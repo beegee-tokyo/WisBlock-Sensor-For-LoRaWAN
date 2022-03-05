@@ -118,7 +118,7 @@ bool init_rak1903(void)
 	// else
 	// {
 	// ClosedCube OPT3001 library supports only use of Wire
-	return false;
+	// return false;
 	// Wire1.begin();
 	// if (opt3001.begin(OPT3001_ADDRESS, Wire1) != NO_ERROR)
 	// {
