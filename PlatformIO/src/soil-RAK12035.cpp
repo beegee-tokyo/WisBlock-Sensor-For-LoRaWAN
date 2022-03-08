@@ -41,9 +41,14 @@ bool init_rak12035(void)
 	bool found_sensor = false;
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
-	pinMode(WB_IO5, INPUT);
+	// pinMode(WB_IO5, INPUT);
+	pinMode(WB_IO4, OUTPUT);
+	digitalWrite(WB_IO4, LOW);
 
-	delay(500);
+	delay(100);
+	digitalWrite(WB_IO4, HIGH);
+
+	delay(400);
 
 	if (found_sensors[SOIL_ID].i2c_num == 1)
 	{
@@ -101,6 +106,12 @@ bool init_rak12035(void)
 
 	soil_sensor.sensor_sleep();
 
+	// The soil sensor need accelerometer in slot D */
+	if (found_sensors[ACC_ID].found_sensor)
+	{
+		MYLOG("SOIL", "Assing RAK1904 IRQ to WB_IO5");
+		int_assign_rak1904(WB_IO5);
+	}
 	return found_sensor;
 }
 
@@ -190,7 +201,7 @@ void read_rak12035(void)
 	MYLOG("SOIL", "Sensor reading was %s", got_value ? "success" : "unsuccessful");
 	MYLOG("SOIL", "T %.2f H %ld C %ld", (double)(avgTemp / 10.0), avgHumid, avgCap);
 
-	g_solution_data.addTemperature(LPP_CHANNEL_SOIL_TEMP, avgTemp);
+	g_solution_data.addTemperature(LPP_CHANNEL_SOIL_TEMP, (float)(avgTemp / 10.0));
 	g_solution_data.addRelativeHumidity(LPP_CHANNEL_SOIL_HUMID, avgHumid);
 	g_solution_data.addAnalogInput(LPP_CHANNEL_SOIL_HUMID_RAW, avgCap);
 	g_solution_data.addPresence(LPP_CHANNEL_SOIL_VALID, (got_value ? 1 : 0));

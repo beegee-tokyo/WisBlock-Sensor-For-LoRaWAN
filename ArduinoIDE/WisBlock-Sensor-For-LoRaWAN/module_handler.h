@@ -90,7 +90,10 @@ bool init_rak1903(void);
 void read_rak1903();
 #define ACC_INT_PIN WB_IO3
 bool init_rak1904(void);
+void int_assign_rak1904(uint8_t new_irq_pin);
 void clear_int_rak1904(void);
+bool init_rak1905(void);
+void clear_int_rak1905(void);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
@@ -159,6 +162,7 @@ void get_sensor_values(void);
 #define UVL_ID 18	  // RAK12019 UV light sensor
 #define TOUCH_ID 19	  // RAK14002 Touch Pad
 #define CURRENT_ID 20 // RAK16000 current sensor
+#define MPU_ID 21	  // RAk1905 9DOF sensor
 
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */

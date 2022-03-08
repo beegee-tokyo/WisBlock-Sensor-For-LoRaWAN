@@ -80,11 +80,9 @@ void read_rak1902(void)
 	}
 	MYLOG("PRESS", "Got valid reading");
 
-	uint16_t press_int = (uint16_t)(pressure.pressure * 10);
+	MYLOG("PRESS", "P: %.2f MSL: %.2f", pressure.pressure, at_MSL);
 
-	MYLOG("PRESS", "P: %.2f MSL: %.2f", (float)press_int / 10.0, at_MSL);
-
-	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, press_int);
+	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, pressure.pressure);
 
 	lps22hb.setDataRate(LPS22_RATE_ONE_SHOT); // LPS22_RATE_ONE_SHOT
 }

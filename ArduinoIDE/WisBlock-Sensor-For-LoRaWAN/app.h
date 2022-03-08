@@ -26,7 +26,7 @@
 #endif
 // ; patch version increase on bugfix, no affect on API
 #ifndef SW_VERSION_3
-#define SW_VERSION_3 2
+#define SW_VERSION_3 5
 #endif
 
 #include <Arduino.h>

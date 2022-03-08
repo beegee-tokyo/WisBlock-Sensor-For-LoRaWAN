@@ -38,14 +38,15 @@ sensors_t found_sensors[] = {
 	{0x53, 0, false}, // 18 ✔ RAK12019 LTR390 light sensor
 	{0x28, 0, false}, // 19 ✔ RAK14002 Touch Button module
 	{0x41, 0, false}, // 20 ✔ RAK16000 DC current sensor
-	{0x57, 0, false}, // 21 RAK12012 MAX30102 heart rate sensor
-	{0x54, 0, false}, // 22 RAK12016 Flex sensor
-	{0x47, 0, false}, // 23 RAK13004 PWM expander module
-	{0x38, 0, false}, // 24 RAK14001 RGB LED module
-	{0x5F, 0, false}, // 25 RAK14004 Keypad interface
-	{0x61, 0, false}, // 26 RAK16001 ADC sensor
-	{0x59, 0, false}, // 27 RAK13600 NFC
-	{0x59, 0, false}, // 28 RAK16002 Coulomb sensor
+	{0x68, 0, false}, // 21 ✔ RAK1905 MPU9250 9DOF sensor
+	{0x57, 0, false}, // 22 RAK12012 MAX30102 heart rate sensor
+	{0x54, 0, false}, // 23 RAK12016 Flex sensor
+	{0x47, 0, false}, // 24 RAK13004 PWM expander module
+	{0x38, 0, false}, // 25 RAK14001 RGB LED module
+	{0x5F, 0, false}, // 26 RAK14004 Keypad interface
+	{0x61, 0, false}, // 27 RAK16001 ADC sensor
+	{0x59, 0, false}, // 28 RAK13600 NFC
+	{0x59, 0, false}, // 29 RAK16002 Coulomb sensor
 					  //  {0x20, 0, false}, // RAK13003 IO expander module address conflict with RAK12035
 };
 
@@ -154,6 +155,22 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[GYRO_ID].found_sensor)
+	{
+		if (!init_rak12025())
+		{
+			found_sensors[GYRO_ID].found_sensor = false;
+			if (!init_rak1905())
+			{
+				found_sensors[MPU_ID].found_sensor = false;
+			}
+			else
+			{
+				found_sensors[MPU_ID].found_sensor = true;
+			}
+		}
+	}
+
 	if (found_sensors[ENV_ID].found_sensor)
 	{
 		if (init_rak1906())
@@ -246,14 +263,6 @@ void find_modules(void)
 			{
 				found_sensors[RTC_ID].found_sensor = true;
 			}
-		}
-	}
-
-	if (found_sensors[GYRO_ID].found_sensor)
-	{
-		if (!init_rak12025())
-		{
-			found_sensors[GYRO_ID].found_sensor = false;
 		}
 	}
 
@@ -393,6 +402,16 @@ void announce_modules(void)
 	else
 	{
 		AT_PRINTF("+EVT:RAK1904 OK\n");
+	}
+
+	if (!found_sensors[MPU_ID].found_sensor)
+	{
+		MYLOG("APP", "MPU error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK1905 OK\n");
 	}
 
 	if (!found_sensors[ENV_ID].found_sensor)

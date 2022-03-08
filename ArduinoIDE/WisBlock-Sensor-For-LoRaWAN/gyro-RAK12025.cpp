@@ -58,11 +58,18 @@ bool init_rak12025(void)
 	if (error != 0)
 	{
 		MYLOG("GYRO", "init fail");
+		return false;
 	}
 
 	// gyro_sensor->readRegister(0x0F, &id, 1);
 	gyro_sensor.readRegister(0x0F, &id, 1);
 	MYLOG("GYRO", "Gyroscope Device ID = %02X", id);
+
+	if (id != 0xD3)
+	{
+		MYLOG("GYRO", "wrong ID");
+		return false;
+	}
 
 	/* The value of 1 LSB of the threshold corresponds to ~7.5 mdps
 	 * Set Threshold ~100 dps on X, Y and Z axis

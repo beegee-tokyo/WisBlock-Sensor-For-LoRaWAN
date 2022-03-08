@@ -29,6 +29,9 @@ Adafruit_LIS3DH *acc_sensor;
 /** For internal usage */
 TwoWire *usedWire;
 
+/** Interrupt pin, depends on slot */
+uint8_t acc_int_pin = ACC_INT_PIN;
+
 /**
  * @brief Read RAK1904 register
  *     Added here because Adafruit made that function private :-(
@@ -93,7 +96,7 @@ bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 bool init_rak1904(void)
 {
 	// Setup interrupt pin
-	pinMode(ACC_INT_PIN, INPUT);
+	pinMode(acc_int_pin, INPUT);
 
 	if (found_sensors[ACC_ID].i2c_num == 1)
 	{
@@ -180,9 +183,21 @@ bool init_rak1904(void)
 	clear_int_rak1904();
 
 	// Set the interrupt callback function
-	attachInterrupt(ACC_INT_PIN, int_callback_rak1904, RISING);
+	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 
 	return true;
+}
+
+/**
+ * @brief Assign/reassing interrupt pin
+ *
+ * @param new_irq_pin new GPIO to assign to interrupt
+ */
+void int_assign_rak1904(uint8_t new_irq_pin)
+{
+	detachInterrupt(acc_int_pin);
+	acc_int_pin = new_irq_pin;
+	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 }
 
 /**
@@ -192,6 +207,7 @@ bool init_rak1904(void)
  */
 void int_callback_rak1904(void)
 {
+	detachInterrupt(acc_int_pin);
 	api_wake_loop(MOTION_TRIGGER);
 }
 
@@ -202,4 +218,5 @@ void int_callback_rak1904(void)
 void clear_int_rak1904(void)
 {
 	acc_sensor->readAndClearInterrupt();
+	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 }

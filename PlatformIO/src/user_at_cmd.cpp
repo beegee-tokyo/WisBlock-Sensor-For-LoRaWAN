@@ -387,7 +387,7 @@ float at_MSL = 1013.25;
 
 /**
  * @brief Query the current MSL value
- * 
+ *
  * @return int 0
  */
 static int at_query_msl()

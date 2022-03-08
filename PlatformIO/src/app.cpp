@@ -178,6 +178,59 @@ bool init_app(void)
  */
 void app_event_handler(void)
 {
+#ifdef NRF52_SERIES
+#if MY_DEBUG > 0
+	// dbgMemInfo();
+	if ((g_task_event_type & STATUS) == STATUS)
+	{
+		MYLOG("APP", "STATUS WAKEUP");
+	}
+	if ((g_task_event_type & VOC_REQ) == VOC_REQ)
+	{
+		MYLOG("APP", "VOC_REQ WAKEUP");
+	}
+	if ((g_task_event_type & MOTION_TRIGGER) == MOTION_TRIGGER)
+	{
+		MYLOG("APP", "MOTION_TRIGGER WAKEUP");
+	}
+	if ((g_task_event_type & TOUCH_EVENT) == TOUCH_EVENT)
+	{
+		MYLOG("APP", "TOUCH_EVENT WAKEUP");
+	}
+	if ((g_task_event_type & GNSS_FIN) == GNSS_FIN)
+	{
+		MYLOG("APP", "GNSS_FIN WAKEUP");
+	}
+	if ((g_task_event_type & BLE_CONFIG) == BLE_CONFIG)
+	{
+		MYLOG("APP", "BLE_CONFIG WAKEUP");
+	}
+	if ((g_task_event_type & BLE_DATA) == BLE_DATA)
+	{
+		MYLOG("APP", "BLE_DATA WAKEUP");
+	}
+	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
+	{
+		MYLOG("APP", "LORA_DATA WAKEUP");
+	}
+	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
+	{
+		MYLOG("APP", "LORA_TX_FIN WAKEUP");
+	}
+	if ((g_task_event_type & AT_CMD) == AT_CMD)
+	{
+		MYLOG("APP", "AT_CMD WAKEUP");
+	}
+	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+	{
+		MYLOG("APP", "LORA_JOIN_FIN WAKEUP");
+	}
+	char buffer[64] = {0};
+	itoa(g_task_event_type, buffer, 2);
+	MYLOG("APP", "Wakeup Flag %s", buffer);
+#endif
+#endif
+
 	// Timer triggered event
 	if ((g_task_event_type & STATUS) == STATUS)
 	{
@@ -368,11 +421,24 @@ void app_event_handler(void)
 				MYLOG("APP", "Gyro triggered");
 				clear_int_rak12025();
 			}
-
-			if (found_sensors[SOIL_ID].found_sensor && g_enable_ble)
+			if (found_sensors[MPU_ID].found_sensor)
 			{
-				// If BLE is enabled, restart Advertising
+				MYLOG("APP", "MPU triggered");
+				clear_int_rak1905();
+			}
+
+			// If BLE is enabled, restart Advertising
+			if (g_enable_ble)
+			{
 				restart_advertising(15);
+			}
+
+			// If it is the soil moisture sensor, just switch on BLE and do nothing else
+			if (found_sensors[SOIL_ID].found_sensor)
+			{
+				char buffer[64] = {0};
+				itoa(g_task_event_type, buffer, 2);
+				MYLOG("APP", "Leaving app handler - Wakeup Flag %s", buffer);
 				return;
 			}
 		}
@@ -484,6 +550,12 @@ void app_event_handler(void)
 		}
 		// Reset the packet
 		g_solution_data.reset();
+	}
+
+	{
+		char buffer[64] = {0};
+		itoa(g_task_event_type, buffer, 2);
+		MYLOG("APP", "Leaving app handler - Wakeup Flag %s", buffer);
 	}
 }
 
