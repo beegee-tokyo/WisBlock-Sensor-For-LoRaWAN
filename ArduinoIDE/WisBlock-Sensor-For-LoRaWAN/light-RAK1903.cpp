@@ -1,5 +1,5 @@
 /**
- * @file light.cpp
+ * @file light-RAK1903.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialize and read data from OPT3001 sensor
  * @version 0.2

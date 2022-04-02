@@ -183,6 +183,7 @@ bool init_rak1904(void)
 	clear_int_rak1904();
 
 	// Set the interrupt callback function
+	MYLOG("ACC", "Int pin %s", acc_int_pin == WB_IO3 ? "WB_IO3" : "WB_IO5");
 	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 
 	return true;

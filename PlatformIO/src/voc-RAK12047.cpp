@@ -109,8 +109,8 @@ bool init_rak12047(void)
 	// Reset discard counter
 	discard_counter = 0;
 
-	// Set delayed sending to 1/2 of programmed send interval or 30 seconds
-	voc_read_timer.begin(1000, voc_read_wakeup, NULL, true);
+	// Set VOC reading interval to 10 seconds
+	voc_read_timer.begin(10000, voc_read_wakeup, NULL, true);
 	voc_read_timer.start();
 
 	return true;

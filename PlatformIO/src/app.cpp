@@ -30,6 +30,9 @@ bool g_gps_prec_6 = true;
 /** Switch between Cayenne LPP and Helium Mapper data packet */
 bool g_is_helium = false;
 
+/** Flag for battery protection enabled */
+bool battery_check_enabled = false;
+
 // Forward declaration
 void send_delayed(TimerHandle_t unused);
 void at_settings(void);
@@ -50,6 +53,15 @@ WisCayenne g_solution_data(255);
 bool init_result = true;
 
 char disp_txt[64] = {0};
+
+// /** Structure for multicast group entry */
+// MulticastParams_t test_multicast;
+// /** Multicast network session key, must be the same as in the Multicast group in the LNS **/
+// uint8_t _mc_nwskey[] = {0xc2, 0x52, 0x19, 0xc3, 0x69, 0xae, 0x0a, 0xc4, 0xa9, 0x17, 0x61, 0xee, 0x1b, 0x8d, 0xc4, 0xc5};
+// /** Multicast application session key, must be the same as in the Multicast group in the LNS **/
+// uint8_t _mc_appskey[] = {0x03, 0x76, 0xc3, 0xe7, 0x99, 0x3c, 0xe1, 0xcd, 0x64, 0xa6, 0x6d, 0xa0, 0x70, 0x88, 0xcc, 0xad};
+// /** Multicast device address, must be the same as in the Multicast group in the LNS **/
+// uint32_t _mc_devaddr = 0x7bca00be;
 
 /**
  * @brief Application specific setup functions
@@ -101,6 +113,9 @@ bool init_app(void)
 	MYLOG("APP", "init_app");
 
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
+
+	// Get the battery check setting
+	read_batt_settings();
 
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
@@ -288,20 +303,23 @@ void app_event_handler(void)
 			rak1921_add_line(disp_txt);
 		}
 
-		// Protection against battery drain
-		if (batt_level_f < 2900)
+		// Protection against battery drain if battery check is enabled
+		if (battery_check_enabled)
 		{
-			// Battery is very low, change send time to 1 hour to protect battery
-			low_batt_protection = true; // Set low_batt_protection active
-			api_timer_restart(1 * 60 * 60 * 1000);
-			MYLOG("APP", "Battery protection activated");
-		}
-		else if ((batt_level_f > 4100) && low_batt_protection)
-		{
-			// Battery is higher than 4V, change send time back to original setting
-			low_batt_protection = false;
-			api_timer_restart(g_lorawan_settings.send_repeat_time);
-			MYLOG("APP", "Battery protection deactivated");
+			if (batt_level_f < 2900)
+			{
+				// Battery is very low, change send time to 1 hour to protect battery
+				low_batt_protection = true; // Set low_batt_protection active
+				api_timer_restart(1 * 60 * 60 * 1000);
+				MYLOG("APP", "Battery protection activated");
+			}
+			else if ((batt_level_f > 4100) && low_batt_protection)
+			{
+				// Battery is higher than 4V, change send time back to original setting
+				low_batt_protection = false;
+				api_timer_restart(g_lorawan_settings.send_repeat_time);
+				MYLOG("APP", "Battery protection deactivated");
+			}
 		}
 
 		// Just as an example, RAK14008 is used to display the status of the battery
@@ -322,6 +340,11 @@ void app_event_handler(void)
 			{
 				// Read environment data
 				read_rak1906();
+			}
+			if (found_sensors[PRESS_ID].found_sensor)
+			{
+				// Read environment data
+				read_rak1902();
 			}
 
 			MYLOG("APP", "Packetsize %d", g_solution_data.getSize());
@@ -509,12 +532,15 @@ void app_event_handler(void)
 
 #if MY_DEBUG == 1
 		uint8_t *packet_buff = g_solution_data.getBuffer();
+		char ble_out[256] = {0};
 		for (int idx = 0; idx < g_solution_data.getSize(); idx++)
 		{
-			Serial.printf("%02X", packet_buff[idx]);
+			// Serial.printf("%02X", packet_buff[idx]);
+			sprintf(&ble_out[idx * 2], "%02X", packet_buff[idx]);
 		}
-		Serial.println("");
-		Serial.printf("Packetsize %d\n", g_solution_data.getSize());
+		// Serial.println("");
+		// Serial.printf("Packetsize %d\n", g_solution_data.getSize());
+		MYLOG("APP", "Size %d - Pckg: %s", g_solution_data.getSize(), ble_out);
 #endif
 
 		if (g_lorawan_settings.lorawan_enable)
@@ -613,6 +639,13 @@ void lora_data_handler(void)
 			MYLOG("APP", "Successfully joined network");
 			AT_PRINTF("+EVT:JOINED\n");
 			last_pos_send = millis();
+
+			// // Add Multicast support
+			// test_multicast.Address = _mc_devaddr;
+			// memcpy(test_multicast.NwkSKey, _mc_nwskey, 16);
+			// memcpy(test_multicast.AppSKey, _mc_appskey, 16);
+			// LoRaMacStatus_t result = LoRaMacMulticastChannelLink(&test_multicast);
+			// MYLOG("APP", "MC setup result = %d", result);
 		}
 		else
 		{

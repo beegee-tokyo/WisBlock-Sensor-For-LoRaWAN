@@ -1,5 +1,5 @@
 /**
- * @file soil.cpp
+ * @file soil-RAK12035.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Soil sensor initialization and readings
  * @version 0.1

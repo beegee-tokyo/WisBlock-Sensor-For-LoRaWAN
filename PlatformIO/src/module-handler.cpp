@@ -23,31 +23,33 @@ sensors_t found_sensors[] = {
 	{0x5c, 0, false}, //  3 ✔ RAK1902 barometric pressure sensor
 	{0x70, 0, false}, //  4 ✔ RAK1901 temperature & humidity sensor
 	{0x76, 0, false}, //  5 ✔ RAK1906 environment sensor
-	{0x20, 0, false}, //  6 ✔ RAK12035 soil moisture sensor
+	{0x20, 0, false}, //  6 ✔ RAK12035 soil moisture sensor !! address conflict with RAK13003
 	{0x10, 0, false}, //  7 ✔ RAK12010 light sensor
 	{0x51, 0, false}, //  8 ✔ RAK12004 MQ2 CO2 gas sensor
 	{0x50, 0, false}, //  9 ✔ RAK12008 MG812 CO2 gas sensor
 	{0x55, 0, false}, // 10 ✔ RAK12009 MQ3 Alcohol gas sensor
-	{0x52, 0, false}, // 11 ✔ RAK12014 Laser ToF sensor
-	{0x52, 0, false}, // 12 ✔ RAK12002 RTC module
+	{0x52, 0, false}, // 11 ✔ RAK12014 Laser ToF sensor !! address conflict with RAK12002
+	{0x52, 0, false}, // 12 ✔ RAK12002 RTC module address !! conflict with RAK12014
 	{0x04, 0, false}, // 13 ✔ RAK14003 LED bargraph module
-	{0x59, 0, false}, // 14 ✔ RAK12047 VOC sensor
-	{0x68, 0, false}, // 15 ✔ RAK12025 Gyroscope
+	{0x59, 0, false}, // 14 ✔ RAK12047 VOC sensor address !! conflict with RAK13600, RAK13003
+	{0x68, 0, false}, // 15 ✔ RAK12025 Gyroscope address !! conflict with RAK1905
 	{0x73, 0, false}, // 16 ✔ RAK14008 Gesture sensor
 	{0x3C, 0, false}, // 17 ✔ RAK1921 OLED display
 	{0x53, 0, false}, // 18 ✔ RAK12019 LTR390 light sensor
 	{0x28, 0, false}, // 19 ✔ RAK14002 Touch Button module
 	{0x41, 0, false}, // 20 ✔ RAK16000 DC current sensor
-	{0x68, 0, false}, // 21 ✔ RAK1905 MPU9250 9DOF sensor
-	{0x57, 0, false}, // 22 RAK12012 MAX30102 heart rate sensor
-	{0x54, 0, false}, // 23 RAK12016 Flex sensor
-	{0x47, 0, false}, // 24 RAK13004 PWM expander module
-	{0x38, 0, false}, // 25 RAK14001 RGB LED module
-	{0x5F, 0, false}, // 26 RAK14004 Keypad interface
-	{0x61, 0, false}, // 27 RAK16001 ADC sensor
-	{0x59, 0, false}, // 28 RAK13600 NFC
-	{0x59, 0, false}, // 29 RAK16002 Coulomb sensor
-					  //  {0x20, 0, false}, // RAK13003 IO expander module address conflict with RAK12035
+	{0x68, 0, false}, // 21 ✔ RAK1905 MPU9250 9DOF sensor !! address conflict with RAK12025
+	{0x61, 0, false}, // 22 ✔ RAK12037 CO2 sensor !! address conflict with RAK16001
+	{0x3A, 0, false}, // 23 RAK12003 IR temperature sensor
+	{0x57, 0, false}, // 24 RAK12012 MAX30102 heart rate sensor
+	{0x54, 0, false}, // 25 RAK12016 Flex sensor
+	{0x47, 0, false}, // 26 RAK13004 PWM expander module
+	{0x38, 0, false}, // 27 RAK14001 RGB LED module
+	{0x5F, 0, false}, // 28 RAK14004 Keypad interface
+	{0x61, 0, false}, // 29 RAK16001 ADC sensor !! address conflict with RAK12037
+	{0x59, 0, false}, // 30 RAK13600 NFC !! address conflict with RAK12047, RAK13600
+	{0x59, 0, false}, // 31 RAK16002 Coulomb sensor !! address conflict with RAK13600, RAK12047
+	{0x20, 0, false}, // 32 RAK13003 IO expander module !! address conflict with RAK12035
 };
 
 /**
@@ -68,7 +70,7 @@ void find_modules(void)
 		error = Wire.endTransmission();
 		if (error == 0)
 		{
-			MYLOG("SCAN", "Found sensor at I2C1 0x%02X\n", address);
+			// MYLOG("SCAN", "Found sensor at I2C1 0x%02X\n", address);
 			for (uint8_t i = 0; i < sizeof(found_sensors) / sizeof(sensors_t); i++)
 			{
 				if (address == found_sensors[i].i2c_addr)
@@ -96,7 +98,7 @@ void find_modules(void)
 		error = Wire1.endTransmission();
 		if (error == 0)
 		{
-			MYLOG("SCAN", "Found sensor at I2C2 %02X", address);
+			// MYLOG("SCAN", "Found sensor at I2C2 %02X", address);
 			for (uint8_t i = 0; i < sizeof(found_sensors) / sizeof(sensors_t); i++)
 			{
 				if (address == found_sensors[i].i2c_addr)
@@ -117,7 +119,13 @@ void find_modules(void)
 	}
 #endif
 	MYLOG("SCAN", "Found %d sensors", num_dev);
-
+	for (uint8_t i = 0; i < sizeof(found_sensors) / sizeof(sensors_t); i++)
+	{
+		if (found_sensors[i].found_sensor)
+		{
+			MYLOG("SCAN", "ID %d addr %02X", i, found_sensors[i].i2c_addr);
+		}
+	}
 	// Initialize the modules found
 	if (found_sensors[TEMP_ID].found_sensor)
 	{
@@ -231,6 +239,18 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[CO2_ID].found_sensor)
+	{
+		if (init_rak12037())
+		{
+			snprintf(g_ble_dev_name, 9, "RAK_GAS");
+		}
+		else
+		{
+			found_sensors[CO2_ID].found_sensor = false;
+		}
+	}
+
 	if (found_sensors[LIGHT2_ID].found_sensor)
 	{
 		if (init_rak12010())
@@ -304,7 +324,16 @@ void find_modules(void)
 
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
-		snprintf(g_ble_dev_name, 9, "RAK_GNSS");
+		if (init_gnss())
+		{
+			found_sensors[GNSS_ID].found_sensor = true;
+			snprintf(g_ble_dev_name, 9, "RAK_GNSS");
+		}
+		else
+		{
+			found_sensors[GNSS_ID].found_sensor = false;
+			// MYLOG("APP", "GNSS failed");
+		}
 	}
 	else
 	{
@@ -316,9 +345,10 @@ void find_modules(void)
 		else
 		{
 			found_sensors[GNSS_ID].found_sensor = false;
-			MYLOG("APP", "GNSS failed");
+			// MYLOG("APP", "GNSS failed");
 		}
 	}
+
 	if (found_sensors[VOC_ID].found_sensor)
 	{
 		MYLOG("APP", "Initialize RAK12047");
@@ -363,7 +393,7 @@ void announce_modules(void)
 {
 	if (!found_sensors[TEMP_ID].found_sensor)
 	{
-		MYLOG("APP", "SHTC3 error");
+		// MYLOG("APP", "SHTC3 error");
 		init_result = false;
 	}
 	else
@@ -374,7 +404,7 @@ void announce_modules(void)
 
 	if (!found_sensors[PRESS_ID].found_sensor)
 	{
-		MYLOG("APP", "LPS22HB error");
+		// MYLOG("APP", "LPS22HB error");
 		init_result = false;
 	}
 	else
@@ -385,7 +415,7 @@ void announce_modules(void)
 
 	if (!found_sensors[LIGHT_ID].found_sensor)
 	{
-		MYLOG("APP", "OPT3001 error");
+		// MYLOG("APP", "OPT3001 error");
 		init_result = false;
 	}
 	else
@@ -396,7 +426,7 @@ void announce_modules(void)
 
 	if (!found_sensors[ACC_ID].found_sensor)
 	{
-		MYLOG("APP", "ACC error");
+		// MYLOG("APP", "ACC error");
 		init_result = false;
 	}
 	else
@@ -406,7 +436,7 @@ void announce_modules(void)
 
 	if (!found_sensors[MPU_ID].found_sensor)
 	{
-		MYLOG("APP", "MPU error");
+		// MYLOG("APP", "MPU error");
 		init_result = false;
 	}
 	else
@@ -416,7 +446,7 @@ void announce_modules(void)
 
 	if (!found_sensors[ENV_ID].found_sensor)
 	{
-		MYLOG("APP", "BME680 error");
+		// MYLOG("APP", "BME680 error");
 		init_result = false;
 	}
 	else
@@ -426,7 +456,7 @@ void announce_modules(void)
 
 	if (!found_sensors[GNSS_ID].found_sensor)
 	{
-		MYLOG("APP", "GNSS error");
+		// MYLOG("APP", "GNSS error");
 		init_result = false;
 	}
 	else
@@ -498,7 +528,7 @@ void announce_modules(void)
 	delayed_sending.begin(min_delay, send_delayed, NULL, false);
 	if (!found_sensors[OLED_ID].found_sensor)
 	{
-		MYLOG("APP", "OLED error");
+		// MYLOG("APP", "OLED error");
 		init_result = false;
 	}
 	else
@@ -508,7 +538,7 @@ void announce_modules(void)
 
 	if (!found_sensors[RTC_ID].found_sensor)
 	{
-		MYLOG("APP", "RTC error");
+		// MYLOG("APP", "RTC error");
 		init_result = false;
 	}
 	else
@@ -519,7 +549,7 @@ void announce_modules(void)
 
 	if (!found_sensors[MQ2_ID].found_sensor)
 	{
-		MYLOG("APP", "MQ2 error");
+		// MYLOG("APP", "MQ2 error");
 		init_result = false;
 	}
 	else
@@ -530,7 +560,7 @@ void announce_modules(void)
 
 	if (!found_sensors[MG812_ID].found_sensor)
 	{
-		MYLOG("APP", "MG812 error");
+		// MYLOG("APP", "MG812 error");
 		init_result = false;
 	}
 	else
@@ -541,7 +571,7 @@ void announce_modules(void)
 
 	if (!found_sensors[MQ3_ID].found_sensor)
 	{
-		MYLOG("APP", "MQ3 error");
+		// MYLOG("APP", "MQ3 error");
 		init_result = false;
 	}
 	else
@@ -550,9 +580,20 @@ void announce_modules(void)
 		read_rak12009();
 	}
 
+	if (!found_sensors[CO2_ID].found_sensor)
+	{
+		// MYLOG("APP", "SCD30 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12037 OK\n");
+		read_rak12037();
+	}
+
 	if (!found_sensors[LIGHT2_ID].found_sensor)
 	{
-		MYLOG("APP", "VEML7700 error");
+		// MYLOG("APP", "VEML7700 error");
 		init_result = false;
 	}
 	else
@@ -563,7 +604,7 @@ void announce_modules(void)
 
 	if (!found_sensors[TOF_ID].found_sensor)
 	{
-		MYLOG("APP", "VL53L01 error");
+		// MYLOG("APP", "VL53L01 error");
 		init_result = false;
 	}
 	else
@@ -574,7 +615,7 @@ void announce_modules(void)
 
 	if (!found_sensors[UVL_ID].found_sensor)
 	{
-		MYLOG("APP", "LTR390 error");
+		// MYLOG("APP", "LTR390 error");
 		init_result = false;
 	}
 	else
@@ -585,7 +626,7 @@ void announce_modules(void)
 
 	if (!found_sensors[GYRO_ID].found_sensor)
 	{
-		MYLOG("APP", "I3G4240D error");
+		// MYLOG("APP", "I3G4240D error");
 		init_result = false;
 	}
 	else
@@ -596,7 +637,7 @@ void announce_modules(void)
 
 	if (!found_sensors[SOIL_ID].found_sensor)
 	{
-		MYLOG("APP", "Soil Sensor error");
+		// MYLOG("APP", "Soil Sensor error");
 		init_result = false;
 	}
 	else
@@ -606,7 +647,7 @@ void announce_modules(void)
 
 	if (!found_sensors[VOC_ID].found_sensor)
 	{
-		MYLOG("APP", "SGP40 Sensor error");
+		// MYLOG("APP", "SGP40 Sensor error");
 		init_result = false;
 	}
 	else
@@ -616,7 +657,7 @@ void announce_modules(void)
 
 	if (!found_sensors[TOUCH_ID].found_sensor)
 	{
-		MYLOG("APP", "Touch Pad error");
+		// MYLOG("APP", "Touch Pad error");
 		init_result = false;
 	}
 	else
@@ -626,7 +667,7 @@ void announce_modules(void)
 
 	if (!found_sensors[BAR_ID].found_sensor)
 	{
-		MYLOG("APP", "LED_BAR error");
+		// MYLOG("APP", "LED_BAR error");
 		init_result = false;
 	}
 	else
@@ -638,7 +679,7 @@ void announce_modules(void)
 
 	if (!found_sensors[GESTURE_ID].found_sensor)
 	{
-		MYLOG("APP", "PAJ7620 error");
+		// MYLOG("APP", "PAJ7620 error");
 		init_result = false;
 	}
 	else
@@ -648,7 +689,7 @@ void announce_modules(void)
 
 	if (!found_sensors[CURRENT_ID].found_sensor)
 	{
-		MYLOG("APP", "INA219 error");
+		// MYLOG("APP", "INA219 error");
 		init_result = false;
 	}
 	else
@@ -668,21 +709,21 @@ void get_sensor_values(void)
 		// Read environment data
 		read_rak1901();
 	}
-	if (found_sensors[PRESS_ID].found_sensor)
-	{
-		// Read environment data
-		read_rak1902();
-	}
+	// if (found_sensors[PRESS_ID].found_sensor)
+	// {
+	// 	// Read environment data
+	// 	read_rak1902();
+	// }
 	if (found_sensors[LIGHT_ID].found_sensor)
 	{
 		// Read environment data
 		read_rak1903();
 	}
-	if (found_sensors[ENV_ID].found_sensor)
-	{
-		// Start reading environment data
-		start_rak1906();
-	}
+	// if (found_sensors[ENV_ID].found_sensor)
+	// {
+	// 	// Start reading environment data
+	// 	start_rak1906();
+	// }
 	if (found_sensors[MQ2_ID].found_sensor)
 	{
 		// Get the MQ2 sensor values
@@ -697,6 +738,11 @@ void get_sensor_values(void)
 	{
 		// Get the MQ3 sensor values
 		read_rak12009();
+	}
+	if (found_sensors[CO2_ID].found_sensor)
+	{
+		// Get the CO2 sensor values
+		read_rak12037();
 	}
 	if (found_sensors[LIGHT2_ID].found_sensor)
 	{

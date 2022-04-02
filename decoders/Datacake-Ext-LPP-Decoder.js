@@ -217,6 +217,9 @@ function Decoder(bytes, fPort) {
 	lppDecode(bytes, 1).forEach(function (field) {
 		response[field['name'] + '_' + field['channel']] = field['value'];
 	});
+	response['LORA_RSSI'] = (!!normalizedPayload.gateways && !!normalizedPayload.gateways[0] && normalizedPayload.gateways[0].rssi) || 0;
+	response['LORA_SNR'] = (!!normalizedPayload.gateways && !!normalizedPayload.gateways[0] && normalizedPayload.gateways[0].snr) || 0;
+	response['LORA_DATARATE'] = normalizedPayload.data_rate;
 	return response;
 
 }

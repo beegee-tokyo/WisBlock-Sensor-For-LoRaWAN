@@ -1,5 +1,5 @@
 /**
- * @file user_at.cpp
+ * @file user_at_cmd.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Handle user defined AT commands
  * @version 0.3
@@ -20,8 +20,14 @@ static const char gnss_name[] = "GNSS";
 /** Filename to save data format setting */
 static const char helium_format[] = "HELIUM";
 
+/** Filename to save GPS precision setting */
+static const char batt_name[] = "BATT";
+
 /** File to save GPS precision setting */
 File gps_file(InternalFS);
+
+/** File to save battery check status */
+File batt_check(InternalFS);
 
 #define AT_PRINTF(...)                  \
 	Serial.printf(__VA_ARGS__);         \
@@ -426,6 +432,89 @@ atcmd_t g_user_at_cmd_list_env[] = {
 	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, NULL},
 };
 
+/**
+ * @brief Enable/Disable battery check
+ *
+ * @param str
+ * @return int
+ */
+static int at_set_batt_check(char *str)
+{
+	long check_bat_request = strtol(str, NULL, 0);
+	if (check_bat_request == 1)
+	{
+		battery_check_enabled = true;
+		save_batt_settings(battery_check_enabled);
+	}
+	else if (check_bat_request == 0)
+	{
+		battery_check_enabled = false;
+		save_batt_settings(battery_check_enabled);
+	}
+	else
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	return 0;
+}
+
+/**
+ * @brief Enable/Disable battery check
+ *
+ * @return int 0
+ */
+static int at_query_batt_check(void)
+{
+	// Wet calibration value query
+	AT_PRINTF("Battery check is %s", battery_check_enabled ? "enabled" : "disabled");
+	return 0;
+}
+
+/**
+ * @brief Read saved setting for precision and packet format
+ *
+ */
+void read_batt_settings(void)
+{
+	if (InternalFS.exists(batt_name))
+	{
+		battery_check_enabled = true;
+		MYLOG("USR_AT", "File found, enable battery check");
+	}
+	else
+	{
+		battery_check_enabled = false;
+		MYLOG("USR_AT", "File not found, disable battery check");
+	}
+	save_batt_settings(battery_check_enabled);
+}
+
+/**
+ * @brief Save the GPS settings
+ *
+ */
+void save_batt_settings(bool check_batt_enables)
+{
+	if (check_batt_enables)
+	{
+		batt_check.open(batt_name, FILE_O_WRITE);
+		batt_check.write("1");
+		batt_check.close();
+		MYLOG("USR_AT", "Created File for battery protection enabled");
+	}
+	else
+	{
+		InternalFS.remove(batt_name);
+		MYLOG("USR_AT", "Remove File for battery protection enabled");
+	}
+}
+
+atcmd_t g_user_at_cmd_list_batt[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// Battery check commands
+	{"+BATCHK", "Enable/Disable the battery charge check", at_query_batt_check, at_set_batt_check, NULL},
+};
+
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = 0;
 
@@ -450,67 +539,73 @@ void init_user_at(void)
 #endif
 
 	uint16_t index_next_cmds = 0;
-	uint16_t required_structure_size = 0;
+	uint16_t required_structure_size = sizeof(g_user_at_cmd_list_batt);
+
 	// Get required size of structure
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		required_structure_size += sizeof(g_user_at_cmd_list_soil);
 
-		MYLOG("AT", "Structure size %d", required_structure_size);
+		MYLOG("USR_AT", "Structure size %d Soil", required_structure_size);
 	}
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
 		required_structure_size += sizeof(g_user_at_cmd_list_gps);
 
-		MYLOG("AT", "Structure size %d", required_structure_size);
+		MYLOG("USR_AT", "Structure size %d GNSS", required_structure_size);
 	}
 	if (found_sensors[RTC_ID].found_sensor)
 	{
 		required_structure_size += sizeof(g_user_at_cmd_list_rtc);
 
-		MYLOG("AT", "Structure size %d", required_structure_size);
+		MYLOG("USR_AT", "Structure size %d RTC", required_structure_size);
 	}
 	if ((found_sensors[ENV_ID].found_sensor) || (found_sensors[PRESS_ID].found_sensor))
 	{
 		required_structure_size += sizeof(g_user_at_cmd_list_env);
-		MYLOG("AT", "Structure size %d", required_structure_size);
+		MYLOG("USR_AT", "Structure size %d ENV/Pressure", required_structure_size);
 	}
 
 	// Reserve memory for the structure
 	g_user_at_cmd_list = (atcmd_t *)malloc(required_structure_size);
 
 	// Add AT commands to structure
+	MYLOG("USR_AT", "Adding battery check AT commands");
+	g_user_at_cmd_num += sizeof(g_user_at_cmd_list_batt) / sizeof(atcmd_t);
+	memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_batt, sizeof(g_user_at_cmd_list_batt));
+	index_next_cmds += sizeof(g_user_at_cmd_list_batt) / sizeof(atcmd_t);
+	MYLOG("USR_AT", "Index after adding battery check %d", index_next_cmds);
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
-		MYLOG("AT", "Adding Soil Sensor user AT commands");
+		MYLOG("USR_AT", "Adding Soil Sensor user AT commands");
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_soil, sizeof(g_user_at_cmd_list_soil));
 		index_next_cmds += sizeof(g_user_at_cmd_list_soil) / sizeof(atcmd_t);
-		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding soil %d", index_next_cmds);
 	}
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
-		MYLOG("AT", "Adding GNSS user AT commands");
+		MYLOG("USR_AT", "Adding GNSS user AT commands");
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_gps, sizeof(g_user_at_cmd_list_gps));
 		index_next_cmds += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
-		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding soil %d", index_next_cmds);
 	}
 	if (found_sensors[RTC_ID].found_sensor)
 	{
-		MYLOG("AT", "Adding RTC user AT commands");
+		MYLOG("USR_AT", "Adding RTC user AT commands");
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_rtc, sizeof(g_user_at_cmd_list_rtc));
 		index_next_cmds += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
-		MYLOG("AT", "Index after adding soil %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding soil %d", index_next_cmds);
 	}
-	if (found_sensors[ENV_ID].found_sensor)
+	if ((found_sensors[ENV_ID].found_sensor) || (found_sensors[PRESS_ID].found_sensor))
 	{
-		MYLOG("AT", "Adding ENV user AT commands");
+		MYLOG("USR_AT", "Adding ENV user AT commands");
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_env, sizeof(g_user_at_cmd_list_env));
 		index_next_cmds += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
-		MYLOG("AT", "Index after adding env %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding env %d", index_next_cmds);
 	}
 
 #if TEST_ALL_CMDS == 1

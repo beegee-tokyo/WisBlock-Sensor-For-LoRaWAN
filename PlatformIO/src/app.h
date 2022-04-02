@@ -26,7 +26,7 @@
 #endif
 // ; patch version increase on bugfix, no affect on API
 #ifndef SW_VERSION_3
-#define SW_VERSION_3 2
+#define SW_VERSION_3 6
 #endif
 
 #include <Arduino.h>
@@ -85,6 +85,8 @@ union batt_s
 	uint16_t batt16 = 0;
 	uint8_t batt8[2];
 };
+
+extern bool battery_check_enabled;
 
 /** RTC date/time structure */
 struct date_time_s

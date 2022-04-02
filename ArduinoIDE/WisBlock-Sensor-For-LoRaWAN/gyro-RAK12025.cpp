@@ -1,5 +1,5 @@
 /**
- * @file gyro-RAK1202.cpp
+ * @file gyro-RAK12025.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief 3-axis accelerometer functions
  * @version 0.3

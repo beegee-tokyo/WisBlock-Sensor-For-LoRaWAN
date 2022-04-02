@@ -26,7 +26,7 @@ MPU9250_WE mpu_sensor_2 = MPU9250_WE(&Wire1);
 MPU9250_WE *mpu_sensor;
 
 /** Interrupt pin, depends on slot */
-uint8_t mpu_int_pin = WB_IO3;
+uint8_t mpu_int_pin = ACC_INT_PIN;
 
 /**
  * @brief Initialize MPU9250 9-axis
@@ -51,6 +51,7 @@ bool init_rak1905(void)
 		mpu_sensor = &mpu_sensor_2;
 		Wire1.begin();
 #else
+		MYLOG("9DOF", "MPU9250 sensor on unsupported I2C!");
 		return false;
 #endif
 	}

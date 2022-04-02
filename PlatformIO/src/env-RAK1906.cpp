@@ -1,5 +1,5 @@
 /**
- * @file bme680_sensor.cpp
+ * @file env-RAK1906.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief BME680 sensor functions
  * @version 0.1
@@ -44,6 +44,7 @@ bool init_rak1906(void)
 		bme = &bme_2;
 		Wire1.begin();
 #else
+		MYLOG("BME", "BME680 sensor on unsupported I2C!");
 		return false;
 #endif
 	}

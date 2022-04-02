@@ -41,40 +41,43 @@ extern sensors_t found_sensors[];
 // LoRaWAN stuff
 #include "wisblock_cayenne.h"
 // Cayenne LPP Channel numbers per sensor value
-#define LPP_CHANNEL_BATT 1
-#define LPP_CHANNEL_HUMID 2
-#define LPP_CHANNEL_TEMP 3
-#define LPP_CHANNEL_PRESS 4
-#define LPP_CHANNEL_LIGHT 5
-#define LPP_CHANNEL_HUMID_2 6
-#define LPP_CHANNEL_TEMP_2 7
-#define LPP_CHANNEL_PRESS_2 8
-#define LPP_CHANNEL_GAS_2 9
-#define LPP_CHANNEL_GPS 10
-#define LPP_CHANNEL_SOIL_TEMP 11
-#define LPP_CHANNEL_SOIL_HUMID 12
-#define LPP_CHANNEL_SOIL_HUMID_RAW 13
-#define LPP_CHANNEL_SOIL_VALID 14
-#define LPP_CHANNEL_LIGHT2 15
-#define LPP_CHANNEL_VOC 16
-#define LPP_CHANNEL_GAS 17
-#define LPP_CHANNEL_GAS_PERC 18
-#define LPP_CHANNEL_CO2 19
-#define LPP_CHANNEL_CO2_PERC 20
-#define LPP_CHANNEL_ALC 21
-#define LPP_CHANNEL_ALC_PERC 22
-#define LPP_CHANNEL_TOF 23
-#define LPP_CHANNEL_TOF_VALID 24
-#define LPP_CHANNEL_GYRO 25
-#define LPP_CHANNEL_GESTURE 26
-#define LPP_CHANNEL_UVI 27
-#define LPP_CHANNEL_UVS 28
-#define LPP_CHANNEL_CURRENT_CURRENT 29
-#define LPP_CHANNEL_CURRENT_VOLTAGE 30
-#define LPP_CHANNEL_CURRENT_POWER 31
-#define LPP_CHANNEL_TOUCH_1 32
-#define LPP_CHANNEL_TOUCH_2 33
-#define LPP_CHANNEL_TOUCH_3 34
+#define LPP_CHANNEL_BATT 1			   // Base Board
+#define LPP_CHANNEL_HUMID 2			   // RAK1901
+#define LPP_CHANNEL_TEMP 3			   // RAK1901
+#define LPP_CHANNEL_PRESS 4			   // RAK1902
+#define LPP_CHANNEL_LIGHT 5			   // RAK1903
+#define LPP_CHANNEL_HUMID_2 6		   // RAK1906
+#define LPP_CHANNEL_TEMP_2 7		   // RAK1906
+#define LPP_CHANNEL_PRESS_2 8		   // RAK1906
+#define LPP_CHANNEL_GAS_2 9			   // RAK1906
+#define LPP_CHANNEL_GPS 10			   // RAK1910/RAK12500
+#define LPP_CHANNEL_SOIL_TEMP 11	   // RAK12035
+#define LPP_CHANNEL_SOIL_HUMID 12	   // RAK12035
+#define LPP_CHANNEL_SOIL_HUMID_RAW 13  // RAK12035
+#define LPP_CHANNEL_SOIL_VALID 14	   // RAK12035
+#define LPP_CHANNEL_LIGHT2 15		   // RAK12010
+#define LPP_CHANNEL_VOC 16			   // RAK12047
+#define LPP_CHANNEL_GAS 17			   // RAK12004
+#define LPP_CHANNEL_GAS_PERC 18		   // RAK12004
+#define LPP_CHANNEL_CO2 19			   // RAK12008
+#define LPP_CHANNEL_CO2_PERC 20		   // RAK12008
+#define LPP_CHANNEL_ALC 21			   // RAK12009
+#define LPP_CHANNEL_ALC_PERC 22		   // RAK12009
+#define LPP_CHANNEL_TOF 23			   // RAK12014
+#define LPP_CHANNEL_TOF_VALID 24	   // RAK12014
+#define LPP_CHANNEL_GYRO 25			   // RAK12025
+#define LPP_CHANNEL_GESTURE 26		   // RAK14008
+#define LPP_CHANNEL_UVI 27			   // RAK12019
+#define LPP_CHANNEL_UVS 28			   // RAK12019
+#define LPP_CHANNEL_CURRENT_CURRENT 29 // RAK16000
+#define LPP_CHANNEL_CURRENT_VOLTAGE 30 // RAK16000
+#define LPP_CHANNEL_CURRENT_POWER 31   // RAK16000
+#define LPP_CHANNEL_TOUCH_1 32		   // RAK14002
+#define LPP_CHANNEL_TOUCH_2 33		   // RAK14002
+#define LPP_CHANNEL_TOUCH_3 34		   // RAK14002
+#define LPP_CHANNEL_CO2_2 35		   // RAK12037
+#define LPP_CHANNEL_CO2_Temp_2 36	   // RAK12037
+#define LPP_CHANNEL_CO2_HUMID_2 37	   // RAK12037
 
 extern WisCayenne g_solution_data;
 
@@ -88,7 +91,11 @@ void read_rak1902(void);
 uint16_t get_alt_rak1902(void);
 bool init_rak1903(void);
 void read_rak1903();
+#if BASE_BOARD == 0
 #define ACC_INT_PIN WB_IO3
+#else
+#define ACC_INT_PIN WB_IO5
+#endif
 bool init_rak1904(void);
 void int_assign_rak1904(uint8_t new_irq_pin);
 void clear_int_rak1904(void);
@@ -135,6 +142,8 @@ bool init_rak14008(void);
 void read_rak14008(void);
 bool init_rak16000(void);
 void read_rak16000(void);
+bool init_rak12037(void);
+void read_rak12037(void);
 
 void find_modules(void);
 void announce_modules(void);
@@ -162,7 +171,8 @@ void get_sensor_values(void);
 #define UVL_ID 18	  // RAK12019 UV light sensor
 #define TOUCH_ID 19	  // RAK14002 Touch Pad
 #define CURRENT_ID 20 // RAK16000 current sensor
-#define MPU_ID 21	  // RAk1905 9DOF sensor
+#define MPU_ID 21	  // RAK1905 9DOF sensor
+#define CO2_ID 22	  // RAK12037 CO2 sensor
 
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */
@@ -206,6 +216,9 @@ extern bool g_is_helium;
 
 void read_gps_settings(void);
 void save_gps_settings(void);
+
+void read_batt_settings(void);
+void save_batt_settings(bool check_batt_enables);
 
 /** Latitude/Longitude value union */
 union latLong_s
