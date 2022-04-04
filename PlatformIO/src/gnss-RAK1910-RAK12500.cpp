@@ -19,6 +19,7 @@ SFE_UBLOX_GNSS my_gnss;
 
 /** GNSS task handle */
 TaskHandle_t gnss_task_handle;
+
 /** GPS reading task */
 void gnss_task(void *pvParameters);
 
@@ -95,6 +96,7 @@ bool init_gnss(void)
 				my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
 
 				my_gnss.setMeasurementRate(500);
+
 				return true;
 			}
 		}
@@ -185,11 +187,11 @@ bool poll_gnss(void)
 
 	last_read_ok = false;
 
-	if (!g_is_helium)
-	{
-		// Startup GNSS module
-		init_gnss();
-	}
+	// if (!g_is_helium)
+	// {
+	// 	// Startup GNSS module
+	// 	init_gnss();
+	// }
 
 	time_t time_out = millis();
 	int64_t latitude = 0;
@@ -421,12 +423,19 @@ void gnss_task(void *pvParameters)
 	{
 		if (xSemaphoreTake(g_gnss_sem, portMAX_DELAY) == pdTRUE)
 		{
+			if (!g_is_helium)
+			{
+				// Startup GNSS module
+				init_gnss();
+			}
+
 			if (g_is_helium)
 			{
 				g_solution_data.reset();
 			}
 			MYLOG("GNSS", "GNSS Task wake up");
 			AT_PRINTF("+EVT:START_LOCATION\n");
+
 			// Get location
 			bool got_location = poll_gnss();
 			AT_PRINTF("+EVT:LOCATION %s\n", got_location ? "FIX" : "NOFIX");

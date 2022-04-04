@@ -78,6 +78,8 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_CO2_2 35		   // RAK12037
 #define LPP_CHANNEL_CO2_Temp_2 36	   // RAK12037
 #define LPP_CHANNEL_CO2_HUMID_2 37	   // RAK12037
+#define LPP_CHANNEL_TEMP_3 38		   // RAK12003
+#define LPP_CHANNEL_TEMP_4 39		   // RAK12003
 
 extern WisCayenne g_solution_data;
 
@@ -112,6 +114,8 @@ void rak1921_write_header(char *header_line);
 bool init_rak12002(void);
 void set_rak12002(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t minute);
 void read_rak12002(void);
+bool init_rak12003(void);
+void read_rak12003(void);
 bool init_rak12004(void);
 void read_rak12004(void);
 bool init_rak12008(void);
@@ -173,6 +177,7 @@ void get_sensor_values(void);
 #define CURRENT_ID 20 // RAK16000 current sensor
 #define MPU_ID 21	  // RAK1905 9DOF sensor
 #define CO2_ID 22	  // RAK12037 CO2 sensor
+#define FIR_ID 23	  // RAK12003 FIR temperature sensor
 
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */

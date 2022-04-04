@@ -40,7 +40,7 @@ sensors_t found_sensors[] = {
 	{0x41, 0, false}, // 20 ✔ RAK16000 DC current sensor
 	{0x68, 0, false}, // 21 ✔ RAK1905 MPU9250 9DOF sensor !! address conflict with RAK12025
 	{0x61, 0, false}, // 22 ✔ RAK12037 CO2 sensor !! address conflict with RAK16001
-	{0x3A, 0, false}, // 23 RAK12003 IR temperature sensor
+	{0x3A, 0, false}, // 23 ✔ RAK12003 IR temperature sensor
 	{0x57, 0, false}, // 24 RAK12012 MAX30102 heart rate sensor
 	{0x54, 0, false}, // 25 RAK12016 Flex sensor
 	{0x47, 0, false}, // 26 RAK13004 PWM expander module
@@ -200,6 +200,14 @@ void find_modules(void)
 		else
 		{
 			found_sensors[OLED_ID].found_sensor = false;
+		}
+	}
+
+	if (found_sensors[FIR_ID].found_sensor)
+	{
+		if (!init_rak12003())
+		{
+			found_sensors[MQ2_ID].found_sensor = false;
 		}
 	}
 
@@ -547,6 +555,17 @@ void announce_modules(void)
 		read_rak12002();
 	}
 
+	if (!found_sensors[FIR_ID].found_sensor)
+	{
+		// MYLOG("APP", "MLX90632 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12003 OK\n");
+		read_rak12003();
+	}
+
 	if (!found_sensors[MQ2_ID].found_sensor)
 	{
 		// MYLOG("APP", "MQ2 error");
@@ -724,6 +743,11 @@ void get_sensor_values(void)
 	// 	// Start reading environment data
 	// 	start_rak1906();
 	// }
+	if (found_sensors[FIR_ID].found_sensor)
+	{
+		// Get the MLX90632 sensor values
+		read_rak12003();
+	}
 	if (found_sensors[MQ2_ID].found_sensor)
 	{
 		// Get the MQ2 sensor values

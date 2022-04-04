@@ -39,10 +39,12 @@ This code can be used without changes for
 | [RAK1902](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1902/Overview/) ⤴️ | WisBlock Barometer Pressure Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
 | [RAK1903](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1903/Overview/) ⤴️ | WisBlock Ambient Light Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
 | [RAK1904](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1904/Overview/) ⤴️ | WisBlock Acceleration Sensor (used for GNSS solutions) | WisBlock Kit 2 & 3, WisBlock Tracker for LoRaWAN, RAK Developer Kit 3 |
+| [RAK1905](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1905/Overview/) ⤴️ | WisBlock 9 DOF sensor | - |
 | [RAK1906](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/) ⤴️ | WisBlock Environment Sensor | WisBlock Kit 4, RAK Developer Kit 4 |
 | [RAK1910](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1910/Overview/) ⤴️ | WisBlock GNSS Sensor | WisBlock Kit 2 & 3, RAK Developer Kit 3|
 | [RAK1921](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1921/Overview/) ⤴️ | WisBlock OLED display | (Status display)|
 | [RAK12002](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12002/Overview/) ⤴️ | WisBlock RTC module | - |
+| [RAK12003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12003/Overview/) ⤴️ | WisBlock FIR sensor | - |
 | [RAK12004](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12004/Overview/) ⤴️ | WisBlock MQ2 Gas sensor | - |
 | [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️ | WisBlock MG812 CO2 Gas sensor | - |
 | [RAK12009](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12009/Overview/) ⤴️ | WisBlock MQ3 Alcohol Gas sensor | - |
@@ -51,6 +53,7 @@ This code can be used without changes for
 | [RAK12019](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12019/Overview/) ⤴️ | WisBlock UV Light sensor | - |
 | [RAK12025](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12025/Overview/) ⤴️ | WisBlock Gyroscope sensor | - |
 | [RAK12023/RAK12035](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12023/Overview/) ⤴️ | WisBlock Soil Moisture and Temperature sensor | WisBlock Soil Sensor Solution |
+| [RAK12037](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12037/Overview/) ⤴️ | WisBlock CO2 sensor | - |
 | [RAK12047](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12047/Overview/) ⤴️ | WisBlock VOC sensor | - |
 | [RAK12500](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12500/Overview/) ⤴️ | WisBlock GNSS Sensor | WisBlock Tracker for LoRaWAN |
 | [RAK14002](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK14002/Overview/) ⤴️ | WisBlock 3 button touch pad | - |
@@ -62,10 +65,14 @@ This code can be used without changes for
 - The RAK1904 module _**MUST**_ be installed in     
     - Slot C of RAK5005-O, RAK19007 or RAK19001
     - Slot A of RAK19003
+- The RAK1905 module _**MUST**_ be installed in     
+    - Slot C of RAK5005-O, RAK19007 or RAK19001
+    - Slot A of RAK19003
 - RAK1910 and RAK12500 cannot be used together (both are GNSS location trackers)
 
 ## Power consumption
-The MCU and LoRa transceiver go into sleep mode between measurement cycles to save power. I could measure a sleep current of 40uA of the whole system for a solution that enables sleep. Some solutions, like GNSS trackers or the RAK12047 VOC sensor, that require longer wake times or more frequent wake-ups, have a higher power consumption.
+The MCU and LoRa transceiver go into sleep mode between measurement cycles to save power. I could measure a sleep current of 40uA of the whole system for a solution that enables sleep. Some solutions, like GNSS trackers or the RAK12047 VOC sensor, that require longer wake times or more frequent wake-ups, have a higher power consumption.    
+In addition, sensors like the MQ gas sensors that are using a heating element will consume more power as well.
 
 ----
 
@@ -105,6 +112,9 @@ The MCU and LoRa transceiver go into sleep mode between measurement cycles to sa
 - [SparkFun SHTC3 Humidity and Temperature Sensor Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20SHTC3%20Humidity%20and%20Temperature%20Sensor%20Library) ⤴️
 - [SparkFun u-blox GNSS Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20u-blox%20GNSS%20Arduino%20Library) ⤴️
 - [TinyGPSPlus](https://registry.platformio.org/libraries/mikalhart/TinyGPSPlus) ⤴️
+- [LPS35HW](https://registry.platformio.org/libraries/pilotak/LPS35HW)
+- [SparkFun SCD30 Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20SCD30%20Arduino%20Library)
+- [SparkFun MLX90632 Noncontact Infrared Temperature Sensor](https://registry.platformio.org/libraries/sparkfun/SparkFun%20MLX90632%20Noncontact%20Infrared%20Temperature%20Sensor)
 
 
 ### _REMARK_     
@@ -199,7 +209,8 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | SCD30 CO2 concentration  | 35        | 125        | 2 bytes  | 1 ppm unsigned                                    | RAK12037          | 
 | SCD30 temperature        | 36        | 103        | 2 bytes  | in °C                                             | RAK12037          | 
 | SCD30 humidity           | 37        | 104        | 1 bytes  | in %RH                                            | RAK12037          | 
-
+| MLX90632 sensor temp     | 38        | 103        | 2 bytes  | in °C                                             | RAK12003          |
+| MLX90632 object temp     | 39        | 103        | 2 bytes  | in °C                                             | RAK12003          |
 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.

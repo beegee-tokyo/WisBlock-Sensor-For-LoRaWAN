@@ -44,6 +44,7 @@
 // ClosedCube_OPT3001                     //Click here to install the library => http://librarymanager/All#ClosedCube_OPT3001
 // LPS35HW                                //Click here to install the library => http://librarymanager/All#LPS35HW (CHOOSE THE ONE FROM PAVEL SLAMA)
 // Sparkfun SCD30                         //Click here to install the library => http://librarymanager/All#Sparkfun_SCD30
+// Sparkfun MLX90632                      //Click here to install the library => http://librarymanager/All#Sparkfun_MLX90632
 /*******************************************************************/
 
 #include "app.h"
