@@ -1,5 +1,5 @@
 /**
- * @file gnss-RAK1910-RAK12500.cpp
+ * @file RAK1910-RAK12500_gnss.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief GNSS functions and task
  * @version 0.3

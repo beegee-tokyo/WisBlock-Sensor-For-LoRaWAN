@@ -1,5 +1,5 @@
 /**
- * @file co2-RAK12037.cpp
+ * @file RAK12037_co2.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12037 CO2 gas sensor
  * @version 0.1

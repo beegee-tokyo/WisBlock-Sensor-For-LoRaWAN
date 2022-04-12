@@ -1,5 +1,5 @@
 /**
- * @file gas-RAK12008.cpp
+ * @file RAK12008_gas.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12008 CO2 gas sensor
  * @version 0.1

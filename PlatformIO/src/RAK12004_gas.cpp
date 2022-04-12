@@ -1,5 +1,5 @@
 /**
- * @file gas-RAK12004.cpp
+ * @file RAK12004_gas.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12004 gas sensor
  * @version 0.1

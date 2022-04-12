@@ -1,5 +1,5 @@
 /**
- * @file acc-RAK1905.cpp
+ * @file RAK1905_9dof.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief 9-axis accelerometer functions
  * @version 0.3

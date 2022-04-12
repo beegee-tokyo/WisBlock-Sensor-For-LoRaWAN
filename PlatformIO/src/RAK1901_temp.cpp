@@ -1,5 +1,5 @@
 /**
- * @file temp_humid-RAK1901.cpp
+ * @file RAK1901_temp.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialize and read data from SHTC3 sensor
  * @version 0.2

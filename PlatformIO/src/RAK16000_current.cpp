@@ -1,5 +1,5 @@
 /**
- * @file current-RAK16000.cpp
+ * @file RAK16000_current.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK16000 current sensor
  * @version 0.1

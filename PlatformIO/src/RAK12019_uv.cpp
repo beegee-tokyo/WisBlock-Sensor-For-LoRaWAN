@@ -1,5 +1,5 @@
 /**
- * @file uv-light-RAK12019.cpp
+ * @file RAK12019_uv.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12019 UV light sensor
  * @version 0.1

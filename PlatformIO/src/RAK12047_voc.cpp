@@ -1,5 +1,5 @@
 /**
- * @file voc-RAK12047.cpp
+ * @file RAK12047_voc.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Read values from the RAK12047 VOC sensor
  *        The VOC algorithm requires a reading every one second.

@@ -1,5 +1,5 @@
 /**
- * @file tof-RAK12014.cpp
+ * @file RAK12014_tof.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief VL53L01 ToF sensor support
  * @version 0.1

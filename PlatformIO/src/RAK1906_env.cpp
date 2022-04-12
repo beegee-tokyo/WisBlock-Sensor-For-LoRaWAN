@@ -1,5 +1,5 @@
 /**
- * @file env-RAK1906.cpp
+ * @file RAK1906_env.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief BME680 sensor functions
  * @version 0.1

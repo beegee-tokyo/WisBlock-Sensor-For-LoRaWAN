@@ -1,5 +1,5 @@
 /**
- * @file light-RAK12010.cpp
+ * @file RAK12010_light.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12010 light sensor
  * @version 0.1

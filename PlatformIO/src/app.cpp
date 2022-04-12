@@ -524,7 +524,12 @@ void app_event_handler(void)
 		{
 			// Get Environment data
 			read_rak1906();
+
+			// Get battery level
+			float batt_level_f = read_batt();
+			g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
 		}
+
 		// Remember last time sending
 		last_pos_send = millis();
 		// Just in case

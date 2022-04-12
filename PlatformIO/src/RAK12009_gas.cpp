@@ -1,5 +1,5 @@
 /**
- * @file gas-RAK12009.cpp
+ * @file RAK12009_gas.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Functions for RAK12009 Alcohol sensor
  * @version 0.1

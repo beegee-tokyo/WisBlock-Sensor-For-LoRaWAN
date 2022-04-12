@@ -1,5 +1,5 @@
 /**
- * @file pressure-RAK1902.cpp
+ * @file RAK1902_press.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialize and read values from the LPS22HB sensor
  * @version 0.2

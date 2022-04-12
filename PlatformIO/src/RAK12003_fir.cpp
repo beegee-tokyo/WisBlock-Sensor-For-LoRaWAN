@@ -1,5 +1,5 @@
 /**
- * @file fir-RAK12003.cpp
+ * @file RAK12003_fir.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief MLX90632 ToF sensor support
  * @version 0.1

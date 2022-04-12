@@ -1,5 +1,5 @@
 /**
- * @file rtc_RAK12002.cpp
+ * @file RAK12002_rtc.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialization and usage of RAK12002 RTC module
  * @version 0.1

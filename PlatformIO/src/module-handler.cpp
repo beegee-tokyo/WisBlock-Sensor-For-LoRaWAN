@@ -41,15 +41,16 @@ sensors_t found_sensors[] = {
 	{0x68, 0, false}, // 21 ✔ RAK1905 MPU9250 9DOF sensor !! address conflict with RAK12025
 	{0x61, 0, false}, // 22 ✔ RAK12037 CO2 sensor !! address conflict with RAK16001
 	{0x3A, 0, false}, // 23 ✔ RAK12003 IR temperature sensor
-	{0x57, 0, false}, // 24 RAK12012 MAX30102 heart rate sensor
-	{0x54, 0, false}, // 25 RAK12016 Flex sensor
-	{0x47, 0, false}, // 26 RAK13004 PWM expander module
-	{0x38, 0, false}, // 27 RAK14001 RGB LED module
-	{0x5F, 0, false}, // 28 RAK14004 Keypad interface
-	{0x61, 0, false}, // 29 RAK16001 ADC sensor !! address conflict with RAK12037
-	{0x59, 0, false}, // 30 RAK13600 NFC !! address conflict with RAK12047, RAK13600
-	{0x59, 0, false}, // 31 RAK16002 Coulomb sensor !! address conflict with RAK13600, RAK12047
-	{0x20, 0, false}, // 32 RAK13003 IO expander module !! address conflict with RAK12035
+	{0x68, 0, false}, // 24 RAK12040 AMG8833 temperature array sensor
+	{0x57, 0, false}, // 25 RAK12012 MAX30102 heart rate sensor
+	{0x54, 0, false}, // 26 RAK12016 Flex sensor
+	{0x47, 0, false}, // 27 RAK13004 PWM expander module
+	{0x38, 0, false}, // 28 RAK14001 RGB LED module
+	{0x5F, 0, false}, // 29 RAK14004 Keypad interface
+	{0x61, 0, false}, // 30 RAK16001 ADC sensor !! address conflict with RAK12037
+	{0x59, 0, false}, // 31 RAK13600 NFC !! address conflict with RAK12047, RAK13600
+	{0x59, 0, false}, // 32 RAK16002 Coulomb sensor !! address conflict with RAK13600, RAK12047
+	{0x20, 0, false}, // 33 RAK13003 IO expander module !! address conflict with RAK12035
 };
 
 /**
@@ -126,6 +127,12 @@ void find_modules(void)
 			MYLOG("SCAN", "ID %d addr %02X", i, found_sensors[i].i2c_addr);
 		}
 	}
+
+	// Check first if RAK15001 is available
+	if (init_rak15001())
+	{
+	}
+
 	// Initialize the modules found
 	if (found_sensors[TEMP_ID].found_sensor)
 	{
@@ -171,6 +178,14 @@ void find_modules(void)
 			if (!init_rak1905())
 			{
 				found_sensors[MPU_ID].found_sensor = false;
+				if (!init_rak12040())
+				{
+					found_sensors[MPU_ID].found_sensor = false;
+				}
+				else
+				{
+					found_sensors[TEMP_ARR_ID].found_sensor = true;
+				}
 			}
 			else
 			{
@@ -207,7 +222,7 @@ void find_modules(void)
 	{
 		if (!init_rak12003())
 		{
-			found_sensors[MQ2_ID].found_sensor = false;
+			found_sensors[FIR_ID].found_sensor = false;
 		}
 	}
 
@@ -303,6 +318,14 @@ void find_modules(void)
 		else
 		{
 			found_sensors[SOIL_ID].found_sensor = false;
+		}
+	}
+
+	if (found_sensors[TEMP_ARR_ID].found_sensor)
+	{
+		if (!init_rak12040())
+		{
+			found_sensors[TEMP_ARR_ID].found_sensor = false;
 		}
 	}
 
@@ -599,17 +622,6 @@ void announce_modules(void)
 		read_rak12009();
 	}
 
-	if (!found_sensors[CO2_ID].found_sensor)
-	{
-		// MYLOG("APP", "SCD30 error");
-		init_result = false;
-	}
-	else
-	{
-		AT_PRINTF("+EVT:RAK12037 OK\n");
-		read_rak12037();
-	}
-
 	if (!found_sensors[LIGHT2_ID].found_sensor)
 	{
 		// MYLOG("APP", "VEML7700 error");
@@ -662,6 +674,28 @@ void announce_modules(void)
 	else
 	{
 		AT_PRINTF("+EVT:RAK12035 OK\n");
+	}
+
+	if (!found_sensors[CO2_ID].found_sensor)
+	{
+		// MYLOG("APP", "SCD30 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12037 OK\n");
+		read_rak12037();
+	}
+
+	if (!found_sensors[TEMP_ARR_ID].found_sensor)
+	{
+		// MYLOG("APP", "AMG8833 error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12040 OK\n");
+		read_rak12040();
 	}
 
 	if (!found_sensors[VOC_ID].found_sensor)
@@ -792,6 +826,11 @@ void get_sensor_values(void)
 	{
 		// Get the soil moisture sensor values
 		read_rak12035();
+	}
+	if (found_sensors[TEMP_ARR_ID].found_sensor)
+	{
+		// Get the temp array sensor values
+		read_rak12040();
 	}
 	if (found_sensors[VOC_ID].found_sensor)
 	{

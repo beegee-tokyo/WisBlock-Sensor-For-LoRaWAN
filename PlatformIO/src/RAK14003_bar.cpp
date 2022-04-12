@@ -1,5 +1,5 @@
 /**
- * @file bar-RAK14003.cpp
+ * @file RAK14003_bar.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialize RAK14003 LED bar display and set function
  * @version 0.1

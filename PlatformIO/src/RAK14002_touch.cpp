@@ -1,5 +1,5 @@
 /**
- * @file touch-RAK14002.cpp
+ * @file RAK14002_touch.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief 3 Touch Button module RAK14002 initialization
  * @version 0.3

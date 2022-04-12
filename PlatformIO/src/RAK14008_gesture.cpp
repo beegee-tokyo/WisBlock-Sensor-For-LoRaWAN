@@ -1,5 +1,5 @@
 /**
- * @file gesture-RAK14008.cpp
+ * @file RAK14008_gesture.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Gesture sensor functions
  * @version 0.3

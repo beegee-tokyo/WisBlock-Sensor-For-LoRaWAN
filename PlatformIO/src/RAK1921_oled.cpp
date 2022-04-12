@@ -1,5 +1,5 @@
 /**
- * @file display_rak1921.cpp
+ * @file RAK1921_oled.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Initialization and usage of RAK1921 OLED
  * @version 0.1
