@@ -449,6 +449,16 @@ void app_event_handler(void)
 				MYLOG("APP", "MPU triggered");
 				clear_int_rak1905();
 			}
+			if (found_sensors[ACC2_ID].found_sensor)
+			{
+				MYLOG("APP", "ACC triggered");
+				clear_int_rak12032();
+			}
+			if (found_sensors[DOF_ID].found_sensor)
+			{
+				MYLOG("APP", "9DOF triggered");
+				clear_int_rak12034();
+			}
 
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)

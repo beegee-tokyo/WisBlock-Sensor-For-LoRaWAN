@@ -111,6 +111,7 @@ bool init_rak1921(void);
 void rak1921_add_line(char *line);
 void rak1921_show(void);
 void rak1921_write_header(char *header_line);
+bool init_rak5814(void);
 bool init_rak12002(void);
 void set_rak12002(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t minute);
 void read_rak12002(void);
@@ -132,6 +133,11 @@ void read_rak12019();
 bool init_rak12025(void);
 void read_rak12025(void);
 void clear_int_rak12025(void);
+bool init_rak12034(void);
+void clear_int_rak12034(void);
+bool init_rak12032(void);
+void int_assign_rak12032(uint8_t new_irq_pin);
+void clear_int_rak12032(void);
 bool init_rak12037(void);
 void read_rak12037(void);
 bool init_rak12040(void);
@@ -150,9 +156,6 @@ bool init_rak14008(void);
 void read_rak14008(void);
 bool init_rak16000(void);
 void read_rak16000(void);
-bool init_rak15001(void);
-bool read_rak15001(uint16_t address, uint8_t *buffer, uint16_t size);
-bool write_rak15001(uint16_t address, uint8_t *buffer, uint16_t size);
 
 void find_modules(void);
 void announce_modules(void);
@@ -180,11 +183,12 @@ void get_sensor_values(void);
 #define UVL_ID 18	   // RAK12019 UV light sensor
 #define TOUCH_ID 19	   // RAK14002 Touch Pad
 #define CURRENT_ID 20  // RAK16000 current sensor
-#define MPU_ID 21	   // RAK1905 9DOF sensor
+#define MPU_ID 21	   // RAK1905 9DOF MPU9250 sensor
 #define CO2_ID 22	   // RAK12037 CO2 sensor
 #define FIR_ID 23	   // RAK12003 FIR temperature sensor
 #define TEMP_ARR_ID 24 // RAK12040 Temp Array sensor
-
+#define DOF_ID 25	   // RAK12034 9DOF BMX160 sensor
+#define ACC2_ID 26	   // RAK12032 ADXL313 accelerometer
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */
 #define EN_PIN WB_IO6

@@ -29,6 +29,17 @@ File gps_file(InternalFS);
 /** File to save battery check status */
 File batt_check(InternalFS);
 
+/** Structure for NVRAM settings */
+struct s_nvram_settings
+{
+	uint8_t batt_settings = 0;	 // 0 Battery check disabled, 1 Battery enabled
+	uint8_t gnss_settings = 0;	 // 0 GNSS precision 4, 1 GNSS precision 6, 2 Helium GNSS format
+	uint8_t reserved[255] = {0}; // Reserved for future extensions
+};
+
+/** User AT command defined settings */
+s_nvram_settings g_nvram_settings;
+
 #define AT_PRINTF(...)                  \
 	Serial.printf(__VA_ARGS__);         \
 	if (g_ble_uart_is_connected)        \
@@ -95,6 +106,39 @@ static int at_exec_gnss(char *str)
  */
 void read_gps_settings(void)
 {
+	if (g_ext_nvram)
+	{
+		api_read_ext_nvram(1, (uint8_t *)&g_nvram_settings, sizeof(s_nvram_settings));
+		switch (g_nvram_settings.gnss_settings)
+		{
+		case 0:
+			g_gps_prec_6 = false;
+			g_is_helium = false;
+			MYLOG("USR_AT", "Set GNSS precision to low");
+			break;
+		case 1:
+			g_gps_prec_6 = true;
+			g_is_helium = false;
+			MYLOG("USR_AT", "Set GNSS precision to high");
+			break;
+		case 2:
+			g_is_helium = true;
+			MYLOG("USR_AT", "Set GNSS precision to Helium");
+			break;
+		default:
+			// not initialized, set it all to false
+			g_gps_prec_6 = false;
+			g_is_helium = false;
+			MYLOG("USR_AT", "Error, set GNSS precision to low");
+			save_gps_settings();
+			break;
+		}
+		if (g_nvram_settings.gnss_settings == 0)
+		{
+			g_gps_prec_6 = false;
+		}
+		return;
+	}
 	if (InternalFS.exists(gnss_name))
 	{
 		g_gps_prec_6 = true;
@@ -123,6 +167,26 @@ void read_gps_settings(void)
  */
 void save_gps_settings(void)
 {
+	if (g_ext_nvram)
+	{
+		if (g_is_helium)
+		{
+			g_nvram_settings.gnss_settings = 2;
+			MYLOG("USR_AT", "Set GNSS Helium format");
+		}
+		else if (g_gps_prec_6)
+		{
+			g_nvram_settings.gnss_settings = 1;
+			MYLOG("USR_AT", "Set GNSS high precision");
+		}
+		else
+		{
+			g_nvram_settings.gnss_settings = 0;
+			MYLOG("USR_AT", "Set GNSS low precision");
+		}
+		api_write_ext_nvram(1, (uint8_t *)&g_nvram_settings, sizeof(s_nvram_settings));
+		return;
+	}
 	if (g_gps_prec_6)
 	{
 		gps_file.open(gnss_name, FILE_O_WRITE);
@@ -156,7 +220,7 @@ void save_gps_settings(void)
 atcmd_t g_user_at_cmd_list_gps[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
-	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper", at_query_gnss, at_exec_gnss, NULL},
+	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper", at_query_gnss, at_exec_gnss, at_query_gnss},
 };
 
 /**
@@ -355,7 +419,7 @@ static int at_query_rtc(void)
 atcmd_t g_user_at_cmd_list_rtc[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
-	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, NULL},
+	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, at_query_rtc},
 };
 
 /**
@@ -428,8 +492,8 @@ static int at_set_msl(char *str)
 atcmd_t g_user_at_cmd_list_env[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// ENV commands
-	{"+ALT", "Get Altitude", at_query_alt, NULL, NULL},
-	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, NULL},
+	{"+ALT", "Get Altitude", at_query_alt, NULL, at_query_alt},
+	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, at_query_msl},
 };
 
 /**
@@ -476,6 +540,27 @@ static int at_query_batt_check(void)
  */
 void read_batt_settings(void)
 {
+	if (g_ext_nvram)
+	{
+		api_read_ext_nvram(1, (uint8_t *)&g_nvram_settings, sizeof(s_nvram_settings));
+		switch (g_nvram_settings.batt_settings)
+		{
+		case 0:
+			battery_check_enabled = false;
+			MYLOG("USR_AT", "Disabled battery check");
+			break;
+		case 1:
+			battery_check_enabled = true;
+			MYLOG("USR_AT", "Enabled battery check");
+			break;
+		default:
+			battery_check_enabled = false;
+			MYLOG("USR_AT", "Error, disabled battery check");
+			save_batt_settings(battery_check_enabled);
+			break;
+		}
+		return;
+	}
 	if (InternalFS.exists(batt_name))
 	{
 		battery_check_enabled = true;
@@ -495,6 +580,21 @@ void read_batt_settings(void)
  */
 void save_batt_settings(bool check_batt_enables)
 {
+	if (g_ext_nvram)
+	{
+		if (check_batt_enables)
+		{
+			g_nvram_settings.batt_settings = 1;
+			MYLOG("USR_AT", "Save enabled battery check");
+		}
+		else
+		{
+			g_nvram_settings.batt_settings = 0;
+			MYLOG("USR_AT", "Save disabled battery check");
+		}
+		api_write_ext_nvram(1, (uint8_t *)&g_nvram_settings, sizeof(s_nvram_settings));
+		return;
+	}
 	if (check_batt_enables)
 	{
 		batt_check.open(batt_name, FILE_O_WRITE);
@@ -512,8 +612,26 @@ void save_batt_settings(bool check_batt_enables)
 atcmd_t g_user_at_cmd_list_batt[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// Battery check commands
-	{"+BATCHK", "Enable/Disable the battery charge check", at_query_batt_check, at_set_batt_check, NULL},
+	{"+BATCHK", "Enable/Disable the battery charge check", at_query_batt_check, at_set_batt_check, at_query_batt_check},
 };
+
+static int at_query_nvram(void)
+{
+	if (g_ext_nvram)
+	{
+		api_read_ext_nvram(1, (uint8_t *)&g_nvram_settings, sizeof(s_nvram_settings));
+		AT_PRINTF("GNSS: %02X Batt Check: %02X",g_nvram_settings.gnss_settings, g_nvram_settings.batt_settings);
+		return 0;
+	}
+	return AT_ERRNO_NOSUPP;
+}
+
+atcmd_t g_user_at_cmd_list_nvram[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// Battery check commands
+	{"+NVRAM", "Show content of NVRAM", at_query_nvram, NULL, at_query_nvram},
+};
+
 
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = 0;
@@ -542,6 +660,12 @@ void init_user_at(void)
 	uint16_t required_structure_size = sizeof(g_user_at_cmd_list_batt);
 
 	// Get required size of structure
+	if (g_ext_nvram)
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_nvram);
+
+		MYLOG("USR_AT", "Structure size %d NVRAM", required_structure_size);
+	}
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		required_structure_size += sizeof(g_user_at_cmd_list_soil);
@@ -575,6 +699,14 @@ void init_user_at(void)
 	memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_batt, sizeof(g_user_at_cmd_list_batt));
 	index_next_cmds += sizeof(g_user_at_cmd_list_batt) / sizeof(atcmd_t);
 	MYLOG("USR_AT", "Index after adding battery check %d", index_next_cmds);
+	if (g_ext_nvram)
+	{
+		MYLOG("USR_AT", "Adding NVRAM user AT commands");
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_nvram) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_nvram, sizeof(g_user_at_cmd_list_nvram));
+		index_next_cmds += sizeof(g_user_at_cmd_list_nvram) / sizeof(atcmd_t);
+		MYLOG("USR_AT", "Index after adding NVRAM %d", index_next_cmds);
+	}
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		MYLOG("USR_AT", "Adding Soil Sensor user AT commands");

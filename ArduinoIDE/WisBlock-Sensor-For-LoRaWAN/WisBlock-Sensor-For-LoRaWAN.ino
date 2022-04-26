@@ -1,5 +1,5 @@
 /**
- * @file app.cpp
+ * @file WisBlock-Sensor-For-LoRaWAN.ino
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Application specific functions. Mandatory to have init_app(),
  *        app_event_handler(), ble_data_handler(), lora_data_handler()
@@ -45,6 +45,10 @@
 // LPS35HW                                //Click here to install the library => http://librarymanager/All#LPS35HW (CHOOSE THE ONE FROM PAVEL SLAMA)
 // Sparkfun SCD30                         //Click here to install the library => http://librarymanager/All#Sparkfun_SCD30
 // Sparkfun MLX90632                      //Click here to install the library => http://librarymanager/All#Sparkfun_MLX90632
+// Melopero AMG8833                       //Click here to install the library => http://librarymanager/All#Melopero_AMG8833
+// SparkFun ADXL313 Arduino Library       //Click here to install the library => http://librarymanager/All#SparkFun_AMG8833
+// RAKwireless Storage                    //Click here to install the library => http://librarymanager/All#RAKwireless_Storage
+// ArduinoECCX08                          //Click here to install the library => http://librarymanager/All#ArduinoECCX08
 /*******************************************************************/
 
 #include "app.h"
@@ -485,6 +489,16 @@ void app_event_handler(void)
 				MYLOG("APP", "MPU triggered");
 				clear_int_rak1905();
 			}
+			if (found_sensors[ACC2_ID].found_sensor)
+			{
+				MYLOG("APP", "ACC triggered");
+				clear_int_rak12032();
+			}
+			if (found_sensors[DOF_ID].found_sensor)
+			{
+				MYLOG("APP", "9DOF triggered");
+				clear_int_rak12034();
+			}
 
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
@@ -560,6 +574,10 @@ void app_event_handler(void)
 		{
 			// Get Environment data
 			read_rak1906();
+
+			// Get battery level
+			float batt_level_f = read_batt();
+			g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
 		}
 		// Remember last time sending
 		last_pos_send = millis();

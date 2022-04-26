@@ -115,6 +115,10 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 - [LPS35HW](https://registry.platformio.org/libraries/pilotak/LPS35HW)
 - [SparkFun SCD30 Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20SCD30%20Arduino%20Library)
 - [SparkFun MLX90632 Noncontact Infrared Temperature Sensor](https://registry.platformio.org/libraries/sparkfun/SparkFun%20MLX90632%20Noncontact%20Infrared%20Temperature%20Sensor)
+- [Melopero AMG8833](https://registry.platformio.org/libraries/melopero/Melopero AMG8833)
+- [SparkFun ADXL313 Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun ADXL313 Arduino Library)
+- [RAKwireless Storage](https://registry.platformio.org/libraries/beegee-tokyo/RAKwireless Storage)
+- [ArduinoECCX08](https://registry.platformio.org/libraries/arduino-libraries/ArduinoECCX08)
 
 
 ### _REMARK_     
