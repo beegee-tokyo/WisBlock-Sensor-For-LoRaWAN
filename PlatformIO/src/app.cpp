@@ -35,7 +35,6 @@ bool battery_check_enabled = false;
 
 // Forward declaration
 void send_delayed(TimerHandle_t unused);
-void at_settings(void);
 
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-SENS";
@@ -159,7 +158,7 @@ bool init_app(void)
 	AT_PRINTF("SW Version %d.%d.%d\n", g_sw_ver_1, g_sw_ver_2, g_sw_ver_3);
 	AT_PRINTF("LoRa(R) is a registered trademark or service mark of Semtech Corporation or its affiliates.\nLoRaWAN(R) is a licensed mark.\n");
 	AT_PRINTF("============================\n");
-	at_settings();
+	api_log_settings();
 
 	// Announce found modules with +EVT: over Serial
 	announce_modules();
@@ -459,7 +458,12 @@ void app_event_handler(void)
 				MYLOG("APP", "9DOF triggered");
 				clear_int_rak12034();
 			}
-
+			if (found_sensors[GESTURE_ID].found_sensor)
+			{
+				MYLOG("APP", "Gesture triggered");
+				read_rak14008();
+			}
+			
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
 			{

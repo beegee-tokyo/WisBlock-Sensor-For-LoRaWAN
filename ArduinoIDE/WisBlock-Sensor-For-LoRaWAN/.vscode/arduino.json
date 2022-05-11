@@ -1,0 +1,7 @@
+{
+	"configuration": "softdevice=s140v6,debug=l0",
+	"board": "rakwireless:nrf52:WisCoreRAK4631Board",
+	"port": "COM12",
+	"output": "build",
+	"sketch": "WisBlock-Sensor-For-LoRaWAN.ino"
+}
