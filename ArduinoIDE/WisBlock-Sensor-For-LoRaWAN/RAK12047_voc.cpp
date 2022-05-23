@@ -17,7 +17,7 @@
 /** Instance for the VOC sensor */
 SensirionI2CSgp40 sgp40;
 /** Instance for the VOC algorithm */
-VOCGasIndexAlgorithm voc_algorithm = VOCGasIndexAlgorithm();
+VOCGasIndexAlgorithm voc_algorithm;
 
 /** Timer for VOC measurement */
 SoftwareTimer voc_read_timer;
@@ -173,7 +173,7 @@ void do_read_rak12047(void)
 	// 2. Measure SGP4x signals
 	error = sgp40.measureRawSignal(defaultRh, defaultT,
 								   srawVoc);
-	// MYLOG("VOC", "VOC: %d", srawVoc);
+	MYLOG("VOC", "srawVoc: %d", srawVoc);
 
 	// 3. Process raw signals by Gas Index Algorithm to get the VOC index values
 	if (error)
@@ -202,9 +202,17 @@ void do_read_rak12047(void)
 			uint32_t new_voc_index = voc_algorithm.process(srawVoc);
 			voc_index = ((voc_index + new_voc_index) / 2);
 		}
-		// MYLOG("VOC", "VOC Index: %ld", voc_index);
+		MYLOG("VOC", "VOC Index: %ld", voc_index);
 		voc_valid = true;
 	}
+
+#ifdef _USE_BSEC_
+	// Read as well the BME680 using BSEC library if RAK1906 is available
+	if (found_sensors[TEMP_ID].found_sensor)
+	{
+		do_read_rak1906();
+	}
+#endif
 
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, LOW);

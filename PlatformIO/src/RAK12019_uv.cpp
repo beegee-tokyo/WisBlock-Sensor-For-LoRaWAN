@@ -66,10 +66,10 @@ bool init_rak12019(void)
 	}
 
 	// Set gain level
-	ltr->setGain(LTR390_GAIN_3);
+	ltr->setGain(LTR390_GAIN_18);
 
 	// Set resolution
-	ltr->setResolution(LTR390_RESOLUTION_16BIT);
+	ltr->setResolution(LTR390_RESOLUTION_20BIT);
 
 	ltr->setThresholds(100, 1000); // Set the interrupt output threshold range for lower and upper.
 	if (ltr->getMode() == LTR390_MODE_ALS)
@@ -106,6 +106,10 @@ void read_rak12019(void)
 			_uvs_read = ltr->readUVS();
 			MYLOG("LTR", "Uvi Data:%0.2f-----Uvs Data:%ld", _uvi_read, _uvs_read);
 		}
+	}
+	else
+	{
+		MYLOG("LTR", "No Data available");
 	}
 
 	g_solution_data.addAnalogInput(LPP_CHANNEL_UVI, _uvi_read);

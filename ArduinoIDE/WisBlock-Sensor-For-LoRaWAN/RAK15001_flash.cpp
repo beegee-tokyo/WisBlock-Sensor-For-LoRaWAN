@@ -50,17 +50,19 @@ bool init_rak15001(void)
 	if (!g_flash.begin(&g_RAK15001)) // Start access to the flash
 	{
 		MYLOG("FLASH", "Flash access failed, check the settings");
+		SPI.end();
 		return false;
 	}
 	if (!g_flash.waitUntilReady(5000))
 	{
 		MYLOG("FLASH", "Busy timeout");
+		SPI.end();
 		return false;
 	}
 
-	MYLOG("FLASH", "Device ID: 0x%02X", g_flash.getJEDECID());
+	MYLOG("FLASH", "Device ID: 0x%02lX", g_flash.getJEDECID());
 	MYLOG("FLASH", "Size: %ld", g_flash.size());
-	MYLOG("FLASH", "Pages: %d", g_flash.numPages());
+	MYLOG("FLASH", "Pages: %ld", g_flash.numPages());
 	MYLOG("FLASH", "Page Size: %d", g_flash.pageSize());
 
 	g_has_rak15001 = true;

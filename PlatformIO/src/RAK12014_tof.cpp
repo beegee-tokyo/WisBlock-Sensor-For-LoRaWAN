@@ -25,6 +25,9 @@ union analog_s
 /** Structure to parse uint16_t into a uin8_t array */
 analog_s analog_val;
 
+// Power pin for RAK12014
+uint8_t xshut_pin = WB_IO4;
+
 /**
  * @brief Initialize the VL53L01 sensor
  *
@@ -34,10 +37,10 @@ analog_s analog_val;
 bool init_rak12014(void)
 {
 	// On/Off control pin
-	pinMode(WB_IO4, OUTPUT);
+	pinMode(xshut_pin, OUTPUT);
 
 	// Sensor on
-	digitalWrite(WB_IO4, HIGH);
+	digitalWrite(xshut_pin, HIGH);
 
 	// Wait for sensor wake-up
 	delay(150);
@@ -61,8 +64,8 @@ bool init_rak12014(void)
 	{
 		MYLOG("ToF", "Failed to detect and initialize sensor!");
 		// Sensor off
-		digitalWrite(WB_IO4, LOW);
-		// api_deinit_gpio(WB_IO4);
+		digitalWrite(xshut_pin, LOW);
+		// api_deinit_gpio(xshut_pin);
 
 		return false;
 	}
@@ -75,7 +78,7 @@ bool init_rak12014(void)
 	tof_sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
 
 	// Sensor off
-	digitalWrite(WB_IO4, LOW);
+	digitalWrite(xshut_pin, LOW);
 
 	return true;
 }
@@ -89,7 +92,7 @@ bool init_rak12014(void)
 void read_rak12014(void)
 {
 	// Sensor on
-	digitalWrite(WB_IO4, HIGH);
+	digitalWrite(xshut_pin, HIGH);
 	delay(300);
 
 	uint64_t collected = 0;
@@ -155,6 +158,6 @@ void read_rak12014(void)
 	g_solution_data.addPresence(LPP_CHANNEL_TOF_VALID, got_valid_data);
 
 	// Sensor off
-	digitalWrite(WB_IO4, LOW);
+	digitalWrite(xshut_pin, LOW);
 	return;
 }

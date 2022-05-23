@@ -87,9 +87,9 @@ void find_modules(void)
 		{
 			// RAK12014 has extra GPIO for power control
 			// On/Off control pin
-			pinMode(WB_IO4, OUTPUT);
+			pinMode(xshut_pin, OUTPUT);
 			// Sensor on
-			digitalWrite(WB_IO4, HIGH);
+			digitalWrite(xshut_pin, HIGH);
 			// Wait for sensor wake-up
 			delay(150);
 		}
@@ -348,7 +348,6 @@ void find_modules(void)
 		// Try TOF sensor first
 		if (!init_rak12014())
 		{
-			// No ToF found, try RTC clock
 			found_sensors[TOF_ID].found_sensor = false;
 		}
 	}
@@ -584,6 +583,13 @@ void announce_modules(void)
 		xSemaphoreGive(g_gnss_sem);
 		// Take semaphore
 		xSemaphoreTake(g_gnss_sem, 10);
+		// Create the GNSS polling semaphore
+		g_gnss_poll = xSemaphoreCreateBinary();
+		// Initialize semaphore
+		xSemaphoreGive(g_gnss_poll);
+		// Take semaphore
+		xSemaphoreTake(g_gnss_poll, 10);
+
 		if (!xTaskCreate(gnss_task, "LORA", 4096, NULL, TASK_PRIO_LOW, &gnss_task_handle))
 		{
 			MYLOG("APP", "Failed to start GNSS task");

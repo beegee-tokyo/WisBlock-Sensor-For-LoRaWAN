@@ -11,16 +11,10 @@
 #include "app.h"
 #include "INA219_WE.h"
 
-#define I2C_ADDRESS 0x41
+uint8_t ina_addr = 0x41;
 
 /** Current sensor instance using Wire */
-INA219_WE ina219_1 = (Wire, I2C_ADDRESS);
-#if WIRE_INTERFACES_COUNT > 1
-/** Current sensor instance using Wire1 */
-INA219_WE ina219_2 = (Wire1, I2C_ADDRESS);
-#endif
-/** Pointer to used instance */
-INA219_WE *ina219;
+INA219_WE ina219 = INA219_WE(ina_addr);
 
 /** Default ADC mode */
 INA219_ADC_MODE adc_mode = SAMPLE_MODE_128;
@@ -42,22 +36,9 @@ INA219_BUS_RANGE bus_range = BRNG_32;
  */
 bool init_rak16000(void)
 {
-	if (found_sensors[CURRENT_ID].i2c_num == 1)
-	{
 		Wire.begin();
-		ina219 = &ina219_1;
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		ina219 = &ina219_2;
-#else
-		return false;
-#endif
-	}
 
-	if (!ina219->init())
+	if (!ina219.init())
 	{
 		MYLOG("INA", "INA219 not found");
 		return false;
@@ -77,7 +58,7 @@ bool init_rak16000(void)
 	  SAMPLE_MODE_64    Mean Value 64 samples        34.05 ms
 	  SAMPLE_MODE_128   Mean Value 128 samples       68.10 ms
 	  */
-	ina219->setADCMode(adc_mode); // choose mode and uncomment for change of default
+	ina219.setADCMode(adc_mode); // choose mode and uncomment for change of default
 
 	/* Set measure mode
 	POWER_DOWN - INA219 switched off
@@ -85,7 +66,7 @@ bool init_rak16000(void)
 	ADC_OFF    - Analog/Digital Converter switched off
 	CONTINUOUS  - Continuous measurements (DEFAULT)
 	*/
-	ina219->setMeasureMode(measure_mode); // choose mode and uncomment for change of default
+	ina219.setMeasureMode(measure_mode); // choose mode and uncomment for change of default
 
 	/* Set PGain
 	* Gain *  * Shunt Voltage Range *   * Max Current (if shunt is 0.1 ohms) *
@@ -94,20 +75,20 @@ bool init_rak16000(void)
 	 PG_160      160 mV                   1.6 A
 	 PG_320      320 mV                   3.2 A (DEFAULT)
 	*/
-	ina219->setPGain(gain_mode); // choose gain and uncomment for change of default
+	ina219.setPGain(gain_mode); // choose gain and uncomment for change of default
 
 	/* Set Bus Voltage Range
 	 BRNG_16   -> 16 V
 	 BRNG_32   -> 32 V (DEFAULT)
 	*/
-	ina219->setBusRange(bus_range);	 // choose range and uncomment for change of default
-	ina219->setShuntSizeInOhms(0.1); // we use 100ohm
+	ina219.setBusRange(bus_range);	 // choose range and uncomment for change of default
+	ina219.setShuntSizeInOhms(0.1); // we use 100ohm
 
 	/* If the current values delivered by the INA219 differ by a constant factor
 	   from values obtained with calibrated equipment you can define a correction factor.
 	   Correction factor = current delivered from calibrated equipment / current delivered by INA219
 	*/
-	ina219->setCorrectionFactor(0.99); // insert your correction factor if necessary
+	ina219.setCorrectionFactor(0.99); // insert your correction factor if necessary
 	return true;
 }
 
@@ -125,13 +106,13 @@ void read_rak16000(void)
 	float current_mA = 0.0;
 	float power_mW = 0.0;
 
-	shuntVoltage_mV = ina219->getShuntVoltage_mV();
-	busVoltage_V = ina219->getBusVoltage_V();
+	shuntVoltage_mV = ina219.getShuntVoltage_mV();
+	busVoltage_V = ina219.getBusVoltage_V();
 	// here we use the I=U/R to calculate, here the Resistor is 100mΩ, accuracy can reach to 0.5%.
 	current_mA = shuntVoltage_mV / 0.1;
-	power_mW = ina219->getBusPower();
+	power_mW = ina219.getBusPower();
 
-	if (ina219->getOverflow())
+	if (ina219.getOverflow())
 	{
 		MYLOG("INA", "INA219 overflow");
 		g_solution_data.addAnalogInput(LPP_CHANNEL_CURRENT_CURRENT, 0.0);

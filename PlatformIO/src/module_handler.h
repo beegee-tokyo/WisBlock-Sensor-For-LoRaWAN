@@ -125,6 +125,7 @@ bool init_rak12009(void);
 void read_rak12009(void);
 bool init_rak12010(void);
 void read_rak12010();
+extern uint8_t xshut_pin;
 bool init_rak12014(void);
 void read_rak12014(void);
 bool init_rak12019(void);
@@ -211,6 +212,7 @@ void get_sensor_values(void);
 
 extern float sensorPPM;
 extern float PPMpercentage;
+extern uint16_t last_gas;
 
 // Environment and barometric pressure sensor stuff
 extern float at_MSL;
@@ -229,7 +231,9 @@ uint16_t set_calib_rak12035(bool is_dry, uint16_t calib_val);
 bool init_gnss(void);
 bool poll_gnss(void);
 void gnss_task(void *pvParameters);
+void wake_poll(TimerHandle_t unused);
 extern SemaphoreHandle_t g_gnss_sem;
+extern SemaphoreHandle_t g_gnss_poll;
 extern TaskHandle_t gnss_task_handle;
 extern volatile bool last_read_ok;
 extern uint8_t g_gnss_option;
