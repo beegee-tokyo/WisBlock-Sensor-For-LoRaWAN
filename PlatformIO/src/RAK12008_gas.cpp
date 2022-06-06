@@ -36,31 +36,13 @@ bool init_rak12008(void)
 	pinMode(EN_PIN, OUTPUT);
 	digitalWrite(EN_PIN, HIGH); // power on RAK12008
 
-	if (found_sensors[MG812_ID].i2c_num == 1)
+	Wire.begin();
+	if (!MG812.begin(MG812_ADDRESS, Wire))
 	{
-		Wire.begin();
-		if (!MG812.begin(MG812_ADDRESS, Wire))
-		{
-			MYLOG("MG812", "MG812 not found");
-			digitalWrite(EN_PIN, LOW); // power down RAK12008
-			// api_deinit_gpio(EN_PIN);
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!MG812.begin(MG812_ADDRESS, Wire1))
-		{
-			MYLOG("MG812", "MG812 not found");
-			digitalWrite(EN_PIN, LOW); // power down RAK12008
-			// api_deinit_gpio(EN_PIN);
-			return false;
-		}
-#else
+		MYLOG("MG812", "MG812 not found");
+		digitalWrite(EN_PIN, LOW); // power down RAK12008
+		// api_deinit_gpio(EN_PIN);
 		return false;
-#endif
 	}
 	return true;
 }

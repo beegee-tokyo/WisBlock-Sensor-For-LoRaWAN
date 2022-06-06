@@ -17,9 +17,6 @@ using namespace Adafruit_LittleFS_Namespace;
 /** Filename to save GPS precision setting */
 static const char gnss_name[] = "GNSS";
 
-/** Filename to save data format setting */
-static const char helium_format[] = "HELIUM";
-
 /** Filename to save GPS precision setting */
 static const char batt_name[] = "BATT";
 
@@ -58,6 +55,10 @@ static int at_query_gnss()
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "GPS precision: 2");
 	}
+	else if (g_is_tester)
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "GPS precision: 3");
+	}
 	else
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "GPS precision: %d", g_gps_prec_6 ? 1 : 0);
@@ -72,6 +73,7 @@ static int at_query_gnss()
  *  '0' sets the precission to 4 digits
  *  '1' sets the precission to 6 digits
  *  '2' sets the dataformat to Helium Mapper
+ *  '3' sets the dataformat to LoRaWAN Field Tester
  * @return int 0 if the command was succesfull, 5 if the parameter was wrong
  */
 static int at_exec_gnss(char *str)
@@ -80,17 +82,28 @@ static int at_exec_gnss(char *str)
 	{
 		g_is_helium = false;
 		g_gps_prec_6 = false;
+		g_is_tester = false;
 		save_gps_settings();
 	}
 	else if (str[0] == '1')
 	{
 		g_is_helium = false;
 		g_gps_prec_6 = true;
+		g_is_tester = false;
 		save_gps_settings();
 	}
 	else if (str[0] == '2')
 	{
 		g_is_helium = true;
+		g_gps_prec_6 = false;
+		g_is_tester = false;
+		save_gps_settings();
+	}
+	else if (str[0] == '3')
+	{
+		g_is_helium = false;
+		g_gps_prec_6 = false;
+		g_is_tester = true;
 		save_gps_settings();
 	}
 	else
@@ -106,25 +119,39 @@ static int at_exec_gnss(char *str)
  */
 void read_gps_settings(void)
 {
+	g_gps_prec_6 = false;
+	g_is_helium = false;
+	g_is_tester = false;
+
 	if (InternalFS.exists(gnss_name))
 	{
-		g_gps_prec_6 = true;
-		MYLOG("USR_AT", "File found, set precision to high");
+		gps_file.open(gnss_name, FILE_O_READ);
+		// int read (void *buf, uint16_t nbyte);
+		char data[3] = {'0'};
+		gps_file.read(data, 1);
+		gps_file.close();
+
+		MYLOG("USR_AT", "File found, read %c", data[0]);
+		if (data[0] == '1')
+		{
+			g_gps_prec_6 = true;
+			MYLOG("USR_AT", "File found, set format to 6 digit");
+		}
+		else if (data[0] == '2')
+		{
+			g_is_helium = true;
+			MYLOG("USR_AT", "File found, set format to Helium");
+		}
+		else if (data[0] == '3')
+		{
+			g_is_tester = true;
+			MYLOG("USR_AT", "File found, set format to Tester");
+		}
 	}
 	else
 	{
-		g_gps_prec_6 = false;
-		MYLOG("USR_AT", "File not found, set precision to low");
-	}
-	if (InternalFS.exists(helium_format))
-	{
-		g_is_helium = true;
-		MYLOG("USR_AT", "File found, set Helium Mapper format");
-	}
-	else
-	{
-		g_is_helium = false;
-		MYLOG("USR_AT", "File not found, set Cayenne LPP format");
+		MYLOG("USR_AT", "File not found, set format to Tester");
+		g_is_tester = true;
 	}
 }
 
@@ -134,30 +161,29 @@ void read_gps_settings(void)
  */
 void save_gps_settings(void)
 {
+	InternalFS.remove(gnss_name);
+	gps_file.open(gnss_name, FILE_O_WRITE);
 	if (g_gps_prec_6)
 	{
-		gps_file.open(gnss_name, FILE_O_WRITE);
+		MYLOG("USR_AT", "Saved high precision");
 		gps_file.write("1");
-		gps_file.close();
-		MYLOG("USR_AT", "Created File for high precision");
+	}
+	else if (g_is_helium)
+	{
+		MYLOG("USR_AT", "Saved Helium format");
+		gps_file.write("2");
+	}
+	else if (g_is_tester)
+	{
+		MYLOG("USR_AT", "Saved Tester format");
+		gps_file.write("3");
 	}
 	else
 	{
-		InternalFS.remove(gnss_name);
-		MYLOG("USR_AT", "Remove File for high precision");
+		MYLOG("USR_AT", "Saved low precision");
+		gps_file.write("0");
 	}
-	if (g_is_helium)
-	{
-		gps_file.open(helium_format, FILE_O_WRITE);
-		gps_file.write("1");
-		gps_file.close();
-		MYLOG("USR_AT", "Created File for Helium Mapper format");
-	}
-	else
-	{
-		InternalFS.remove(helium_format);
-		MYLOG("USR_AT", "Remove File for Helium Mapper format");
-	}
+	gps_file.close();
 }
 
 /**
@@ -167,7 +193,7 @@ void save_gps_settings(void)
 atcmd_t g_user_at_cmd_list_gps[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
-	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper", at_query_gnss, at_exec_gnss, at_query_gnss},
+	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper, 3 = Field Tester", at_query_gnss, at_exec_gnss, at_query_gnss},
 };
 
 /**

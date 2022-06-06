@@ -25,20 +25,8 @@ bool init_rak12003(void)
 {
 	MLX90632::status init_result;
 
-	if (found_sensors[FIR_ID].i2c_num == 1)
-	{
-		Wire.begin();
-		fir_sensor.begin(0x3A, Wire, init_result);
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		fir_sensor.begin(0x3A, Wire1, init_result);
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
+	fir_sensor.begin(0x3A, Wire, init_result);
 
 	if (init_result != MLX90632::SENSOR_SUCCESS)
 	{

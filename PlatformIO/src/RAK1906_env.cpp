@@ -14,16 +14,15 @@
 #include <Adafruit_BME680.h>
 
 /** BME680 instance for Wire */
-Adafruit_BME680 bme_1(&Wire);
-#if WIRE_INTERFACES_COUNT > 1
-/** BME680 instance for Wire1 */
-Adafruit_BME680 bme_2(&Wire1);
-#endif
-/** Pointer to used instance */
-Adafruit_BME680 *bme;
+Adafruit_BME680 bme(&Wire);
 
 // Might need adjustments
 #define SEALEVELPRESSURE_HPA (1010.0)
+
+/** Last temperature read */
+float _last_temp_rak1906 = 0;
+/** Last humidity read */
+float _last_humid_rak1906 = 0;
 
 /**
  * @brief Initialize the BME680 sensor
@@ -33,34 +32,20 @@ Adafruit_BME680 *bme;
  */
 bool init_rak1906(void)
 {
-	if (found_sensors[ENV_ID].i2c_num == 1)
-	{
-		bme = &bme_1;
-		Wire.begin();
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		bme = &bme_2;
-		Wire1.begin();
-#else
-		MYLOG("BME", "BME680 sensor on unsupported I2C!");
-		return false;
-#endif
-	}
+	Wire.begin();
 
-	if (!bme->begin(0x76))
+	if (!bme.begin(0x76))
 	{
 		MYLOG("BME", "Could not find a valid BME680 sensor, check wiring!");
 		return false;
 	}
 
 	// Set up oversampling and filter initialization
-	bme->setTemperatureOversampling(BME680_OS_8X);
-	bme->setHumidityOversampling(BME680_OS_2X);
-	bme->setPressureOversampling(BME680_OS_4X);
-	bme->setIIRFilterSize(BME680_FILTER_SIZE_3);
-	bme->setGasHeater(320, 150); // 320*C for 150 ms
+	bme.setTemperatureOversampling(BME680_OS_8X);
+	bme.setHumidityOversampling(BME680_OS_2X);
+	bme.setPressureOversampling(BME680_OS_4X);
+	bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+	bme.setGasHeater(320, 150); // 320*C for 150 ms
 
 	return true;
 }
@@ -72,7 +57,7 @@ bool init_rak1906(void)
 void start_rak1906(void)
 {
 	MYLOG("BME", "Start BME reading");
-	bme->beginReading();
+	bme.beginReading();
 }
 
 /**
@@ -91,7 +76,7 @@ bool read_rak1906()
 	bool read_success = false;
 	while ((millis() - wait_start) < 5000)
 	{
-		if (bme->endReading())
+		if (bme.endReading())
 		{
 			read_success = true;
 			break;
@@ -104,22 +89,37 @@ bool read_rak1906()
 	}
 
 #if MY_DEBUG > 0
-	int16_t temp_int = (int16_t)(bme->temperature * 10.0);
-	uint16_t humid_int = (uint16_t)(bme->humidity * 2);
-	uint16_t press_int = (uint16_t)(bme->pressure / 10);
-	uint16_t gasres_int = (uint16_t)(bme->gas_resistance / 10);
+	int16_t temp_int = (int16_t)(bme.temperature * 10.0);
+	uint16_t humid_int = (uint16_t)(bme.humidity * 2);
+	uint16_t press_int = (uint16_t)(bme.pressure / 10);
+	uint16_t gasres_int = (uint16_t)(bme.gas_resistance / 10);
 #endif
 
-	g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID_2, bme->humidity);
-	g_solution_data.addTemperature(LPP_CHANNEL_TEMP_2, bme->temperature);
-	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS_2, bme->pressure / 100);
-	g_solution_data.addAnalogInput(LPP_CHANNEL_GAS_2, (float)(bme->gas_resistance) / 1000.0);
+	g_solution_data.addRelativeHumidity(LPP_CHANNEL_HUMID_2, bme.humidity);
+	g_solution_data.addTemperature(LPP_CHANNEL_TEMP_2, bme.temperature);
+	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS_2, bme.pressure / 100);
+	g_solution_data.addAnalogInput(LPP_CHANNEL_GAS_2, (float)(bme.gas_resistance) / 1000.0);
+
+	_last_temp_rak1906 = bme.temperature;
+	_last_humid_rak1906 = bme.humidity;
 
 #if MY_DEBUG > 0
 	MYLOG("BME", "RH= %.2f T= %.2f", (float)(humid_int / 2.0), (float)(temp_int / 10.0));
 	MYLOG("BME", "P= %d R= %d", press_int * 10, gasres_int * 10);
 #endif
 	return true;
+}
+
+/**
+ * @brief Returns the latest values from the sensor
+ *        or starts a new reading
+ *
+ * @param values array for temperature [0] and humidity [1]
+ */
+void get_rak1906_values(float *values)
+{
+		values[0] = _last_temp_rak1906;
+		values[1] = _last_humid_rak1906;
 }
 
 /**
@@ -141,8 +141,8 @@ uint16_t get_alt_rak1906(void)
 
 	MYLOG("BME", "Compute altitude\n");
 	// pressure in HPa
-	float pressure = bme->pressure / 100.0;
-	MYLOG("BME", "P: %.2f MSL: %.2f", bme->pressure / 100.0, at_MSL);
+	float pressure = bme.pressure / 100.0;
+	MYLOG("BME", "P: %.2f MSL: %.2f", bme.pressure / 100.0, at_MSL);
 
 	float A = pressure / at_MSL; // (1013.25) by default;
 	float B = 1 / 5.25588;

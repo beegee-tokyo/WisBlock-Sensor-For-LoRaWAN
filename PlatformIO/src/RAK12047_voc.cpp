@@ -14,10 +14,12 @@
 #include <SensirionI2CSgp40.h>
 #include <VOCGasIndexAlgorithm.h>
 
+/** Sampling interval for the algorithm */
+int32_t sampling_interval = 10;
 /** Instance for the VOC sensor */
 SensirionI2CSgp40 sgp40;
 /** Instance for the VOC algorithm */
-VOCGasIndexAlgorithm voc_algorithm;
+VOCGasIndexAlgorithm voc_algorithm(sampling_interval);
 
 /** Timer for VOC measurement */
 SoftwareTimer voc_read_timer;
@@ -131,7 +133,7 @@ void read_rak12047(void)
 		MYLOG("VOC", "VOC Index: %ld", voc_index);
 
 		g_solution_data.addVoc_index(LPP_CHANNEL_VOC, voc_index);
-		}
+	}
 	else
 	{
 		AT_PRINTF("+EVT:VOC_ERROR\n");
@@ -151,22 +153,33 @@ void do_read_rak12047(void)
 	digitalWrite(LED_BLUE, HIGH);
 #endif
 	uint16_t error;
-	float humidity = 0;	   // %RH
-	float temperature = 0; // degreeC
+	// float humidity = 0;	   // %RH
+	// float temperature = 0; // degreeC
 	uint16_t srawVoc = 0;
 	uint16_t defaultRh = 0x8000;
 	uint16_t defaultT = 0x6666;
-	float rak1901_values[2] = {0.0};
+	float t_h_values[2] = {0.0}; // temperature [0] & humidity [1] value from T&H sensor
 
 	if (found_sensors[TEMP_ID].found_sensor)
 	{
-		get_rak1901_values(rak1901_values);
+		get_rak1901_values(t_h_values);
 		// MYLOG("VOC", "Rh: %.2f T: %.2f", humidity, temperature);
 
-		if ((temperature != 0.0) && (temperature != 0.0))
+		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
 		{
-			defaultRh = (uint16_t)(humidity * 65535 / 100);
-			defaultT = (uint16_t)((temperature + 45) * 65535 / 175);
+			defaultRh = (uint16_t)(t_h_values[1] * 65535 / 100);
+			defaultT = (uint16_t)((t_h_values[0] + 45) * 65535 / 175);
+		}
+	}
+	else if (found_sensors[ENV_ID].found_sensor)
+	{
+		get_rak1906_values(t_h_values);
+		// MYLOG("VOC", "Rh: %.2f T: %.2f", humidity, temperature);
+
+		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
+		{
+			defaultRh = (uint16_t)(t_h_values[1] * 65535 / 100);
+			defaultT = (uint16_t)((t_h_values[0] + 45) * 65535 / 175);
 		}
 	}
 
@@ -205,14 +218,6 @@ void do_read_rak12047(void)
 		MYLOG("VOC", "VOC Index: %ld", voc_index);
 		voc_valid = true;
 	}
-
-#ifdef _USE_BSEC_
-	// Read as well the BME680 using BSEC library if RAK1906 is available
-	if (found_sensors[TEMP_ID].found_sensor)
-	{
-		do_read_rak1906();
-	}
-#endif
 
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, LOW);

@@ -26,31 +26,14 @@ bool init_rak12037(void)
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH); // power on RAK12037
 
-	if (found_sensors[CO2_ID].i2c_num == 1)
+	Wire.begin();
+	if (!scd30.begin(Wire))
 	{
-		Wire.begin();
-		if (!scd30.begin(Wire))
-		{
-			MYLOG("SCD30", "SCD30 not found");
-			digitalWrite(WB_IO2, LOW); // power down RAK12004
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!scd30.begin(Wire1))
-		{
-			MYLOG("SCD30", "SCD30 not found");
-			digitalWrite(WB_IO2, LOW); // power down RAK12004
-			// api_deinit_gpio(EN_PIN);
-			return false;
-		}
-#else
+		MYLOG("SCD30", "SCD30 not found");
+		digitalWrite(WB_IO2, LOW); // power down RAK12004
 		return false;
-#endif
 	}
+
 	//**************init SCD30 sensor *****************************************************
 	// Change number of seconds between measurements: 2 to 1800 (30 minutes), stored in non-volatile memory of SCD30
 	scd30.setMeasurementInterval(10000);

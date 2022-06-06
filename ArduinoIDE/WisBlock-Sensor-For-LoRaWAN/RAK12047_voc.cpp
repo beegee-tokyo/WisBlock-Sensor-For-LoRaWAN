@@ -14,10 +14,12 @@
 #include <SensirionI2CSgp40.h>
 #include <VOCGasIndexAlgorithm.h>
 
+/** Sampling interval for the algorithm */
+int32_t sampling_interval = 10;
 /** Instance for the VOC sensor */
 SensirionI2CSgp40 sgp40;
 /** Instance for the VOC algorithm */
-VOCGasIndexAlgorithm voc_algorithm;
+VOCGasIndexAlgorithm voc_algorithm(sampling_interval);
 
 /** Timer for VOC measurement */
 SoftwareTimer voc_read_timer;
@@ -206,13 +208,6 @@ void do_read_rak12047(void)
 		voc_valid = true;
 	}
 
-#ifdef _USE_BSEC_
-	// Read as well the BME680 using BSEC library if RAK1906 is available
-	if (found_sensors[TEMP_ID].found_sensor)
-	{
-		do_read_rak1906();
-	}
-#endif
 
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, LOW);

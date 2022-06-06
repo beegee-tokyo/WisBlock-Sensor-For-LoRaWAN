@@ -17,13 +17,7 @@
 void int_callback_rak1905(void);
 
 /** Sensor instance using Wire */
-MPU9250_WE mpu_sensor_1 = MPU9250_WE();
-#if WIRE_INTERFACES_COUNT > 1
-/** Sensor instance using Wire1 */
-MPU9250_WE mpu_sensor_2 = MPU9250_WE(&Wire1);
-#endif
-/** Pointer to used instance */
-MPU9250_WE *mpu_sensor;
+MPU9250_WE mpu_sensor = MPU9250_WE();
 
 /** Interrupt pin, depends on slot */
 uint8_t mpu_int_pin = ACC_INT_PIN;
@@ -40,52 +34,38 @@ bool init_rak1905(void)
 	// Setup interrupt pin
 	pinMode(mpu_int_pin, INPUT);
 
-	if (found_sensors[MPU_ID].i2c_num == 1)
-	{
-		mpu_sensor = &mpu_sensor_1;
-		Wire.begin();
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		mpu_sensor = &mpu_sensor_2;
-		Wire1.begin();
-#else
-		MYLOG("9DOF", "MPU9250 sensor on unsupported I2C!");
-		return false;
-#endif
-	}
+	Wire.begin();
 
-	if (!mpu_sensor->init())
+	if (!mpu_sensor.init())
 	{
-		MYLOG("9DOF", "Chip ID %02x %02x", mpu_sensor->whoAmI(), mpu_sensor->whoAmIMag());
+		MYLOG("9DOF", "Chip ID %02x %02x", mpu_sensor.whoAmI(), mpu_sensor.whoAmIMag());
 		MYLOG("9DOF", "9DOF sensor initialization failed");
 		return false;
 	}
 
-	MYLOG("9DOF", "Chip ID %02x %02x", mpu_sensor->whoAmI(), mpu_sensor->whoAmIMag());
+	MYLOG("9DOF", "Chip ID %02x %02x", mpu_sensor.whoAmI(), mpu_sensor.whoAmIMag());
 
 	// Auto offsets
-	mpu_sensor->autoOffsets();
+	mpu_sensor.autoOffsets();
 
 	/*  Sample rate divider divides the output rate of the gyroscope and accelerometer.
 	 *  Sample rate = Internal sample rate / (1 + divider)
 	 *  It can only be applied if the corresponding DLPF is enabled and 0<DLPF<7!
 	 *  Divider is a number 0...255
 	 */
-	mpu_sensor->setSampleRateDivider(5);
+	mpu_sensor.setSampleRateDivider(5);
 
 	/*  MPU9250_ACC_RANGE_2G      2 g   (default)
 	 *  MPU9250_ACC_RANGE_4G      4 g
 	 *  MPU9250_ACC_RANGE_8G      8 g
 	 *  MPU9250_ACC_RANGE_16G    16 g
 	 */
-	mpu_sensor->setAccRange(MPU9250_ACC_RANGE_2G);
+	mpu_sensor.setAccRange(MPU9250_ACC_RANGE_2G);
 
 	/*  Enable/disable the digital low pass filter for the accelerometer
 	 *  If disabled the bandwidth is 1.13 kHz, delay is 0.75 ms, output rate is 4 kHz
 	 */
-	mpu_sensor->enableAccDLPF(true);
+	mpu_sensor.enableAccDLPF(true);
 
 	/*  Digital low pass filter (DLPF) for the accelerometer, if enabled
 	 *  MPU9250_DPLF_0, MPU9250_DPLF_2, ...... MPU9250_DPLF_7
@@ -99,7 +79,7 @@ bool init_rak1905(void)
 	 *     6             5              66.96           1
 	 *     7           460               1.94           1
 	 */
-	mpu_sensor->setAccDLPF(MPU9250_DLPF_6);
+	mpu_sensor.setAccDLPF(MPU9250_DLPF_6);
 
 	/*  Set accelerometer output data rate in low power mode (cycle enabled)
 	 *   MPU9250_LP_ACC_ODR_0_24          0.24 Hz
@@ -115,23 +95,23 @@ bool init_rak1905(void)
 	 *   MPU9250_LP_ACC_ODR_250         250 Hz
 	 *   MPU9250_LP_ACC_ODR_500         500 Hz
 	 */
-	// mpu_sensor->setLowPowerAccDataRate(MPU9250_LP_ACC_ODR_125);
+	// mpu_sensor.setLowPowerAccDataRate(MPU9250_LP_ACC_ODR_125);
 
 	/*  Set the interrupt pin:
 	 *  MPU9250_ACT_LOW  = active-low
 	 *  MPU9250_ACT_HIGH = active-high (default)
 	 */
-	mpu_sensor->setIntPinPolarity(MPU9250_ACT_HIGH);
+	mpu_sensor.setIntPinPolarity(MPU9250_ACT_HIGH);
 
 	/*  If latch is enabled the Interrupt Pin Level is held until the Interrupt Status
 	 *  is cleared. If latch is disabled the Interrupt Puls is ~50µs (default).
 	 */
-	mpu_sensor->enableIntLatch(true);
+	mpu_sensor.enableIntLatch(true);
 
 	/*  The Interrupt can be cleared by any read. Otherwise the Interrupt will only be
 	 *  cleared if the Interrupt Status register is read (default).
 	 */
-	mpu_sensor->enableClearIntByAnyRead(false);
+	mpu_sensor.enableClearIntByAnyRead(false);
 
 	/*  Enable/disable interrupts:
 	 *  MPU9250_DATA_READY
@@ -140,14 +120,14 @@ bool init_rak1905(void)
 	 *
 	 *  You can enable all interrupts.
 	 */
-	// mpu_sensor->enableInterrupt(MPU9250_DATA_READY);
-	mpu_sensor->enableInterrupt(MPU9250_WOM_INT);
+	// mpu_sensor.enableInterrupt(MPU9250_DATA_READY);
+	mpu_sensor.enableInterrupt(MPU9250_WOM_INT);
 	// myMPU9250.disableInterrupt(MPU9250_FIFO_OVF);
 
 	/*  Set the Wake On Motion Threshold
 	 *  Choose 1 (= 4 mg) ..... 255 (= 1020 mg);
 	 */
-	mpu_sensor->setWakeOnMotionThreshold(128); // 128 = ~0.5 g
+	mpu_sensor.setWakeOnMotionThreshold(128); // 128 = ~0.5 g
 
 	/*  Enable/disable wake on motion (WOM) and  WOM mode:
 	 *  MPU9250_WOM_DISABLE
@@ -156,12 +136,12 @@ bool init_rak1905(void)
 	 *  MPU9250_WOM_COMP_DISABLE   // reference is the starting value
 	 *  MPU9250_WOM_COMP_ENABLE    // reference is the last value
 	 */
-	mpu_sensor->enableWakeOnMotion(MPU9250_WOM_ENABLE, MPU9250_WOM_COMP_DISABLE);
+	mpu_sensor.enableWakeOnMotion(MPU9250_WOM_ENABLE, MPU9250_WOM_COMP_DISABLE);
 
 	/* If cycle is set, and standby or sleep are not set, the module will cycle between
 	 *  sleep and taking a sample at a rate determined by setLowPowerAccDataRate().
 	 */
-	// mpu_sensor->enableCycle(true);
+	// mpu_sensor.enableCycle(true);
 
 	/* You can enable or disable the axes for gyroscope and/or accelerometer measurements.
 	 * By default all axes are enabled. Parameters are:
@@ -209,8 +189,8 @@ void int_callback_rak1905(void)
  */
 void clear_int_rak1905(void)
 {
-	byte source = mpu_sensor->readAndClearInterrupts();
-	if (mpu_sensor->checkInterrupt(source, MPU9250_WOM_INT))
+	byte source = mpu_sensor.readAndClearInterrupts();
+	if (mpu_sensor.checkInterrupt(source, MPU9250_WOM_INT))
 	{
 		MYLOG("9DOF", "Interrupt Type: Motion");
 	}

@@ -32,7 +32,6 @@ void send_delayed(TimerHandle_t unused);
 typedef struct sensors_s
 {
 	uint8_t i2c_addr;  // I2C address
-	uint8_t i2c_num;   // I2C port
 	bool found_sensor; // Flag if sensor is present
 } sensors_t;
 
@@ -106,6 +105,7 @@ void clear_int_rak1905(void);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
+void get_rak1906_values(float *values);
 uint16_t get_alt_rak1906(void);
 bool init_rak1921(void);
 void rak1921_add_line(char *line);
@@ -240,6 +240,7 @@ extern uint8_t g_gnss_option;
 
 extern bool g_gps_prec_6;
 extern bool g_is_helium;
+extern bool g_is_tester;
 
 void read_gps_settings(void);
 void save_gps_settings(void);

@@ -15,13 +15,6 @@
 // Forward declarations
 void int_callback_rak12025(void);
 
-// /** Sensor instance using Wire */
-// I3G4250D gyro_1(&Wire);
-// /** Sensor instance using Wire1 */
-// I3G4250D gyro_2(&Wire1);
-// /** Pointer to used instance */
-// I3G4250D *gyro_sensor;
-
 /** Temporary as library does not support Wire 1 */
 I3G4250D gyro_sensor;
 
@@ -42,18 +35,6 @@ bool init_rak12025(void)
 	// Setup interrupt pin
 	pinMode(GYRO_INT_PIN, INPUT);
 
-	// if (found_sensors[GYRO_ID].i2c_num == 1)
-	// {
-	// 	gyro_sensor = &gyro_1;
-	// 	Wire.begin();
-	// }
-	// else
-	// {
-	// 	gyro_sensor = &gyro_2;
-	// 	Wire1.begin();
-	// }
-
-	// error = gyro_sensor->I3G4250D_Init(0xFF, 0x00, 0x00, 0x00, 0x00, I3G4250D_SCALE_500);
 	error = gyro_sensor.I3G4250D_Init(0xFF, 0x00, 0x00, 0x00, 0x00, I3G4250D_SCALE_500);
 	if (error != 0)
 	{
@@ -61,7 +42,6 @@ bool init_rak12025(void)
 		return false;
 	}
 
-	// gyro_sensor->readRegister(0x0F, &id, 1);
 	gyro_sensor.readRegister(0x0F, &id, 1);
 	MYLOG("GYRO", "Gyroscope Device ID = %02X", id);
 
@@ -74,13 +54,11 @@ bool init_rak12025(void)
 	/* The value of 1 LSB of the threshold corresponds to ~7.5 mdps
 	 * Set Threshold ~100 dps on X, Y and Z axis
 	 */
-	// gyro_sensor->I3G4250D_SetTresholds(0x1415, 0x1415, 0x1415);
+
 	gyro_sensor.I3G4250D_SetTresholds(0x1415, 0x1415, 0x1415);
 
-	// gyro_sensor->I3G4250D_InterruptCtrl(I3G4250D_INT_CTR_XLI_ON | I3G4250D_INT_CTR_YLI_ON | I3G4250D_INT_CTR_ZLI_ON);
 	gyro_sensor.I3G4250D_InterruptCtrl(I3G4250D_INT_CTR_XLI_ON | I3G4250D_INT_CTR_YLI_ON | I3G4250D_INT_CTR_ZLI_ON);
 
-	// gyro_sensor->I3G4250D_Enable_INT1();
 	gyro_sensor.I3G4250D_Enable_INT1();
 
 	pinMode(GYRO_INT_PIN, INPUT); // Connect with I3G4250D INT1.
@@ -105,7 +83,6 @@ void int_callback_rak12025(void)
  */
 void clear_int_rak12025(void)
 {
-	// gyro_sensor->I3G4250D_GetInterruptSrc();
 	gyro_sensor.I3G4250D_GetInterruptSrc();
 }
 
@@ -117,7 +94,6 @@ void clear_int_rak12025(void)
  */
 void read_rak12025(void)
 {
-	// uint8_t eventSrc = gyro_sensor->I3G4250D_GetInterruptSrc();
 	uint8_t eventSrc = gyro_sensor.I3G4250D_GetInterruptSrc();
 
 #if MY_DEBUG > 0
@@ -147,7 +123,6 @@ void read_rak12025(void)
 	}
 #endif
 
-	// gyro_data = gyro_sensor->I3G4250D_GetScaledData();
 	gyro_data = gyro_sensor.I3G4250D_GetScaledData();
 
 	g_solution_data.addGyrometer(LPP_CHANNEL_GYRO, gyro_data.x, gyro_data.y, gyro_data.z);

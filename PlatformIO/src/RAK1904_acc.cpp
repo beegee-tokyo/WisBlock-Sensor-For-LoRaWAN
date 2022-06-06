@@ -18,13 +18,7 @@
 void int_callback_rak1904(void);
 
 /** Sensor instance using Wire */
-Adafruit_LIS3DH acc_sensor_1(&Wire);
-#if WIRE_INTERFACES_COUNT > 1
-/** Sensor instance using Wire1 */
-Adafruit_LIS3DH acc_sensor_2(&Wire1);
-#endif
-/** Pointer to used instance */
-Adafruit_LIS3DH *acc_sensor;
+Adafruit_LIS3DH acc_sensor(&Wire);
 
 /** For internal usage */
 TwoWire *usedWire;
@@ -98,35 +92,21 @@ bool init_rak1904(void)
 	// Setup interrupt pin
 	pinMode(acc_int_pin, INPUT);
 
-	if (found_sensors[ACC_ID].i2c_num == 1)
-	{
-		acc_sensor = &acc_sensor_1;
-		Wire.begin();
-		usedWire = &Wire;
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		acc_sensor = &acc_sensor_2;
-		Wire1.begin();
-		usedWire = &Wire1;
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
+	usedWire = &Wire;
 
-	acc_sensor->setDataRate(LIS3DH_DATARATE_10_HZ);
-	acc_sensor->setRange(LIS3DH_RANGE_4_G);
+	acc_sensor.setDataRate(LIS3DH_DATARATE_10_HZ);
+	acc_sensor.setRange(LIS3DH_RANGE_4_G);
 
-	if (!acc_sensor->begin())
+	if (!acc_sensor.begin())
 	{
 		MYLOG("ACC", "ACC sensor initialization failed");
 		return false;
 	}
 
 	// Enable interrupts
-	acc_sensor->enableDRDY(true, 1);
-	acc_sensor->enableDRDY(false, 2);
+	acc_sensor.enableDRDY(true, 1);
+	acc_sensor.enableDRDY(false, 2);
 
 	uint8_t data_to_write = 0;
 	data_to_write |= 0x20;									  // Z high
@@ -218,6 +198,6 @@ void int_callback_rak1904(void)
  */
 void clear_int_rak1904(void)
 {
-	acc_sensor->readAndClearInterrupt();
+	acc_sensor.readAndClearInterrupt();
 	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 }

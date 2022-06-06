@@ -50,20 +50,8 @@ bool init_rak12035(void)
 
 	delay(400);
 
-	if (found_sensors[SOIL_ID].i2c_num == 1)
-	{
-		Wire.begin();
-		soil_sensor.setup(Wire);
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		soil_sensor.setup(Wire1);
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
+	soil_sensor.setup(Wire);
 
 	// Initialize the sensor
 	soil_sensor.begin();
@@ -131,18 +119,7 @@ void read_rak12035(void)
 	uint16_t sensCap = 0;
 	uint32_t avgCap = 0;
 
-	if (found_sensors[SOIL_ID].i2c_num == 1)
-	{
-		Wire.begin();
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-#else
-		return;
-#endif
-	}
+	Wire.begin();
 
 	// Wake up the sensor
 	if (!soil_sensor.sensor_on())
@@ -227,18 +204,7 @@ uint16_t start_calib_rak12035(bool is_dry)
 	// Stop app timer while we do calibration
 	api_timer_stop();
 
-	if (found_sensors[SOIL_ID].i2c_num == 1)
-	{
-		Wire.begin();
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
 
 	if (!soil_sensor.sensor_on())
 	{
@@ -264,6 +230,7 @@ uint16_t start_calib_rak12035(bool is_dry)
 	}
 
 	soil_sensor.get_sensor_capacitance(&new_value);
+	MYLOG("SOIL", "First reading is %d\n", new_value);
 
 	for (int readings = 0; readings < 100; readings++)
 	{
@@ -278,7 +245,7 @@ uint16_t start_calib_rak12035(bool is_dry)
 		{
 			MYLOG("SOIL", "Capacitance reading failed\n");
 		}
-		delay(250);
+		delay(1000);
 		digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 		digitalWrite(LED_BLUE, !digitalRead(LED_BLUE));
 	}

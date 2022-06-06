@@ -12,6 +12,26 @@
 #include "app.h"
 #include <VL53L0X.h>
 
+//******************************************************************//
+// RAK12014 xshut_pin and interrupt guide
+//******************************************************************//
+// on/off control pin xshut_pin
+// Slot A      WB_IO2 ( == power control )
+// Slot B      WB_IO1 ( not recommended, INT pin conflict with IO2)
+// Slot C      WB_IO4
+// Slot D      WB_IO6
+// Slot E      WB_IO3
+// Slot F      WB_IO5
+//******************************************************************//
+// interrupt pin
+// Slot A      WB_IO1
+// Slot B      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot C      WB_IO3
+// Slot D      WB_IO5
+// Slot E      WB_IO4
+// Slot F      WB_IO6
+//******************************************************************//
+
 /** Instance of sensor class */
 VL53L0X tof_sensor;
 
@@ -44,20 +64,8 @@ bool init_rak12014(void)
 
 	// Wait for sensor wake-up
 	delay(150);
-	if (found_sensors[TOF_ID].i2c_num == 1)
-	{
-		tof_sensor.setBus(&Wire);
-		Wire.begin();
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		tof_sensor.setBus(&Wire1);
-		Wire1.begin();
-#else
-		return false;
-#endif
-	}
+	tof_sensor.setBus(&Wire);
+	Wire.begin();
 
 	tof_sensor.setTimeout(500);
 	if (!tof_sensor.init())

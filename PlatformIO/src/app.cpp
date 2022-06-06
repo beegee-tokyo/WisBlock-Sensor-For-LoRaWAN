@@ -30,6 +30,9 @@ bool g_gps_prec_6 = true;
 /** Switch between Cayenne LPP and Helium Mapper data packet */
 bool g_is_helium = false;
 
+/** Switch to Field Tester data packet */
+bool g_is_tester = false;
+
 /** Flag for battery protection enabled */
 bool battery_check_enabled = false;
 
@@ -40,7 +43,7 @@ void send_delayed(TimerHandle_t unused);
 char g_ble_dev_name[10] = "RAK-SENS";
 
 /** Send Fail counter **/
-uint8_t send_fail = 0;
+uint8_t join_send_fail = 0;
 
 /** Flag for low battery protection */
 bool low_batt_protection = false;
@@ -120,6 +123,11 @@ bool init_app(void)
 	{
 		// Get precision settings
 		read_gps_settings();
+
+		if (g_is_tester)
+		{
+			g_lorawan_settings.app_port = 1;
+		}
 	}
 
 	AT_PRINTF("============================\n");
@@ -132,6 +140,10 @@ bool init_app(void)
 		if (g_is_helium)
 		{
 			AT_PRINTF("Helium Mapper Solution\n");
+		}
+		else if (g_is_tester)
+		{
+			AT_PRINTF("LPWAN Tester Solution\n");
 		}
 		else
 		{
@@ -182,6 +194,7 @@ bool init_app(void)
 		}
 		rak1921_add_line(disp_txt);
 	}
+
 	return true;
 }
 
@@ -248,12 +261,12 @@ void app_event_handler(void)
 	// Timer triggered event
 	if ((g_task_event_type & STATUS) == STATUS)
 	{
-		if (found_sensors[ENV_ID].found_sensor && !g_is_helium)
+		if (found_sensors[ENV_ID].found_sensor && !g_is_helium && !g_is_tester)
 		{
 			// Startup the BME680
 			start_rak1906();
 		}
-		if (found_sensors[PRESS_ID].found_sensor && !g_is_helium)
+		if (found_sensors[PRESS_ID].found_sensor && !g_is_helium && !g_is_tester)
 		{
 			// Startup the LPS22HB
 			start_rak1902();
@@ -272,7 +285,7 @@ void app_event_handler(void)
 
 		if (!low_batt_protection)
 		{
-			if (!g_is_helium)
+			if (!g_is_helium && !g_is_tester)
 			{
 				// Get values from the connected modules
 				get_sensor_values();
@@ -288,7 +301,7 @@ void app_event_handler(void)
 		float batt_level_f = read_batt();
 		g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
 
-		if (found_sensors[OLED_ID].found_sensor)
+		if ((found_sensors[OLED_ID].found_sensor) && !g_is_tester)
 		{
 			if (found_sensors[RTC_ID].found_sensor)
 			{
@@ -353,7 +366,7 @@ void app_event_handler(void)
 				switch (result)
 				{
 				case LMH_SUCCESS:
-					if (found_sensors[OLED_ID].found_sensor)
+					if ((found_sensors[OLED_ID].found_sensor) && !g_is_tester)
 					{
 						if (found_sensors[RTC_ID].found_sensor)
 						{
@@ -463,7 +476,7 @@ void app_event_handler(void)
 				MYLOG("APP", "Gesture triggered");
 				read_rak14008();
 			}
-			
+
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
 			{
@@ -534,10 +547,18 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_GNSS_FIN;
 
-		if (!g_is_helium && found_sensors[ENV_ID].found_sensor)
+		if (!g_is_helium && !g_is_tester)
 		{
-			// Get Environment data
-			read_rak1906();
+			if (found_sensors[ENV_ID].found_sensor)
+			{
+				// Get Environment data
+				read_rak1906();
+			}
+			if (found_sensors[PRESS_ID].found_sensor)
+			{
+				// Get Environment data
+				read_rak1902();
+			}
 
 			// Get battery level
 			float batt_level_f = read_batt();
@@ -554,11 +575,8 @@ void app_event_handler(void)
 		char ble_out[256] = {0};
 		for (int idx = 0; idx < g_solution_data.getSize(); idx++)
 		{
-			// Serial.printf("%02X", packet_buff[idx]);
 			sprintf(&ble_out[idx * 2], "%02X", packet_buff[idx]);
 		}
-		// Serial.println("");
-		// Serial.printf("Packetsize %d\n", g_solution_data.getSize());
 		MYLOG("APP", "Size %d - Pckg: %s", g_solution_data.getSize(), ble_out);
 #endif
 
@@ -659,6 +677,9 @@ void lora_data_handler(void)
 			AT_PRINTF("+EVT:JOINED\n");
 			last_pos_send = millis();
 
+			// Reset join failed counter
+			join_send_fail = 0;
+
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
 			// memcpy(test_multicast.NwkSKey, _mc_nwskey, 16);
@@ -677,6 +698,14 @@ void lora_data_handler(void)
 			if (g_enable_ble)
 			{
 				restart_advertising(15);
+			}
+
+			join_send_fail++;
+			if (join_send_fail == 10)
+			{
+				// Too many failed join requests, reset node and try to rejoin
+				delay(100);
+				api_reset();
 			}
 		}
 	}
@@ -700,9 +729,9 @@ void lora_data_handler(void)
 		if (!g_rx_fin_result)
 		{
 			// Increase fail send counter
-			send_fail++;
+			join_send_fail++;
 
-			if (send_fail == 10)
+			if (join_send_fail == 10)
 			{
 				// Too many failed sendings, reset node and try to rejoin
 				delay(100);
@@ -714,34 +743,65 @@ void lora_data_handler(void)
 	// LoRa data handling
 	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
 	{
-		/**************************************************************/
-		/**************************************************************/
-		/// \todo LoRa data arrived
-		/// \todo parse them here
-		/**************************************************************/
-		/**************************************************************/
 		g_task_event_type &= N_LORA_DATA;
 		MYLOG("APP", "Received package over LoRa");
-
-		if (g_lorawan_settings.lorawan_enable)
+		if (g_is_tester)
 		{
-			AT_PRINTF("+EVT:RX_1, RSSI %d, SNR %d\n", g_last_rssi, g_last_snr);
-			AT_PRINTF("+EVT:%d:", g_last_fport);
-			for (int idx = 0; idx < g_rx_data_len; idx++)
+			// uint8_t sequence = g_rx_lora_data[0];
+			int16_t min_rssi = g_rx_lora_data[1] - 200;
+			int16_t max_rssi = g_rx_lora_data[2] - 200;
+			int16_t min_distance = g_rx_lora_data[3] * 250;
+			int16_t max_distance = g_rx_lora_data[4] * 250;
+			int8_t num_gateways = g_rx_lora_data[5];
+			AT_PRINTF("+EVT:FieldTester %d gateways\n", num_gateways);
+			AT_PRINTF("+EVT:RSSI min %d max %d\n", min_rssi, max_rssi);
+			AT_PRINTF("+EVT:Distance min %d max %d\n", min_distance, max_distance);
+
+			Serial.printf("+EVT:Distance min %d max %d\n", min_distance, max_distance);
+			if (found_sensors[OLED_ID].found_sensor)
 			{
-				AT_PRINTF("%02X", g_rx_lora_data[idx]);
+				char disp_txt[64] = {0};
+				snprintf(disp_txt, 64, "FieldTester %d gateways\n", num_gateways);
+				rak1921_add_line(disp_txt);
+				snprintf(disp_txt, 64, "RSSI min %d max %d\n", min_rssi, max_rssi);
+				rak1921_add_line(disp_txt);
+				snprintf(disp_txt, 64, "Distance min %d max %d\n", min_distance, max_distance);
+				rak1921_add_line(disp_txt);
+				// Get battery level
+				float batt_level_f = read_batt();
+				snprintf(disp_txt, 64, "Battery %.3fV", batt_level_f / 1000);
+				rak1921_add_line(disp_txt);
 			}
-			AT_PRINTF("\n");
 		}
 		else
 		{
-			AT_PRINTF("+EVT:RXP2P, RSSI %d, SNR %d\n", g_last_rssi, g_last_snr);
-			AT_PRINTF("+EVT:");
-			for (int idx = 0; idx < g_rx_data_len; idx++)
+			/**************************************************************/
+			/**************************************************************/
+			/// \todo LoRa data arrived
+			/// \todo parse them here
+			/**************************************************************/
+			/**************************************************************/
+
+			if (g_lorawan_settings.lorawan_enable)
 			{
-				AT_PRINTF("%02X", g_rx_lora_data[idx]);
+				AT_PRINTF("+EVT:RX_1, RSSI %d, SNR %d\n", g_last_rssi, g_last_snr);
+				AT_PRINTF("+EVT:%d:", g_last_fport);
+				for (int idx = 0; idx < g_rx_data_len; idx++)
+				{
+					AT_PRINTF("%02X", g_rx_lora_data[idx]);
+				}
+				AT_PRINTF("\n");
 			}
-			AT_PRINTF("\n");
+			else
+			{
+				AT_PRINTF("+EVT:RXP2P, RSSI %d, SNR %d\n", g_last_rssi, g_last_snr);
+				AT_PRINTF("+EVT:");
+				for (int idx = 0; idx < g_rx_data_len; idx++)
+				{
+					AT_PRINTF("%02X", g_rx_lora_data[idx]);
+				}
+				AT_PRINTF("\n");
+			}
 		}
 	}
 }
