@@ -12,7 +12,7 @@
 #include <Adafruit_MCP23X17.h>
 
 /** LED bar chip I2C address */
-#define IIC_ADDRESS 0X04
+uint8_t mcp_addr = 0X04;
 
 /** LED bar chip instance */
 Adafruit_MCP23X17 mcp;
@@ -34,32 +34,15 @@ bool init_rak14003(void)
 	digitalWrite(WB_IO4, 1);
 	delay(10);
 
-	if (found_sensors[BAR_ID].i2c_num == 1)
+	Wire.begin();
+	if (!mcp.begin_I2C(mcp_addr, &Wire))
 	{
-		Wire.begin();
-		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire))
-		{
-			MYLOG("LED_BAR", "LED_BAR not found");
-			digitalWrite(WB_IO4, LOW);
-			// api_deinit_gpio(WB_IO4);
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!mcp.begin_I2C(IIC_ADDRESS, &Wire1))
-		{
-			MYLOG("LED_BAR", "LED_BAR not found");
-			digitalWrite(WB_IO4, LOW);
-			// api_deinit_gpio(WB_IO4);
-			return false;
-		}
-#else
+		MYLOG("LED_BAR", "LED_BAR not found");
+		digitalWrite(WB_IO4, LOW);
+		// api_deinit_gpio(WB_IO4);
 		return false;
-#endif
 	}
+
 	for (int i = 0; i < 16; i++)
 	{
 		mcp.digitalWrite(i, HIGH); // Turn off all LEDs.

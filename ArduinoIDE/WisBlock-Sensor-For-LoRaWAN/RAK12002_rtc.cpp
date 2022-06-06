@@ -24,20 +24,8 @@ date_time_s g_date_time;
  */
 bool init_rak12002(void)
 {
-	if (found_sensors[RTC_ID].i2c_num == 1)
-	{
-		Wire.begin();
-		rtc.initI2C(Wire);
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		rtc.initI2C(Wire1);
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
+	rtc.initI2C(Wire);
 
 	rtc.useEEPROM(false);
 

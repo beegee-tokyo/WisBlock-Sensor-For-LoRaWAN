@@ -4,9 +4,9 @@
  * @brief Initialize and access RAK15000 EEPROM
  * @version 0.1
  * @date 2022-05-11
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 
 #include "app.h"
@@ -29,40 +29,19 @@ bool init_rak15000(void)
 	MYLOG("EEPROM", "Check EEPROM");
 	delay(100);
 
-	if (found_sensors[EEPROM_ID].i2c_num == 1)
+	Wire.begin();
+	if (!eeprom.begin(EEPROM_ADDR, &Wire))
 	{
-		Wire.begin();
-		if (!eeprom.begin(EEPROM_ADDR, &Wire))
-		{
-			MYLOG("EEPROM", "EEPROM not found");
-			return false;
-		}
-		if (!eeprom.read(0, eepr_buff, 100))
-		{
-			MYLOG("EEPROM", "EEPROM read error");
-			return false;
-		}
-		MYLOG("EEPROM", "EEPROM read ok");
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!eeprom.begin(EEPROM_ADDR, &Wire1))
-		{
-			MYLOG("EEPROM", "EEPROM not found");
-			return false;
-		}
-		if (!eeprom.read(0, eepr_buff, 100))
-		{
-			MYLOG("EEPROM", "EEPROM not found");
-			return false;
-		}
-		MYLOG("EEPROM", "EEPROM read ok");
-#else
+		MYLOG("EEPROM", "EEPROM not found");
 		return false;
-#endif
 	}
+	if (!eeprom.read(0, eepr_buff, 100))
+	{
+		MYLOG("EEPROM", "EEPROM read error");
+		return false;
+	}
+	MYLOG("EEPROM", "EEPROM read ok");
+
 	return true;
 }
 
@@ -104,6 +83,9 @@ bool write_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num)
 	return eeprom.write(addr, buffer, num);
 }
 
+/***********************************************************************************************/
+/***********************************************************************************************/
+
 // #include <RAK_EEPROM_I2C.h>
 
 // /** EEPROM class instance */
@@ -120,6 +102,7 @@ bool write_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num)
 
 // 	pinMode(WB_IO2, OUTPUT);
 // 	digitalWrite(WB_IO2, HIGH); // power on for AT24C02 device
+// 	delay(200);
 // 	MYLOG("EEPROM", "Check EEPROM");
 // 	delay(100);
 
@@ -162,7 +145,7 @@ bool write_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num)
 
 // /**
 //  * @brief Read a datablock from the EEPROM
-//  * 
+//  *
 //  * @param addr Start address
 //  * @param buffer Buffer to write data to
 //  * @param num Number of bytes to read
@@ -181,7 +164,7 @@ bool write_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num)
 
 // /**
 //  * @brief Write a datablock to the EEPROM
-//  * 
+//  *
 //  * @param addr Start address
 //  * @param buffer Buffer with the data to write
 //  * @param num Number of bytes to write

@@ -32,7 +32,6 @@ void send_delayed(TimerHandle_t unused);
 typedef struct sensors_s
 {
 	uint8_t i2c_addr;  // I2C address
-	uint8_t i2c_num;   // I2C port
 	bool found_sensor; // Flag if sensor is present
 } sensors_t;
 
@@ -106,6 +105,7 @@ void clear_int_rak1905(void);
 bool init_rak1906(void);
 void start_rak1906(void);
 bool read_rak1906(void);
+void get_rak1906_values(float *values);
 uint16_t get_alt_rak1906(void);
 bool init_rak1921(void);
 void rak1921_add_line(char *line);
@@ -170,14 +170,14 @@ void announce_modules(void);
 void get_sensor_values(void);
 
 // Index for known I2C devices
-#define ACC_ID 0	  // RAK1904 accelerometer
-#define LIGHT_ID 1	  // RAK1903 light sensor
-#define GNSS_ID 2	  // RAK12500 GNSS sensor
-#define PRESS_ID 3	  // RAK1902 barometric pressure sensor
-#define TEMP_ID 4	  // RAK1901 temperature & humidity sensor
-#define ENV_ID 5	  // RAK1906 environment sensor
-#define SOIL_ID 6	  // RAK12035 soil moisture sensor
-#define LIGHT2_ID 7	  // RAK12010 light sensor
+#define ACC_ID 0	   // RAK1904 accelerometer
+#define LIGHT_ID 1	   // RAK1903 light sensor
+#define GNSS_ID 2	   // RAK12500 GNSS sensor
+#define PRESS_ID 3	   // RAK1902 barometric pressure sensor
+#define TEMP_ID 4	   // RAK1901 temperature & humidity sensor
+#define ENV_ID 5	   // RAK1906 environment sensor
+#define SOIL_ID 6	   // RAK12035 soil moisture sensor
+#define LIGHT2_ID 7	   // RAK12010 light sensor
 #define EEPROM_ID 8	   // RAK15000 EEPROM module
 #define MQ2_ID 9	   // RAK12004 MQ2 CO2 gas sensor
 #define MG812_ID 10	   // RAK12008 MG812 CO2 gas sensor
@@ -240,6 +240,7 @@ extern uint8_t g_gnss_option;
 
 extern bool g_gps_prec_6;
 extern bool g_is_helium;
+extern bool g_is_tester;
 
 void read_gps_settings(void);
 void save_gps_settings(void);

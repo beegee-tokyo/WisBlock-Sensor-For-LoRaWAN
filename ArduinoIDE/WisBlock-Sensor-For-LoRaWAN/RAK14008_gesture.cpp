@@ -27,19 +27,7 @@ RevEng_PAJ7620 gesture_sensor = RevEng_PAJ7620();
  */
 bool init_rak14008(void)
 {
-	uint8_t error = 0;
-	// if (found_sensors[GESTURE_ID].i2c_num == 1)
-	{
-		error = gesture_sensor.begin(&Wire);
-	}
-	// 	else
-	// 	{
-	// #if WIRE_INTERFACES_COUNT > 1
-	// 		error = gesture_sensor.begin(&Wire1);
-	// #else
-	// 		return false;
-	// #endif
-	// 	}
+	uint8_t error = gesture_sensor.begin(&Wire);
 
 	if (error != 1)
 	{
@@ -111,6 +99,6 @@ void read_rak14008(void)
 
 	if (g_lpwan_has_joined)
 	{
-	g_solution_data.addDigitalInput(LPP_CHANNEL_GESTURE, gesture);
+		g_solution_data.addDigitalInput(LPP_CHANNEL_GESTURE, gesture);
 	}
 }

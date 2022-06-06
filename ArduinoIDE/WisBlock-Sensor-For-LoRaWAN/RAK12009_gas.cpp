@@ -29,32 +29,15 @@ bool init_rak12009(void)
 	pinMode(EN_PIN, OUTPUT);
 	digitalWrite(EN_PIN, HIGH); // power on RAK12004
 
-	if (found_sensors[MQ3_ID].i2c_num == 1)
+	Wire.begin();
+	if (!MQ3.begin(MQ3_ADDRESS, Wire))
 	{
-		Wire.begin();
-		if (!MQ3.begin(MQ3_ADDRESS, Wire))
-		{
-			MYLOG("MQ3", "MQ3 not found");
-			digitalWrite(EN_PIN, LOW); // power down RAK12009
-			// api_deinit_gpio(EN_PIN);
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!MQ3.begin(MQ3_ADDRESS, Wire1))
-		{
-			MYLOG("MQ3", "MQ3 not found");
-			digitalWrite(EN_PIN, LOW); // power down RAK12009
-			// api_deinit_gpio(EN_PIN);
-			return false;
-		}
-#else
+		MYLOG("MQ3", "MQ3 not found");
+		digitalWrite(EN_PIN, LOW); // power down RAK12009
+		// api_deinit_gpio(EN_PIN);
 		return false;
-#endif
 	}
+
 	//**************init MQ3 *****************************************************
 	// Set math model to calculate the PPM concentration and the value of constants
 	MQ3.setRL(Gas_RL);

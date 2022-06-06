@@ -29,25 +29,10 @@ bool _has_last_values = false;
  */
 bool init_rak1901(void)
 {
-	if (found_sensors[TEMP_ID].i2c_num == 1)
+	if (shtc3.begin(Wire) != SHTC3_Status_Nominal)
 	{
-		if (shtc3.begin(Wire) != SHTC3_Status_Nominal)
-		{
-			MYLOG("T_H", "Could not initialize SHTC3");
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		if (shtc3.begin(Wire1) != SHTC3_Status_Nominal)
-		{
-			MYLOG("T_H", "Could not initialize SHTC3");
-			return false;
-		}
-#else
+		MYLOG("T_H", "Could not initialize SHTC3");
 		return false;
-#endif
 	}
 	return true;
 }

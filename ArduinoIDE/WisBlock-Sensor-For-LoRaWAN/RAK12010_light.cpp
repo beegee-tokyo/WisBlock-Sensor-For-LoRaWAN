@@ -22,28 +22,13 @@ Light_VEML7700 VEML = Light_VEML7700();
  */
 bool init_rak12010(void)
 {
-	if (found_sensors[LIGHT2_ID].i2c_num == 1)
+	Wire.begin();
+	if (!VEML.begin(&Wire))
 	{
-		Wire.begin();
-		if (!VEML.begin(&Wire))
-		{
-			MYLOG("VEML", "VEML7700 not found");
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		if (!VEML.begin(&Wire1))
-		{
-			MYLOG("VEML", "VEML7700 not found");
-			return false;
-		}
-#else
+		MYLOG("VEML", "VEML7700 not found");
 		return false;
-#endif
 	}
+
 	if (!VEML.begin())
 	{
 		MYLOG("VEML", "VEML7700 not found");

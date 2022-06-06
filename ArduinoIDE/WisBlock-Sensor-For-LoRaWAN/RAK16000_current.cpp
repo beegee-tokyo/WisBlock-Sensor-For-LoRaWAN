@@ -36,7 +36,7 @@ INA219_BUS_RANGE bus_range = BRNG_32;
  */
 bool init_rak16000(void)
 {
-		Wire.begin();
+	Wire.begin();
 
 	if (!ina219.init())
 	{
@@ -81,7 +81,7 @@ bool init_rak16000(void)
 	 BRNG_16   -> 16 V
 	 BRNG_32   -> 32 V (DEFAULT)
 	*/
-	ina219.setBusRange(bus_range);	 // choose range and uncomment for change of default
+	ina219.setBusRange(bus_range);	// choose range and uncomment for change of default
 	ina219.setShuntSizeInOhms(0.1); // we use 100ohm
 
 	/* If the current values delivered by the INA219 differ by a constant factor

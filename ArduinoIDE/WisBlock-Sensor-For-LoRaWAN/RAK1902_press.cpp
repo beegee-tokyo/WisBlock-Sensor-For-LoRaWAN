@@ -22,26 +22,11 @@ LPS35HW lps;
  */
 bool init_rak1902(void)
 {
-	if (found_sensors[PRESS_ID].i2c_num == 1)
+	Wire.begin();
+	if (!lps.begin(&Wire))
 	{
-		Wire.begin();
-		if (!lps.begin(&Wire))
-		{
-			MYLOG("PRESS", "Could not initialize LPS2X on Wire");
-			return false;
-		}
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		if (!lps.begin(&Wire1))
-		{
-			MYLOG("PRESS", "Could not initialize LPS2X on Wire1");
-			return false;
-		}
-#else
+		MYLOG("PRESS", "Could not initialize LPS2X on Wire");
 		return false;
-#endif
 	}
 
 	lps.setLowPower(true);

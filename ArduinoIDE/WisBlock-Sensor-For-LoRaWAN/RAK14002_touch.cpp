@@ -34,23 +34,9 @@ bool init_rak14002(void)
 	// Setup interrupt pin
 	pinMode(TOUCH_INT_PIN, INPUT);
 
-	bool init_result = false;
-	if (found_sensors[TOUCH_ID].i2c_num == 1)
-	{
-		Wire.begin();
-		init_result = touch_pad.begin(Wire);
-	}
-	else
-	{
-#if WIRE_INTERFACES_COUNT > 1
-		Wire1.begin();
-		init_result = touch_pad.begin(Wire1);
-#else
-		return false;
-#endif
-	}
+	Wire.begin();
 
-	if (!init_result)
+	if (!touch_pad.begin(Wire))
 	{
 		MYLOG("TOUCH", "Touch Pad initialization failed");
 		return false;

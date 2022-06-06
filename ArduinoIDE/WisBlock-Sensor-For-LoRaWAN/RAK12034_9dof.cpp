@@ -14,13 +14,13 @@
 // 0x01 - accelerometer X axis high threshold interrupt
 // 0x02 - accelerometer y axis high threshold interrupt
 // 0x04 - accelerometer z axis high threshold interrupt
-#define  HIGH_G_INT 0x07 
+#define HIGH_G_INT 0x07
 // Interrupt threshold
 // ( 0x80*7.81 ) mg(2g range)
 // ( 0x80*15.63 )mg (4g range)
 // ( 0x80*31.25 )mg (8g range)
-// ( 0x80* 62.5 )mg (16g range) 
-#define  HIGH_G_THRESHOLD 0x80 
+// ( 0x80* 62.5 )mg (16g range)
+#define HIGH_G_THRESHOLD 0x80
 
 // Forward declarations
 void int_callback_rak12034(void);
@@ -52,13 +52,13 @@ bool init_rak12034(void)
 
 	// Check if it is the expected chip
 	uint8_t chip_id = 0;
-	bmx160.readReg(BMX160_CHIP_ID_ADDR, &chip_id,1);
+	bmx160.readReg(BMX160_CHIP_ID_ADDR, &chip_id, 1);
 	if (chip_id != BMX160_CHIP_ID)
 	{
 		MYLOG("BMX160", "Wrong chip ID %02X", chip_id);
 		return false;
 	}
-		MYLOG("BMX160", "Chip ID %02X", chip_id);
+	MYLOG("BMX160", "Chip ID %02X", chip_id);
 
 	// Enable the gyroscope and accelerometer sensor
 	bmx160.wakeUp();
@@ -126,20 +126,20 @@ void int_callback_rak12034(void)
  */
 void clear_int_rak12034(void)
 {
-  sBmx160SensorData_t Omagn, Ogyro, Oaccel;
+	sBmx160SensorData_t Omagn, Ogyro, Oaccel;
 
-  float Temp = 0;
-  bmx160.getTemperature(&Temp);
-  MYLOG("BMX160", "Temperature: %.2f",Temp);
+	float Temp = 0;
+	bmx160.getTemperature(&Temp);
+	MYLOG("BMX160", "Temperature: %.2f", Temp);
 
-  /* Get a new sensor event */
-  bmx160.getAllData(&Omagn, &Ogyro, &Oaccel);
-  /* Display the magnetometer results (magn is magnetometer in uTesla) */
-  MYLOG("BMX160", "M X: %f Y: %f Z: %f uT", Omagn.x,Omagn.y,Omagn.z);
+	/* Get a new sensor event */
+	bmx160.getAllData(&Omagn, &Ogyro, &Oaccel);
+	/* Display the magnetometer results (magn is magnetometer in uTesla) */
+	MYLOG("BMX160", "M X: %f Y: %f Z: %f uT", Omagn.x, Omagn.y, Omagn.z);
 
-  /* Display the gyroscope results (gyroscope data is in °/s) */
-  MYLOG("BMX160", "G X: %f Y: %f Z: %f °/s",Ogyro.x,Ogyro.y,Ogyro.z);
+	/* Display the gyroscope results (gyroscope data is in °/s) */
+	MYLOG("BMX160", "G X: %f Y: %f Z: %f °/s", Ogyro.x, Ogyro.y, Ogyro.z);
 
-  /* Display the accelerometer results (accelerometer data is in m/s^2) */
-  MYLOG("BMX160", "A X: %f Y: %f Z: %f m/s^2",Oaccel.x,Oaccel.y,Oaccel.z);
+	/* Display the accelerometer results (accelerometer data is in m/s^2) */
+	MYLOG("BMX160", "A X: %f Y: %f Z: %f m/s^2", Oaccel.x, Oaccel.y, Oaccel.z);
 }
