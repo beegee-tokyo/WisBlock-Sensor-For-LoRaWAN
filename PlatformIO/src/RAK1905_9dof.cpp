@@ -16,6 +16,17 @@
 // Forward declarations
 void int_callback_rak1905(void);
 
+//******************************************************************//
+// RAK1905 INT1_PIN
+//******************************************************************//
+// Slot A      WB_IO1
+// Slot B      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot C      WB_IO3
+// Slot D      WB_IO5
+// Slot E      WB_IO4
+// Slot F      WB_IO6
+//******************************************************************//
+
 /** Sensor instance using Wire */
 MPU9250_WE mpu_sensor = MPU9250_WE();
 

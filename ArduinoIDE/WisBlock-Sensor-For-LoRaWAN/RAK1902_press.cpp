@@ -37,8 +37,8 @@ bool init_rak1902(void)
 
 void start_rak1902(void)
 {
-	// lps.requestOneShot(); // important to request new data before reading
-	// delay(250);			  // Give the sensor some time
+	lps.requestOneShot(); // important to request new data before reading
+	delay(250);			  // Give the sensor some time
 }
 
 /**
@@ -51,14 +51,30 @@ void read_rak1902(void)
 {
 	MYLOG("PRESS", "Reading LPS22HB");
 
-	lps.requestOneShot(); // important to request new data before reading
-	delay(500);			  // Give the sensor some time
+	// lps.requestOneShot(); // important to request new data before reading
+	delay(500); // Give the sensor some time
 
 	float pressure = lps.readPressure(); // hPa
 
 	MYLOG("PRESS", "P: %.2f MSL: %.2f", pressure, at_MSL);
 
 	g_solution_data.addBarometricPressure(LPP_CHANNEL_PRESS, pressure);
+
+#if HAS_EPD > 0
+	set_baro_rak14000(pressure);
+#endif
+}
+
+/**
+ * @brief Get the rak1902 sensor data
+ * 
+ * @return float measured pressure
+ */
+float get_rak1902(void)
+{
+	delay(500); // Give the sensor some time
+
+	return lps.readPressure(); // hPa
 }
 
 /**

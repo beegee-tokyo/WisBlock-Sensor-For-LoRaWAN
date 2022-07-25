@@ -78,4 +78,5 @@ bool sha256_rak5814(byte *data, uint32_t length, byte *result)
 	// return true;
 
 	// eccx08.ecdsaVerify()
+	return true;
 }

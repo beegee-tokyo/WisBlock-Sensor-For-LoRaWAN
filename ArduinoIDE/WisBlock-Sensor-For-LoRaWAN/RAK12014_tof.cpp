@@ -46,7 +46,7 @@ union analog_s
 analog_s analog_val;
 
 // Power pin for RAK12014
-uint8_t xshut_pin = WB_IO4;
+uint8_t xshut_pin = WB_IO3;
 
 /**
  * @brief Initialize the VL53L01 sensor
@@ -163,7 +163,7 @@ void read_rak12014(void)
 
 	MYLOG("ToF", "Water level %d mm", 1100 - (uint16_t)collected);
 	g_solution_data.addAnalogInput(LPP_CHANNEL_TOF, (float)(collected));
-	g_solution_data.addPresence(LPP_CHANNEL_TOF_VALID, got_valid_data);
+	g_solution_data.addPresence(LPP_CHANNEL_TOF_VALID, (got_valid_data ? 1 : 0));
 
 	// Sensor off
 	digitalWrite(xshut_pin, LOW);

@@ -179,8 +179,8 @@ void read_rak12035(void)
 	MYLOG("SOIL", "T %.2f H %ld C %ld", (double)(avgTemp / 10.0), avgHumid, avgCap);
 
 	g_solution_data.addTemperature(LPP_CHANNEL_SOIL_TEMP, (float)(avgTemp / 10.0));
-	g_solution_data.addRelativeHumidity(LPP_CHANNEL_SOIL_HUMID, avgHumid);
-	g_solution_data.addAnalogInput(LPP_CHANNEL_SOIL_HUMID_RAW, avgCap);
+	g_solution_data.addRelativeHumidity(LPP_CHANNEL_SOIL_HUMID, (float)avgHumid);
+	g_solution_data.addAnalogInput(LPP_CHANNEL_SOIL_HUMID_RAW, (float)avgCap);
 	g_solution_data.addPresence(LPP_CHANNEL_SOIL_VALID, (got_value ? 1 : 0));
 
 	soil_sensor.sensor_sleep();

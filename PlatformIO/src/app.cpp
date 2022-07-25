@@ -16,7 +16,15 @@
 /** Timer since last position message was sent */
 time_t last_pos_send = 0;
 /** Timer for delayed sending to keep duty cycle */
+#ifdef NRF52_SERIES
 SoftwareTimer delayed_sending;
+#endif
+#ifdef ESP32
+Ticker delayed_sending;
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+mbed::Ticker delayed_sending;
+#endif
 
 /** Flag if delayed sending is already activated */
 bool delayed_active = false;
@@ -35,9 +43,6 @@ bool g_is_tester = false;
 
 /** Flag for battery protection enabled */
 bool battery_check_enabled = false;
-
-// Forward declaration
-void send_delayed(TimerHandle_t unused);
 
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-SENS";
@@ -92,6 +97,11 @@ void setup_app(void)
 	pinMode(WB_IO2, OUTPUT);
 	digitalWrite(WB_IO2, HIGH);
 
+#if HAS_EPD > 0
+	MYLOG("APP", "Init RAK14000");
+	init_rak14000();
+#endif
+
 	delay(500);
 
 	// Scan the I2C interfaces for devices
@@ -100,8 +110,15 @@ void setup_app(void)
 	// Initialize the User AT command list
 	init_user_at();
 
+#if defined NRF52_SERIES || defined ESP32
+#ifdef BLE_OFF
+	// Enable BLE
+	g_enable_ble = false;
+#else
 	// Enable BLE
 	g_enable_ble = true;
+#endif
+#endif
 }
 
 /**
@@ -205,62 +222,22 @@ bool init_app(void)
  */
 void app_event_handler(void)
 {
-#ifdef NRF52_SERIES
-// #if MY_DEBUG > 0
-// 	// dbgMemInfo();
-// 	if ((g_task_event_type & STATUS) == STATUS)
-// 	{
-// 		MYLOG("APP", "STATUS WAKEUP");
-// 	}
-// 	if ((g_task_event_type & VOC_REQ) == VOC_REQ)
-// 	{
-// 		MYLOG("APP", "VOC_REQ WAKEUP");
-// 	}
-// 	if ((g_task_event_type & MOTION_TRIGGER) == MOTION_TRIGGER)
-// 	{
-// 		MYLOG("APP", "MOTION_TRIGGER WAKEUP");
-// 	}
-// 	if ((g_task_event_type & TOUCH_EVENT) == TOUCH_EVENT)
-// 	{
-// 		MYLOG("APP", "TOUCH_EVENT WAKEUP");
-// 	}
-// 	if ((g_task_event_type & GNSS_FIN) == GNSS_FIN)
-// 	{
-// 		MYLOG("APP", "GNSS_FIN WAKEUP");
-// 	}
-// 	if ((g_task_event_type & BLE_CONFIG) == BLE_CONFIG)
-// 	{
-// 		MYLOG("APP", "BLE_CONFIG WAKEUP");
-// 	}
-// 	if ((g_task_event_type & BLE_DATA) == BLE_DATA)
-// 	{
-// 		MYLOG("APP", "BLE_DATA WAKEUP");
-// 	}
-// 	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
-// 	{
-// 		MYLOG("APP", "LORA_DATA WAKEUP");
-// 	}
-// 	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
-// 	{
-// 		MYLOG("APP", "LORA_TX_FIN WAKEUP");
-// 	}
-// 	if ((g_task_event_type & AT_CMD) == AT_CMD)
-// 	{
-// 		MYLOG("APP", "AT_CMD WAKEUP");
-// 	}
-// 	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
-// 	{
-// 		MYLOG("APP", "LORA_JOIN_FIN WAKEUP");
-// 	}
-// 	char buffer[64] = {0};
-// 	itoa(g_task_event_type, buffer, 2);
-// 	MYLOG("APP", "Wakeup Flag %s", buffer);
-// #endif
-#endif
+	// Handle wake up call
+	if ((g_task_event_type & AT_CMD) == AT_CMD)
+	{
+		if (g_device_sleep)
+		{
+			at_wake();
+		}
+		return;
+	}
 
 	// Timer triggered event
 	if ((g_task_event_type & STATUS) == STATUS)
 	{
+		g_task_event_type &= N_STATUS;
+		MYLOG("APP", "Timer wakeup");
+
 		if (found_sensors[ENV_ID].found_sensor && !g_is_helium && !g_is_tester)
 		{
 			// Startup the BME680
@@ -271,14 +248,14 @@ void app_event_handler(void)
 			// Startup the LPS22HB
 			start_rak1902();
 		}
-		g_task_event_type &= N_STATUS;
-		MYLOG("APP", "Timer wakeup");
 
+#if defined NRF52_SERIES || defined ESP32
 		// If BLE is enabled, restart Advertising
 		if (g_enable_ble)
 		{
 			restart_advertising(15);
 		}
+#endif
 
 		// Reset the packet
 		g_solution_data.reset();
@@ -293,7 +270,15 @@ void app_event_handler(void)
 			if (found_sensors[GNSS_ID].found_sensor)
 			{
 				// Start the GNSS location tracking
+#if defined NRF52_SERIES || defined ESP32
 				xSemaphoreGive(g_gnss_sem);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+				if (gnss_task_id != NULL)
+				{
+					osSignalSet(gnss_task_id, 0x1);
+				}
+#endif
 			}
 		}
 
@@ -348,6 +333,7 @@ void app_event_handler(void)
 
 		if (!found_sensors[GNSS_ID].found_sensor)
 		{
+			// Get data from the slower sensors
 			if (found_sensors[ENV_ID].found_sensor)
 			{
 				// Read environment data
@@ -358,6 +344,19 @@ void app_event_handler(void)
 				// Read environment data
 				read_rak1902();
 			}
+			// Read the CO2 sensor last, it needs temperature and humidity values first
+			if (found_sensors[SCT31_ID].found_sensor)
+			{
+				// Read CO2 data
+				read_rak12008();
+			}
+
+#if HAS_EPD > 0
+			// Refresh display
+			MYLOG("APP", "Refresh RAK14000");
+			wake_rak14000();
+			// refresh_rak14000();
+#endif
 
 			MYLOG("APP", "Packetsize %d", g_solution_data.getSize());
 			if (g_lorawan_settings.lorawan_enable)
@@ -440,7 +439,7 @@ void app_event_handler(void)
 			g_task_event_type &= N_TOUCH_EVENT;
 			if (found_sensors[TOUCH_ID].found_sensor)
 			{
-				MYLOG("APP", "TOUCH triggered");
+				MYLOG("APP", "RAK14002 triggered");
 				read_rak14002();
 			}
 		}
@@ -448,40 +447,42 @@ void app_event_handler(void)
 		{
 			if (found_sensors[ACC_ID].found_sensor)
 			{
-				MYLOG("APP", "ACC triggered");
+				MYLOG("APP", "RAK1904 triggered");
 				clear_int_rak1904();
 			}
 			if (found_sensors[GYRO_ID].found_sensor)
 			{
-				MYLOG("APP", "Gyro triggered");
+				MYLOG("APP", "RAK12025 triggered");
 				clear_int_rak12025();
 			}
 			if (found_sensors[MPU_ID].found_sensor)
 			{
-				MYLOG("APP", "MPU triggered");
+				MYLOG("APP", "RAK1905 triggered");
 				clear_int_rak1905();
 			}
 			if (found_sensors[ACC2_ID].found_sensor)
 			{
-				MYLOG("APP", "ACC triggered");
+				MYLOG("APP", "RAK12032 triggered");
 				clear_int_rak12032();
 			}
 			if (found_sensors[DOF_ID].found_sensor)
 			{
-				MYLOG("APP", "9DOF triggered");
+				MYLOG("APP", "RAK12034 triggered");
 				clear_int_rak12034();
 			}
 			if (found_sensors[GESTURE_ID].found_sensor)
 			{
-				MYLOG("APP", "Gesture triggered");
+				MYLOG("APP", "RAK14008 triggered");
 				read_rak14008();
 			}
 
+#if defined NRF52_SERIES || defined ESP32
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
 			{
 				restart_advertising(15);
 			}
+#endif
 
 			// If it is the soil moisture sensor, just switch on BLE and do nothing else
 			if (found_sensors[SOIL_ID].found_sensor)
@@ -506,15 +507,26 @@ void app_event_handler(void)
 					send_now = false;
 					if (!delayed_active)
 					{
+#ifdef NRF52_SERIES
 						delayed_sending.stop();
+#endif
+#ifdef ESP32
+						delayed_sending.detach();
+#endif
 						MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
 						MYLOG("APP", "Max delay time %d", (int)min_delay);
 						time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
 						MYLOG("APP", "Wait time %ld", (long)wait_time);
 
 						MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
+#ifdef NRF52_SERIES
 						delayed_sending.setPeriod(wait_time);
 						delayed_sending.start();
+#endif
+#ifdef ESP32
+						delayed_sending.attach_ms(wait_time, send_delayed);
+
+#endif
 						delayed_active = true;
 					}
 				}
@@ -549,6 +561,7 @@ void app_event_handler(void)
 
 		if (!g_is_helium && !g_is_tester)
 		{
+			// Get data from slower sensors
 			if (found_sensors[ENV_ID].found_sensor)
 			{
 				// Get Environment data
@@ -558,6 +571,11 @@ void app_event_handler(void)
 			{
 				// Get Environment data
 				read_rak1902();
+			}
+			if (found_sensors[SCT31_ID].found_sensor)
+			{
+				// Read CO2 data
+				read_rak12008();
 			}
 
 			// Get battery level
@@ -580,48 +598,52 @@ void app_event_handler(void)
 		MYLOG("APP", "Size %d - Pckg: %s", g_solution_data.getSize(), ble_out);
 #endif
 
-		if (g_lorawan_settings.lorawan_enable)
+		if (g_solution_data.getSize() > 0)
 		{
-			lmh_error_status result = send_lora_packet(g_solution_data.getBuffer(), g_solution_data.getSize());
-			switch (result)
+			if (g_lorawan_settings.lorawan_enable)
 			{
-			case LMH_SUCCESS:
-				MYLOG("APP", "Packet enqueued");
-				break;
-			case LMH_BUSY:
-				MYLOG("APP", "LoRa transceiver is busy");
-				AT_PRINTF("+EVT:BUSY\n");
-				break;
-			case LMH_ERROR:
-				AT_PRINTF("+EVT:SIZE_ERROR\n");
-				MYLOG("APP", "Packet error, too big to send with current DR");
-				break;
-			}
-		}
-		else
-		{
-			// Send packet over LoRa
-			if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
-			{
-				MYLOG("APP", "Packet enqueued");
+				uint8_t use_port = g_lorawan_settings.app_port;
+				if (g_is_tester)
+				{
+					use_port = 1;
+				}
+				lmh_error_status result = send_lora_packet(g_solution_data.getBuffer(), g_solution_data.getSize(), use_port);
+				switch (result)
+				{
+				case LMH_SUCCESS:
+					MYLOG("APP", "Packet enqueued");
+					break;
+				case LMH_BUSY:
+					MYLOG("APP", "LoRa transceiver is busy");
+					AT_PRINTF("+EVT:BUSY\n");
+					break;
+				case LMH_ERROR:
+					AT_PRINTF("+EVT:SIZE_ERROR\n");
+					MYLOG("APP", "Packet error, too big to send with current DR");
+					break;
+				}
 			}
 			else
 			{
-				AT_PRINTF("+EVT:SIZE_ERROR\n");
-				MYLOG("APP", "Packet too big");
+				// Send packet over LoRa
+				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
+				{
+					MYLOG("APP", "Packet enqueued");
+				}
+				else
+				{
+					AT_PRINTF("+EVT:SIZE_ERROR\n");
+					MYLOG("APP", "Packet too big");
+				}
 			}
 		}
 		// Reset the packet
 		g_solution_data.reset();
 	}
-
-	{
-		char buffer[64] = {0};
-		itoa(g_task_event_type, buffer, 2);
-		// MYLOG("APP", "Leaving app handler - Wakeup Flag %s", buffer);
-	}
 }
 
+// ESP32 is handling the received BLE UART data different, this works only for nRF52
+#if defined NRF52_SERIES
 /**
  * @brief Handle BLE UART data
  *
@@ -637,6 +659,11 @@ void ble_data_handler(void)
 			/** BLE UART data arrived */
 			g_task_event_type &= N_BLE_DATA;
 
+			if (g_device_sleep)
+			{
+				at_wake();
+			}
+
 			while (g_ble_uart.available() > 0)
 			{
 				at_serial_input(uint8_t(g_ble_uart.read()));
@@ -646,6 +673,7 @@ void ble_data_handler(void)
 		}
 	}
 }
+#endif
 
 /**
  * @brief Handle received LoRa Data
@@ -680,6 +708,9 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
+			// Force a sensor reading now
+			api_wake_loop(STATUS);
+
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
 			// memcpy(test_multicast.NwkSKey, _mc_nwskey, 16);
@@ -694,11 +725,13 @@ void lora_data_handler(void)
 			/// \todo here join could be restarted.
 			lmh_join();
 
+#if defined NRF52_SERIES || defined ESP32
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
 			{
 				restart_advertising(15);
 			}
+#endif
 
 			join_send_fail++;
 			if (join_send_fail == 10)
@@ -753,6 +786,8 @@ void lora_data_handler(void)
 			int16_t min_distance = g_rx_lora_data[3] * 250;
 			int16_t max_distance = g_rx_lora_data[4] * 250;
 			int8_t num_gateways = g_rx_lora_data[5];
+			AT_PRINTF("+EVT:RX_1, RSSI %d, SNR %d\n", g_last_rssi, g_last_snr);
+			AT_PRINTF("+EVT:%d:\n", g_last_fport);
 			AT_PRINTF("+EVT:FieldTester %d gateways\n", num_gateways);
 			AT_PRINTF("+EVT:RSSI min %d max %d\n", min_rssi, max_rssi);
 			AT_PRINTF("+EVT:Distance min %d max %d\n", min_distance, max_distance);
@@ -813,7 +848,14 @@ void lora_data_handler(void)
  * @param unused
  * 			Timer handle, not used
  */
+#ifdef NRF52_SERIES
 void send_delayed(TimerHandle_t unused)
 {
 	api_wake_loop(STATUS);
 }
+#elif defined ESP32 || defined ARDUINO_ARCH_RP2040
+void send_delayed(void)
+{
+	api_wake_loop(STATUS);
+}
+#endif

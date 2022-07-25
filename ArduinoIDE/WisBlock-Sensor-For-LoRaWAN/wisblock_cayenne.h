@@ -12,7 +12,7 @@
 #define WISBLOCK_CAYENNE_H
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+// #include <ArduinoJson.h>
 #include <CayenneLPP.h>
 
 #define LPP_GPS4 136 // 3 byte lon/lat 0.0001 °, 3 bytes alt 0.01 meter (Cayenne LPP default)

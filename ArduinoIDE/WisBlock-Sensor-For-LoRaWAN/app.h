@@ -26,11 +26,28 @@
 #endif
 // ; patch version increase on bugfix, no affect on API
 #ifndef SW_VERSION_3
-#define SW_VERSION_3 7
+#define SW_VERSION_3 8
 #endif
 
 #include <Arduino.h>
 /** Add you required includes after Arduino.h */
+
+#ifdef ARDUINO_ARCH_RP2040
+#include <mbed.h>
+#include <rtos.h>
+#include <multicore.h>
+#include <time.h>
+#include <Stream.h>
+
+using namespace rtos;
+using namespace mbed;
+using namespace std::chrono_literals;
+using namespace std::chrono;
+
+#define Stream arduino::Stream
+#define SPI mbed::SPI
+
+#endif
 
 #include <Wire.h>
 /** Include the WisBlock-API */
@@ -41,6 +58,7 @@
 #define MY_DEBUG 0
 #endif
 
+#if defined NRF52_SERIES
 #if MY_DEBUG > 0
 #define MYLOG(tag, ...)                     \
 	do                                      \
@@ -58,13 +76,68 @@
 #else
 #define MYLOG(...)
 #endif
+#endif
+#if defined ARDUINO_ARCH_RP2040
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                  \
+	do                                   \
+	{                                    \
+		if (tag)                         \
+			Serial.printf("[%s] ", tag); \
+		Serial.printf(__VA_ARGS__);      \
+		Serial.printf("\n");             \
+	} while (0)
+#else
+#define MYLOG(...)
+#endif
+#endif
 
+#if defined ESP32
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                                                 \
+	if (tag)                                                            \
+		Serial.printf("[%s] ", tag);                                    \
+	Serial.printf(__VA_ARGS__);                                         \
+	Serial.printf("\n");                                                \
+	if (g_ble_uart_is_connected)                                        \
+	{                                                                   \
+		char buff[255];                                                 \
+		int len = sprintf(buff, __VA_ARGS__);                           \
+		uart_tx_characteristic->setValue((uint8_t *)buff, (size_t)len); \
+		uart_tx_characteristic->notify(true);                           \
+		delay(50);                                                      \
+	}
+#else
+#define MYLOG(...)
+#endif
+#endif
+
+#if defined NRF52_SERIES
 #define AT_PRINTF(...)                  \
 	Serial.printf(__VA_ARGS__);         \
 	if (g_ble_uart_is_connected)        \
 	{                                   \
 		g_ble_uart.printf(__VA_ARGS__); \
 	}
+#endif
+
+#if defined ARDUINO_ARCH_RP2040
+#define AT_PRINTF(...) \
+	Serial.printf(__VA_ARGS__);
+#endif
+
+#if defined ESP32
+#define AT_PRINTF(...)                                                  \
+	Serial.printf(__VA_ARGS__);                                         \
+	if (g_ble_uart_is_connected)                                        \
+	{                                                                   \
+		char buff[255];                                                 \
+		int len = sprintf(buff, __VA_ARGS__);                           \
+		uart_tx_characteristic->setValue((uint8_t *)buff, (size_t)len); \
+		uart_tx_characteristic->notify(true);                           \
+		delay(50);                                                      \
+	}
+#endif
 
 /** Application function definitions */
 void setup_app(void);
@@ -76,7 +149,7 @@ void init_user_at(void);
 
 extern uint8_t g_last_fport;
 
-/** MOdule stuff */
+/** Module stuff */
 #include "module_handler.h"
 
 /** Battery level uinion */
@@ -100,4 +173,9 @@ struct date_time_s
 	uint8_t second;
 };
 extern date_time_s g_date_time;
+
+// Sleep AT command
+extern bool g_device_sleep;
+int at_wake(void);
+
 #endif

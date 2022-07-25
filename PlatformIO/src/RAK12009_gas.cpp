@@ -86,5 +86,5 @@ void read_rak12009(void)
 	MYLOG("MQ3", "MQ3 PPM percentage Value is:%3.2f%%", PPMpercentage);
 
 	g_solution_data.addAnalogInput(LPP_CHANNEL_ALC, sensorPPM);
-	g_solution_data.addPercentage(LPP_CHANNEL_ALC_PERC, PPMpercentage);
+	g_solution_data.addPercentage(LPP_CHANNEL_ALC_PERC, (uint32_t)(PPMpercentage));
 }

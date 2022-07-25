@@ -89,5 +89,5 @@ void read_rak12004(void)
 	MYLOG("MQ2", "MQ2 PPM percentage Value is:%3.2f%%", PPMpercentage);
 
 	g_solution_data.addAnalogInput(LPP_CHANNEL_GAS, sensorPPM);
-	g_solution_data.addPercentage(LPP_CHANNEL_GAS_PERC, PPMpercentage);
+	g_solution_data.addPercentage(LPP_CHANNEL_GAS_PERC, (uint32_t)(PPMpercentage));
 }

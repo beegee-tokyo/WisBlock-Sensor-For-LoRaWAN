@@ -27,7 +27,7 @@ sensors_t found_sensors[] = {
 	{0x10, false}, //  7 ✔ RAK12010 light sensor
 	{0x51, false}, //  8 ✔ RAK12004 MQ2 CO2 gas sensor !! conflict with RAK15000
 	{0x50, false}, //  9 ✔ RAK15000 EEPROM !! conflict with RAK12008
-	{0x50, false}, // 10 ✔ RAK12008 MG812 CO2 gas sensor !! conflict with RAK15000
+	{0x2C, false}, // 10 ✔ RAK12008 SCT31 CO2 gas sensor
 	{0x55, false}, // 11 ✔ RAK12009 MQ3 Alcohol gas sensor
 	{0x29, false}, // 12 ✔ RAK12014 Laser ToF sensor
 	{0x52, false}, // 13 ✔ RAK12002 RTC module !! conflict with RAK15000
@@ -131,6 +131,7 @@ void find_modules(void)
 			MYLOG("SCAN", "ID %d addr %02X", i, found_sensors[i].i2c_addr);
 		}
 	}
+
 	// Initialize the modules found
 	if (found_sensors[EEPROM_ID].found_sensor)
 	{
@@ -270,7 +271,7 @@ void find_modules(void)
 		}
 	}
 
-	if (found_sensors[MG812_ID].found_sensor)
+	if (found_sensors[SCT31_ID].found_sensor)
 	{
 		if (init_rak12008())
 		{
@@ -278,7 +279,7 @@ void find_modules(void)
 		}
 		else
 		{
-			found_sensors[MG812_ID].found_sensor = false;
+			found_sensors[SCT31_ID].found_sensor = false;
 		}
 	}
 
@@ -544,6 +545,7 @@ void announce_modules(void)
 			AT_PRINTF("+EVT:RAK1910 OK\n");
 		}
 		// Prepare GNSS task
+#if defined NRF52_SERIES || defined ESP32
 		// Create the GNSS event semaphore
 		g_gnss_sem = xSemaphoreCreateBinary();
 		// Initialize semaphore
@@ -556,8 +558,15 @@ void announce_modules(void)
 		xSemaphoreGive(g_gnss_poll);
 		// Take semaphore
 		xSemaphoreTake(g_gnss_poll, 10);
+#endif
 
-		if (!xTaskCreate(gnss_task, "LORA", 4096, NULL, TASK_PRIO_LOW, &gnss_task_handle))
+#ifdef ARDUINO_ARCH_RP2040
+		gnss_task_handle.start(gnss_task);
+		gnss_task_handle.set_priority(osPriorityNormal);
+#endif
+#if defined NRF52_SERIES || defined ESP32
+		if (!xTaskCreate(gnss_task, "GNSS", 4096, NULL, TASK_PRIO_LOW, &gnss_task_handle))
+#endif
 		{
 			MYLOG("APP", "Failed to start GNSS task");
 		}
@@ -599,8 +608,10 @@ void announce_modules(void)
 		min_delay = 30000;
 	}
 
-	// Set delayed sending to 1/2 of programmed send interval or 30 seconds
+// Set delayed sending to 1/2 of programmed send interval or 30 seconds
+#ifdef NRF52_SERIES
 	delayed_sending.begin(min_delay, send_delayed, NULL, false);
+#endif
 	if (!found_sensors[OLED_ID].found_sensor)
 	{
 		// MYLOG("APP", "OLED error");
@@ -644,15 +655,15 @@ void announce_modules(void)
 		read_rak12004();
 	}
 
-	if (!found_sensors[MG812_ID].found_sensor)
+	if (!found_sensors[SCT31_ID].found_sensor)
 	{
-		// MYLOG("APP", "MG812 error");
+		// MYLOG("APP", "SCT31 error");
 		init_result = false;
 	}
 	else
 	{
 		AT_PRINTF("+EVT:RAK12008 OK\n");
-		read_rak12008();
+		// read_rak12008();
 	}
 
 	if (!found_sensors[MQ3_ID].found_sensor)
@@ -863,11 +874,12 @@ void get_sensor_values(void)
 		// Get the MQ2 sensor values
 		read_rak12004();
 	}
-	if (found_sensors[MG812_ID].found_sensor)
-	{
-		// Get the MG812 sensor values
-		read_rak12008();
-	}
+	// RAK12008 needs readings from temperature/humidity/pressure sensors. Readings will be gotten in app.cpp
+	// if (found_sensors[SCT31_ID].found_sensor)
+	// {
+	// 	// Get the SCT31 sensor values
+	// 	read_rak12008();
+	// }
 	if (found_sensors[MQ3_ID].found_sensor)
 	{
 		// Get the MQ3 sensor values

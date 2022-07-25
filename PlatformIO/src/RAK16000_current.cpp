@@ -36,7 +36,7 @@ INA219_BUS_RANGE bus_range = BRNG_32;
  */
 bool init_rak16000(void)
 {
-		Wire.begin();
+	Wire.begin();
 
 	if (!ina219.init())
 	{

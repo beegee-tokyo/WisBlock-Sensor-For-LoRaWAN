@@ -16,8 +16,18 @@
 extern bool init_result;
 extern time_t min_delay;
 extern time_t last_pos_send;
+#ifdef NRF52_SERIES
 extern SoftwareTimer delayed_sending;
 void send_delayed(TimerHandle_t unused);
+#endif
+#ifdef ESP32
+extern Ticker delayed_sending;
+void send_delayed(void);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+extern mbed::Ticker delayed_sending;
+void send_delayed(void);
+#endif
 
 /** Wakeup triggers for application events */
 #define MOTION_TRIGGER 0b1000000000000000
@@ -28,6 +38,8 @@ void send_delayed(TimerHandle_t unused);
 #define N_VOC_REQ 0b1101111111111111
 #define TOUCH_EVENT 0b0001000000000000
 #define N_TOUCH_EVENT 0b1110111111111111
+// #define BUTTON_EVENT 0b0000100000000000
+// #define N_BUTTON_EVENT 0b1111011111111111
 
 typedef struct sensors_s
 {
@@ -82,6 +94,36 @@ extern sensors_t found_sensors[];
 
 extern WisCayenne g_solution_data;
 
+// Index for known I2C devices
+#define ACC_ID 0	   // RAK1904 accelerometer
+#define LIGHT_ID 1	   // RAK1903 light sensor
+#define GNSS_ID 2	   // RAK12500 GNSS sensor
+#define PRESS_ID 3	   // RAK1902 barometric pressure sensor
+#define TEMP_ID 4	   // RAK1901 temperature & humidity sensor
+#define ENV_ID 5	   // RAK1906 environment sensor
+#define SOIL_ID 6	   // RAK12035 soil moisture sensor
+#define LIGHT2_ID 7	   // RAK12010 light sensor
+#define EEPROM_ID 8	   // RAK15000 EEPROM module
+#define MQ2_ID 9	   // RAK12004 MQ2 CO2 gas sensor
+#define SCT31_ID 10	   // RAK12008 SCT31 CO2 gas sensor
+#define MQ3_ID 11	   // RAK12009 MQ3 Alcohol gas sensor
+#define TOF_ID 12	   // RAK12014 Laser ToF sensor
+#define RTC_ID 13	   // RAK12002 RTC module
+#define BAR_ID 14	   // RAK14003 LED bargraph module
+#define VOC_ID 15	   // RAK12047 VOC sensor
+#define GYRO_ID 16	   // RAK12025 Gyroscope
+#define GESTURE_ID 17  // RAK14008 Gesture sensor
+#define OLED_ID 18	   // RAK1921 OLED display
+#define UVL_ID 19	   // RAK12019 UV light sensor
+#define TOUCH_ID 20	   // RAK14002 Touch Pad
+#define CURRENT_ID 21  // RAK16000 current sensor
+#define MPU_ID 22	   // RAK1905 9DOF MPU9250 sensor
+#define CO2_ID 23	   // RAK12037 CO2 sensor
+#define FIR_ID 24	   // RAK12003 FIR temperature sensor
+#define TEMP_ARR_ID 25 // RAK12040 Temp Array sensor
+#define DOF_ID 26	   // RAK12034 9DOF BMX160 sensor
+#define ACC2_ID 27	   // RAK12032 ADXL313 accelerometer
+
 /** Sensor functions */
 bool init_rak1901(void);
 void read_rak1901(void);
@@ -89,6 +131,7 @@ void get_rak1901_values(float *values);
 bool init_rak1902(void);
 void start_rak1902(void);
 void read_rak1902(void);
+float get_rak1902(void);
 uint16_t get_alt_rak1902(void);
 bool init_rak1903(void);
 void read_rak1903();
@@ -169,35 +212,24 @@ void find_modules(void);
 void announce_modules(void);
 void get_sensor_values(void);
 
-// Index for known I2C devices
-#define ACC_ID 0	   // RAK1904 accelerometer
-#define LIGHT_ID 1	   // RAK1903 light sensor
-#define GNSS_ID 2	   // RAK12500 GNSS sensor
-#define PRESS_ID 3	   // RAK1902 barometric pressure sensor
-#define TEMP_ID 4	   // RAK1901 temperature & humidity sensor
-#define ENV_ID 5	   // RAK1906 environment sensor
-#define SOIL_ID 6	   // RAK12035 soil moisture sensor
-#define LIGHT2_ID 7	   // RAK12010 light sensor
-#define EEPROM_ID 8	   // RAK15000 EEPROM module
-#define MQ2_ID 9	   // RAK12004 MQ2 CO2 gas sensor
-#define MG812_ID 10	   // RAK12008 MG812 CO2 gas sensor
-#define MQ3_ID 11	   // RAK12009 MQ3 Alcohol gas sensor
-#define TOF_ID 12	   // RAK12014 Laser ToF sensor
-#define RTC_ID 13	   // RAK12002 RTC module
-#define BAR_ID 14	   // RAK14003 LED bargraph module
-#define VOC_ID 15	   // RAK12047 VOC sensor
-#define GYRO_ID 16	   // RAK12025 Gyroscope
-#define GESTURE_ID 17  // RAK14008 Gesture sensor
-#define OLED_ID 18	   // RAK1921 OLED display
-#define UVL_ID 19	   // RAK12019 UV light sensor
-#define TOUCH_ID 20	   // RAK14002 Touch Pad
-#define CURRENT_ID 21  // RAK16000 current sensor
-#define MPU_ID 22	   // RAK1905 9DOF MPU9250 sensor
-#define CO2_ID 23	   // RAK12037 CO2 sensor
-#define FIR_ID 24	   // RAK12003 FIR temperature sensor
-#define TEMP_ARR_ID 25 // RAK12040 Temp Array sensor
-#define DOF_ID 26	   // RAK12034 9DOF BMX160 sensor
-#define ACC2_ID 27	   // RAK12032 ADXL313 accelerometer
+// RAK14000 EPD stuff
+void init_rak14000(void);
+void wake_rak14000(void);
+void clear_rak14000(void);
+void refresh_rak14000(void);
+void set_voc_rak14000(uint16_t voc_value);
+void set_temp_rak14000(float temp_value);
+void set_humid_rak14000(float humid_value);
+void set_baro_rak14000(float baro_value);
+void set_co2_rak14000(float co2_value);
+void voc_rak14000(bool full);
+void temp_rak14000(bool full);
+void humid_rak14000(bool full);
+void baro_rak14000(bool full);
+void co2_rak14000(bool full);
+void status_general_rak14000(bool full);
+void status_rak14000(void);
+
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */
 #define EN_PIN WB_IO6
@@ -230,11 +262,23 @@ uint16_t set_calib_rak12035(bool is_dry, uint16_t calib_val);
 #define RAK12500_GNSS 2
 bool init_gnss(void);
 bool poll_gnss(void);
-void gnss_task(void *pvParameters);
-void wake_poll(TimerHandle_t unused);
+
+#ifndef TASK_PRIO_LOW
+#define TASK_PRIO_LOW 1
+#endif
+
+#if defined NRF52_SERIES || defined ESP32
 extern SemaphoreHandle_t g_gnss_sem;
 extern SemaphoreHandle_t g_gnss_poll;
 extern TaskHandle_t gnss_task_handle;
+void gnss_task(void *pvParameters);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+extern Thread gnss_task_handle; // (osPriorityNormal, 4096);
+extern osThreadId gnss_task_id;
+void gnss_task(void);
+#endif
+
 extern volatile bool last_read_ok;
 extern uint8_t g_gnss_option;
 

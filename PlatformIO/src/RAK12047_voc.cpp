@@ -22,7 +22,15 @@ SensirionI2CSgp40 sgp40;
 VOCGasIndexAlgorithm voc_algorithm(sampling_interval);
 
 /** Timer for VOC measurement */
+#ifdef NRF52_SERIES
 SoftwareTimer voc_read_timer;
+#endif
+#ifdef ESP32
+Ticker voc_read_timer;
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+mbed::Ticker voc_read_timer;
+#endif
 
 /** Calculated VOC index */
 int32_t voc_index = 0;
@@ -41,10 +49,18 @@ uint16_t discard_counter = 0;
  *
  * @param unused
  */
+#ifdef NRF52_SERIES
 void voc_read_wakeup(TimerHandle_t unused)
 {
 	api_wake_loop(VOC_REQ);
 }
+#endif
+#if defined ESP32 || defined ARDUINO_ARCH_RP2040
+void voc_read_wakeup(void)
+{
+	api_wake_loop(VOC_REQ);
+}
+#endif
 
 /**
  * @brief Initialize the sensor
@@ -112,9 +128,16 @@ bool init_rak12047(void)
 	discard_counter = 0;
 
 	// Set VOC reading interval to 10 seconds
+#ifdef NRF52_SERIES
 	voc_read_timer.begin(10000, voc_read_wakeup, NULL, true);
 	voc_read_timer.start();
-
+#endif
+#ifdef ESP32
+	voc_read_timer.attach_ms(10000, voc_read_wakeup);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+	voc_read_timer.attach(voc_read_wakeup, (microseconds)(10000000));
+#endif
 	return true;
 }
 
@@ -139,6 +162,9 @@ void read_rak12047(void)
 		AT_PRINTF("+EVT:VOC_ERROR\n");
 		MYLOG("VOC", "No valid VOC available");
 	}
+#if HAS_EPD > 0
+	set_voc_rak14000(voc_index);
+#endif
 }
 
 /**
@@ -152,13 +178,14 @@ void do_read_rak12047(void)
 #if MY_DEBUG > 0
 	digitalWrite(LED_BLUE, HIGH);
 #endif
+
 	uint16_t error;
 	// float humidity = 0;	   // %RH
 	// float temperature = 0; // degreeC
 	uint16_t srawVoc = 0;
 	uint16_t defaultRh = 0x8000;
 	uint16_t defaultT = 0x6666;
-	float t_h_values[2] = {0.0}; // temperature [0] & humidity [1] value from T&H sensor
+	float t_h_values[3] = {0.0}; // temperature [0] & humidity [1] value from T&H sensor
 
 	if (found_sensors[TEMP_ID].found_sensor)
 	{

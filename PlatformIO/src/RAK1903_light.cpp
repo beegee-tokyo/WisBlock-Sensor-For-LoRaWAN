@@ -33,10 +33,10 @@ bool init_rak1903(void)
 
 	OPT3001_Config newConfig;
 
-	newConfig.RangeNumber = B1100;
-	newConfig.ConvertionTime = B0;
-	newConfig.Latch = B1;
-	newConfig.ModeOfConversionOperation = B11;
+	newConfig.RangeNumber = 0b1100; // B1100;
+	newConfig.ConvertionTime = 0b0; // B0;
+	newConfig.Latch = 0b1; // B1;
+	newConfig.ModeOfConversionOperation = 0b11; // B11;
 
 	OPT3001_ErrorCode errorConfig = opt3001.writeConfig(newConfig);
 	if (errorConfig != NO_ERROR)
@@ -63,7 +63,7 @@ void read_rak1903()
 
 		MYLOG("LIGHT", "L: %.2f", (float)light_int / 1.0);
 
-		g_solution_data.addLuminosity(LPP_CHANNEL_LIGHT, light_int);
+		g_solution_data.addLuminosity(LPP_CHANNEL_LIGHT, (uint32_t)(light_int));
 	}
 	else
 	{

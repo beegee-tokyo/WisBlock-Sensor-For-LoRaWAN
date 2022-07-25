@@ -9,20 +9,9 @@
  *
  */
 #include "app.h"
-#include <ADC121C021.h>
+#include <SparkFun_STC3x_Arduino_Library.h>
 
-#define MG812_ADDRESS 0x50
-
-/** Constant to calculate PPM log(y) = constantA*log(x) + constantB,  y:sensor voltage,  x:gas concentration ppm */
-float constantA = 0.027;
-/** Constant to calculate PPM log(y) = constantA*log(x) + constantB,  y:sensor voltage,  x:gas concentration ppm */
-float constantB = 0.4524;
-
-/** Gas sensor instance */
-ADC121C021 MG812;
-
-/** Voltage read from sensor */
-float sensorVoltage;
+STC3x stc31_sensor;
 
 /**
  * @brief Initialize the gas sensor
@@ -32,37 +21,75 @@ float sensorVoltage;
  */
 bool init_rak12008(void)
 {
-	pinMode(ALERT_PIN, INPUT);
-	pinMode(EN_PIN, OUTPUT);
-	digitalWrite(EN_PIN, HIGH); // power on RAK12008
-
 	Wire.begin();
-	if (!MG812.begin(MG812_ADDRESS, Wire))
+	if (!stc31_sensor.begin(0x2C))
 	{
-		MYLOG("MG812", "MG812 not found");
-		digitalWrite(EN_PIN, LOW); // power down RAK12008
-		// api_deinit_gpio(EN_PIN);
+		MYLOG("STC31", "STC31 not found");
 		return false;
 	}
+
+	if (stc31_sensor.setBinaryGas(STC3X_BINARY_GAS_CO2_AIR_25) == false)
+	{
+		MYLOG("STC31", "Could not set the binary gas! Freezing...");
+		return false;
+	}
+
 	return true;
 }
 
 /**
  * @brief Read data from the gas sensor
  *     Data is added to Cayenne LPP payload as channels
- *     LPP_CHANNEL_CO2 and LPP_CHANNEL_CO2_PERC
+ *     LPP_CHANNEL_CO2_PERC
  *
  */
 void read_rak12008(void)
 {
-	sensorVoltage = MG812.getSensorVoltage() / V_RATIO;
-	double ppm_log = (constantB - sensorVoltage) / constantA;
-	sensorPPM = pow(M_E, ppm_log);
-	MYLOG("MG812", "MG812 sensor voltage Value is: %3.2f\r\n", sensorVoltage);
-	MYLOG("MG812", "MG812 sensor PPM Value is: %3.2f\r\n", sensorPPM);
-	PPMpercentage = sensorPPM / 10000;
-	MYLOG("MG812", "MG812 PPM percentage Value is:%3.2f%%\r\n", PPMpercentage);
+	// Set binary gas, just to be sure.
+	stc31_sensor.setBinaryGas(STC3X_BINARY_GAS_CO2_AIR_25);
+	float t_h_values[3] = {0.0}; // temperature [0] & humidity [1] % pressure [2] value from T&H sensor
 
-	g_solution_data.addAnalogInput(LPP_CHANNEL_CO2, sensorPPM);
-	g_solution_data.addPercentage(LPP_CHANNEL_CO2_PERC, PPMpercentage);
+	if (found_sensors[ENV_ID].found_sensor)
+	{
+		get_rak1906_values(t_h_values);
+		MYLOG("CO2", "Rh: %.2f T: %.2f P: %.2f", t_h_values[1], t_h_values[0], t_h_values[2]);
+
+		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
+		{
+			stc31_sensor.setTemperature(t_h_values[0]);
+			stc31_sensor.setRelativeHumidity(t_h_values[1]);
+			stc31_sensor.setPressure((uint16_t)t_h_values[2]);
+		}
+	}
+	else
+	{
+		if (found_sensors[TEMP_ID].found_sensor)
+		{
+			get_rak1901_values(t_h_values);
+			MYLOG("CO2", "Rh: %.2f T: %.2f", t_h_values[1], t_h_values[0]);
+
+			if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
+			{
+				stc31_sensor.setTemperature(t_h_values[0]);
+				stc31_sensor.setRelativeHumidity(t_h_values[1]);
+			}
+		}
+		if (found_sensors[PRESS_ID].found_sensor)
+		{
+			start_rak1902();
+			delay(100);
+			float pressure = get_rak1902();
+			MYLOG("CO2", "P: %.2f", pressure);
+			stc31_sensor.setPressure((uint16_t)pressure);
+		}
+	}
+	if (stc31_sensor.measureGasConcentration()) // measureGasConcentration will return true when fresh data is available
+	{
+		float co2_perc = abs(stc31_sensor.getCO2());
+		MYLOG("CO2", "CO2: %.2f", co2_perc);
+		g_solution_data.addAnalogInput(LPP_CHANNEL_CO2_PERC, co2_perc); // Percent
+#if HAS_EPD > 0
+		set_co2_rak14000(co2_perc);
+#endif
+	}
 }

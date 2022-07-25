@@ -60,6 +60,11 @@ void read_rak1901(void)
 		_last_temp = shtc3.toDegC();
 		_last_humid = shtc3.toPercent();
 		_has_last_values = true;
+
+#if HAS_EPD > 0
+		set_humid_rak14000(shtc3.toPercent());
+		set_temp_rak14000(shtc3.toDegC());
+#endif
 	}
 	else
 	{

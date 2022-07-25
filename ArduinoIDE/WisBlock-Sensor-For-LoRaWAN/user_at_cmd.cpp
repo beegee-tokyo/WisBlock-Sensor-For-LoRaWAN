@@ -10,6 +10,7 @@
  */
 
 #include "app.h"
+#ifdef NRF52_SERIES
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
 using namespace Adafruit_LittleFS_Namespace;
@@ -25,6 +26,15 @@ File gps_file(InternalFS);
 
 /** File to save battery check status */
 File batt_check(InternalFS);
+#endif
+#ifdef ESP32
+#include <Preferences.h>
+/** ESP32 preferences */
+Preferences esp32_prefs;
+#endif
+
+/** Flag for sleep activated */
+bool g_device_sleep = false;
 
 /** Structure for NVRAM settings */
 struct s_nvram_settings
@@ -36,13 +46,6 @@ struct s_nvram_settings
 
 /** User AT command defined settings */
 s_nvram_settings g_nvram_settings;
-
-#define AT_PRINTF(...)                  \
-	Serial.printf(__VA_ARGS__);         \
-	if (g_ble_uart_is_connected)        \
-	{                                   \
-		g_ble_uart.printf(__VA_ARGS__); \
-	}
 
 /**
  * @brief Returns in g_at_query_buf the current settings for the GNSS precision
@@ -122,15 +125,26 @@ void read_gps_settings(void)
 	g_gps_prec_6 = false;
 	g_is_helium = false;
 	g_is_tester = false;
+	bool found_prefs = false;
+	char data[3] = {'0'};
 
+#ifdef NRF52_SERIES
 	if (InternalFS.exists(gnss_name))
 	{
 		gps_file.open(gnss_name, FILE_O_READ);
 		// int read (void *buf, uint16_t nbyte);
-		char data[3] = {'0'};
 		gps_file.read(data, 1);
 		gps_file.close();
-
+		found_prefs = true;
+	}
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("gnss", false);
+	data[0] = esp32_prefs.getShort("fmt", 0);
+	esp32_prefs.end();
+#endif
+	if (found_prefs)
+	{
 		MYLOG("USR_AT", "File found, read %c", data[0]);
 		if (data[0] == '1')
 		{
@@ -161,6 +175,7 @@ void read_gps_settings(void)
  */
 void save_gps_settings(void)
 {
+#ifdef NRF52_SERIES
 	InternalFS.remove(gnss_name);
 	gps_file.open(gnss_name, FILE_O_WRITE);
 	if (g_gps_prec_6)
@@ -184,6 +199,76 @@ void save_gps_settings(void)
 		gps_file.write("0");
 	}
 	gps_file.close();
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("gnss", false);
+	if (g_gps_prec_6)
+	{
+		MYLOG("USR_AT", "Saved high precision");
+		esp32_prefs.putShort("fmt", 1);
+	}
+	else if (g_is_helium)
+	{
+		MYLOG("USR_AT", "Saved Helium format");
+		esp32_prefs.putShort("fmt", 2);
+	}
+	else if (g_is_tester)
+	{
+		MYLOG("USR_AT", "Saved Tester format");
+		esp32_prefs.putShort("fmt", 3);
+	}
+	else
+	{
+		MYLOG("USR_AT", "Saved low precision");
+		esp32_prefs.putShort("fmt", 0);
+	}
+	esp32_prefs.end();
+#endif
+}
+
+/**
+ * @brief Goto sleep
+ *
+ * @return int 0
+ */
+static int at_sleep(void)
+{
+	// Switch off module power
+	digitalWrite(WB_IO2, LOW);
+
+	// Cancel automatic sending
+	api_timer_stop();
+
+	// Put radio into sleep
+	Radio.Sleep();
+
+	// set sleep flag
+	g_device_sleep = true;
+	return 0;
+}
+
+/**
+ * @brief Wakeup
+ *
+ * @return int 0
+ */
+int at_wake(void)
+{
+	MYLOG("USR_AT", "Wakeup");
+	// Switch off module power
+	digitalWrite(WB_IO2, HIGH);
+
+	// Cancel automatic sending
+	api_timer_restart(g_lorawan_settings.send_repeat_time);
+
+	if (found_sensors[GNSS_ID].found_sensor)
+	{
+		init_gnss();
+	}
+
+	// remove sleep flag
+	g_device_sleep = false;
+	return 0;
 }
 
 /**
@@ -194,6 +279,7 @@ atcmd_t g_user_at_cmd_list_gps[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
 	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper, 3 = Field Tester", at_query_gnss, at_exec_gnss, at_query_gnss},
+	{"+SLEEP", "Put device into sleep", NULL, NULL, at_sleep},
 };
 
 /**
@@ -513,6 +599,7 @@ static int at_query_batt_check(void)
  */
 void read_batt_settings(void)
 {
+#ifdef NRF52_SERIES
 	if (InternalFS.exists(batt_name))
 	{
 		battery_check_enabled = true;
@@ -523,6 +610,13 @@ void read_batt_settings(void)
 		battery_check_enabled = false;
 		MYLOG("USR_AT", "File not found, disable battery check");
 	}
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("bat", false);
+	battery_check_enabled = esp32_prefs.getBool("bat", false);
+	esp32_prefs.end();
+#endif
+
 	save_batt_settings(battery_check_enabled);
 }
 
@@ -532,6 +626,7 @@ void read_batt_settings(void)
  */
 void save_batt_settings(bool check_batt_enables)
 {
+#ifdef NRF52_SERIES
 	if (check_batt_enables)
 	{
 		batt_check.open(batt_name, FILE_O_WRITE);
@@ -544,6 +639,12 @@ void save_batt_settings(bool check_batt_enables)
 		InternalFS.remove(batt_name);
 		MYLOG("USR_AT", "Remove File for battery protection enabled");
 	}
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("bat", false);
+	esp32_prefs.putBool("bat", battery_check_enabled);
+	esp32_prefs.end();
+#endif
 }
 
 atcmd_t g_user_at_cmd_list_batt[] = {
@@ -577,6 +678,7 @@ void init_user_at(void)
 
 	uint16_t index_next_cmds = 0;
 	uint16_t required_structure_size = sizeof(g_user_at_cmd_list_batt);
+	MYLOG("USR_AT", "Structure size %d Battery", required_structure_size);
 
 	// Get required size of structure
 	if (found_sensors[SOIL_ID].found_sensor)
@@ -627,7 +729,7 @@ void init_user_at(void)
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_gps, sizeof(g_user_at_cmd_list_gps));
 		index_next_cmds += sizeof(g_user_at_cmd_list_gps) / sizeof(atcmd_t);
-		MYLOG("USR_AT", "Index after adding soil %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding GNSS %d", index_next_cmds);
 	}
 	if (found_sensors[RTC_ID].found_sensor)
 	{
@@ -635,7 +737,7 @@ void init_user_at(void)
 		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_rtc, sizeof(g_user_at_cmd_list_rtc));
 		index_next_cmds += sizeof(g_user_at_cmd_list_rtc) / sizeof(atcmd_t);
-		MYLOG("USR_AT", "Index after adding soil %d", index_next_cmds);
+		MYLOG("USR_AT", "Index after adding RTC %d", index_next_cmds);
 	}
 	if ((found_sensors[ENV_ID].found_sensor) || (found_sensors[PRESS_ID].found_sensor))
 	{

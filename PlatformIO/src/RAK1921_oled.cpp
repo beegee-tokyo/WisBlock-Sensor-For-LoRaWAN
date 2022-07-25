@@ -11,6 +11,11 @@
 #include "app.h"
 #include <nRF_SSD1306Wire.h>
 
+#ifdef ESP32
+#define PIN_WIRE_SDA SDA
+#define PIN_WIRE_SCL SCL
+#endif
+
 void disp_show(void);
 
 /** Width of the display in pixel */
@@ -45,7 +50,7 @@ bool init_rak1921(void)
 	Wire.begin();
 
 	delay(500); // Give display reset some time
-	taskENTER_CRITICAL();
+	// taskENTER_CRITICAL();
 	oled_display.setI2cAutoInit(true);
 	oled_display.init();
 	oled_display.displayOff();
@@ -55,7 +60,7 @@ bool init_rak1921(void)
 	oled_display.setContrast(128);
 	oled_display.setFont(ArialMT_Plain_10);
 	oled_display.display();
-	taskEXIT_CRITICAL();
+	// taskEXIT_CRITICAL();
 
 	return true;
 }
@@ -65,7 +70,7 @@ bool init_rak1921(void)
  */
 void rak1921_write_header(char *header_line)
 {
-	taskENTER_CRITICAL();
+	// taskENTER_CRITICAL();
 	oled_display.setFont(ArialMT_Plain_10);
 
 	// clear the status bar
@@ -80,7 +85,7 @@ void rak1921_write_header(char *header_line)
 	// draw divider line
 	oled_display.drawLine(0, 11, 128, 11);
 	oled_display.display();
-	taskEXIT_CRITICAL();
+	// taskEXIT_CRITICAL();
 }
 
 /**
@@ -90,7 +95,7 @@ void rak1921_write_header(char *header_line)
  */
 void rak1921_add_line(char *line)
 {
-	taskENTER_CRITICAL();
+	// taskENTER_CRITICAL();
 	if (current_line == NUM_OF_LINES)
 	{
 		// Display is full, shift text one line up
@@ -108,7 +113,7 @@ void rak1921_add_line(char *line)
 	}
 
 	rak1921_show();
-	taskEXIT_CRITICAL();
+	// taskEXIT_CRITICAL();
 }
 
 /**

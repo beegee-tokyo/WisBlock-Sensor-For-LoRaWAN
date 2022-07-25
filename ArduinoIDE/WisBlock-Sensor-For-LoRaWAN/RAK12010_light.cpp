@@ -58,5 +58,5 @@ void read_rak12010(void)
 	MYLOG("VEML", "L: %.2fLux W: %.2f ALS: %.2f", light_lux, light_white, light_als);
 #endif
 
-	g_solution_data.addLuminosity(LPP_CHANNEL_LIGHT2, VEML.readLux());
+	g_solution_data.addLuminosity(LPP_CHANNEL_LIGHT2, (uint32_t)VEML.readLux());
 }

@@ -14,6 +14,17 @@
 #include <Adafruit_LIS3DH.h>
 #include <Adafruit_Sensor.h>
 
+//******************************************************************//
+// RAK1904 INT1_PIN
+//******************************************************************//
+// Slot A      WB_IO1
+// Slot B      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot C      WB_IO3
+// Slot D      WB_IO5
+// Slot E      WB_IO4
+// Slot F      WB_IO6
+//******************************************************************//
+
 // Forward declarations
 void int_callback_rak1904(void);
 
@@ -61,7 +72,7 @@ bool rak1904_writeRegister(uint8_t chip_reg, uint8_t dataToWrite)
 bool rak1904_readRegister(uint8_t *outputPointer, uint8_t chip_reg)
 {
 	// Return value
-	uint8_t result;
+	uint8_t result = 0;
 	uint8_t numBytes = 1;
 
 	usedWire->beginTransmission(LIS3DH_DEFAULT_ADDRESS);
@@ -188,7 +199,7 @@ void int_assign_rak1904(uint8_t new_irq_pin)
  */
 void int_callback_rak1904(void)
 {
-	detachInterrupt(acc_int_pin);
+	// detachInterrupt(acc_int_pin);
 	api_wake_loop(MOTION_TRIGGER);
 }
 
@@ -199,5 +210,5 @@ void int_callback_rak1904(void)
 void clear_int_rak1904(void)
 {
 	acc_sensor.readAndClearInterrupt();
-	attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
+	// attachInterrupt(acc_int_pin, int_callback_rak1904, RISING);
 }
