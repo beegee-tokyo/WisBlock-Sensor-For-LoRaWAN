@@ -110,13 +110,20 @@ osThreadId epd_task_id = NULL;
 void epd_task(void);
 #endif
 
+/** Bandwidth as characters for settings screen */
 char *bws[] = {(char *)"125", (char *)"250", (char *)"500", (char *)"062", (char *)"041", (char *)"031", (char *)"020", (char *)"015", (char *)"010", (char *)"007"};
+/** Regions as characters for settings screen */
 char *regions[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char *)"CN779",
 				   (char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
 				   (char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
 
+// Forward declaration
 void rak14000_text(int16_t x, int16_t y, char *text, uint16_t text_color, uint32_t text_size);
 
+/**
+ * @brief Interrupt callback for left button
+ *
+ */
 void butt_left_int(void)
 {
 	detachInterrupt(LEFT_BUTTON);
@@ -132,6 +139,10 @@ void butt_left_int(void)
 	// refresh_rak14000();
 }
 
+/**
+ * @brief Interrupt callback for middle button
+ *
+ */
 void butt_mid_int(void)
 {
 	detachInterrupt(MIDDLE_BUTTON);
@@ -152,6 +163,10 @@ void butt_mid_int(void)
 	// refresh_rak14000();
 }
 
+/**
+ * @brief Interrupt callback for right button
+ *
+ */
 void butt_right_int(void)
 {
 	detachInterrupt(RIGHT_BUTTON);
@@ -172,6 +187,10 @@ void butt_right_int(void)
 	// refresh_rak14000();
 }
 
+/**
+ * @brief Initialization of RAK14000 EPD
+ *
+ */
 void init_rak14000(void)
 {
 	pinMode(POWER_ENABLE, INPUT_PULLUP);
@@ -188,19 +207,6 @@ void init_rak14000(void)
 	// set right button interrupt
 	pinMode(RIGHT_BUTTON, INPUT);
 	attachInterrupt(RIGHT_BUTTON, butt_right_int, FALLING);
-
-	// display.begin();
-
-	// // Clear display
-	// display.clearBuffer();
-
-	// // Draw Welcome Logo
-	// display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
-	// display.drawBitmap(DEPG_HP.position1_x, DEPG_HP.position1_y, rak_img, 150, 56, txt_color);
-
-	// rak14000_text(DEPG_HP.position1_x, DEPG_HP.position1_y + 50, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
-
-	// display.display(true);
 
 #if defined NRF52_SERIES || defined ESP32
 	// Create the EPD event semaphore
@@ -223,6 +229,10 @@ void init_rak14000(void)
 	}
 }
 
+/**
+ * @brief Wake task to handle screen updates
+ *
+ */
 void wake_rak14000(void)
 {
 #if defined NRF52_SERIES || defined ESP32
@@ -254,14 +264,23 @@ void rak14000_text(int16_t x, int16_t y, char *text, uint16_t text_color, uint32
 	display.print(text);
 }
 
+/**
+ * @brief Clear display content
+ *
+ */
 void clear_rak14000(void)
 {
 	display.clearBuffer();
 	display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
 }
 
+/** Flag for first screen update */
 bool first_time = true;
 
+/**
+ * @brief Update screen content
+ *
+ */
 void refresh_rak14000(void)
 {
 	if (show_status)
@@ -343,6 +362,11 @@ void refresh_rak14000(void)
 	}
 }
 
+/**
+ * @brief Add VOC value to buffer
+ *
+ * @param voc_value new VOC value
+ */
 void set_voc_rak14000(uint16_t voc_value)
 {
 	MYLOG("EPD", "VOC set to %d at index %d", voc_value, voc_idx);
@@ -363,6 +387,11 @@ void set_voc_rak14000(uint16_t voc_value)
 	voc_idx++;
 }
 
+/**
+ * @brief Add temperature value to buffer
+ *
+ * @param temp_value new temperature value
+ */
 void set_temp_rak14000(float temp_value)
 {
 	MYLOG("EPD", "Temp set to %.2f at index %d", temp_value, temp_idx);
@@ -383,6 +412,11 @@ void set_temp_rak14000(float temp_value)
 	temp_idx++;
 }
 
+/**
+ * @brief Add humidity value to buffer
+ *
+ * @param humid_value new humidity value
+ */
 void set_humid_rak14000(float humid_value)
 {
 	MYLOG("EPD", "Humid set to %.2f at index %d", humid_value, humid_idx);
@@ -403,6 +437,11 @@ void set_humid_rak14000(float humid_value)
 	humid_idx++;
 }
 
+/**
+ * @brief Add CO2 value to buffer
+ *
+ * @param co2_value new CO2 value
+ */
 void set_co2_rak14000(float co2_value)
 {
 	MYLOG("EPD", "CO2 set to %.2f at index %d", co2_value, co2_idx);
@@ -423,6 +462,11 @@ void set_co2_rak14000(float co2_value)
 	co2_idx++;
 }
 
+/**
+ * @brief Add barometric pressure to buffer
+ *
+ * @param baro_value new barometric pressure
+ */
 void set_baro_rak14000(float baro_value)
 {
 	MYLOG("EPD", "Baro set to %.2f at index %d", baro_value, baro_idx);
@@ -443,6 +487,11 @@ void set_baro_rak14000(float baro_value)
 	baro_idx++;
 }
 
+/**
+ * @brief Update display for VOC values
+ *
+ * @param full unused
+ */
 void voc_rak14000(bool full)
 {
 	uint16_t x_text = 2;
@@ -458,10 +507,11 @@ void voc_rak14000(bool full)
 
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
-	snprintf(disp_text, 29, "VOC Index");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
-	snprintf(disp_text, 29, "%d", voc_values[voc_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	// snprintf(disp_text, 29, "VOC Index");
+	// rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	display.drawBitmap(x_text, y_text, voc_img, 32, 32, txt_color);
+	snprintf(disp_text, 29, "VOC %d", voc_values[voc_idx - 1]);
+	rak14000_text(x_text + 50, y_text + 10, disp_text, txt_color, s_text);
 
 	// Draw VOC values
 	for (int idx = 0; idx < num_values; idx++)
@@ -486,6 +536,11 @@ void voc_rak14000(bool full)
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
+/**
+ * @brief Update display for CO2 values
+ *
+ * @param full unused
+ */
 void co2_rak14000(bool full)
 {
 	uint16_t x_text = DEPG_HP.width / 2 + 3;
@@ -501,10 +556,11 @@ void co2_rak14000(bool full)
 
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
-	snprintf(disp_text, 29, "CO2");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	// snprintf(disp_text, 29, "CO2");
+	// rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	display.drawBitmap(x_text, y_text, co2_img, 32, 32, txt_color);
 	snprintf(disp_text, 29, "%.2f %%", co2_values[co2_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text + 50, y_text + 10, disp_text, txt_color, s_text);
 
 	// Draw CO2 values
 	for (int idx = 0; idx < num_values; idx++)
@@ -529,6 +585,11 @@ void co2_rak14000(bool full)
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
+/**
+ * @brief Update display for temperature values
+ *
+ * @param full unused
+ */
 void temp_rak14000(bool full)
 {
 	uint16_t x_text = 2;
@@ -544,10 +605,11 @@ void temp_rak14000(bool full)
 
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
-	snprintf(disp_text, 29, "Temperature");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	// snprintf(disp_text, 29, "Temperature");
+	// rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	display.drawBitmap(x_text, y_text, celsius_img, 32, 32, txt_color);
 	snprintf(disp_text, 29, "%.2f %cC", temp_values[temp_idx - 1], (char)247);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text + 50, y_text + 10, disp_text, txt_color, s_text);
 
 	// Draw Temperature values
 	for (int idx = 0; idx < num_values; idx++)
@@ -572,6 +634,11 @@ void temp_rak14000(bool full)
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
+/**
+ * @brief Update display for humidity values
+ *
+ * @param full unused
+ */
 void humid_rak14000(bool full)
 {
 	uint16_t x_text = DEPG_HP.width / 2 + 3;
@@ -593,10 +660,11 @@ void humid_rak14000(bool full)
 
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
-	snprintf(disp_text, 29, "Humidity");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	// snprintf(disp_text, 29, "Humidity");
+	// rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	display.drawBitmap(x_text, y_text, humidity_img, 32, 32, txt_color);
 	snprintf(disp_text, 29, "%.2f %%RH", humid_values[humid_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text + 50, y_text + 10, disp_text, txt_color, s_text);
 
 	// Draw Humidity values
 	for (int idx = 0; idx < num_values; idx++)
@@ -621,6 +689,11 @@ void humid_rak14000(bool full)
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
+/**
+ * @brief Update display for barometric pressure
+ *
+ * @param full unused
+ */
 void baro_rak14000(bool full)
 {
 	uint16_t x_text = 2;
@@ -637,10 +710,11 @@ void baro_rak14000(bool full)
 
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
-	snprintf(disp_text, 29, "Barometer");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	// snprintf(disp_text, 29, "Barometer");
+	// rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	display.drawBitmap(x_text, y_text, barometer_img, 32, 32, txt_color);
 	snprintf(disp_text, 29, "%.0f mBar", baro_values[baro_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text + 50, y_text + 10, disp_text, txt_color, s_text);
 
 	// Draw Barometer values
 	for (int idx = 0; idx < num_values; idx++)
@@ -665,6 +739,11 @@ void baro_rak14000(bool full)
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
+/**
+ * @brief Update display with device status
+ *
+ * @param full unused
+ */
 void status_general_rak14000(bool full)
 {
 	uint16_t y_pos = DEPG_HP.height / 3 * 2 + 3;
@@ -779,6 +858,10 @@ void status_general_rak14000(bool full)
 	// display.displayPartial(DEPG_HP.width / 2 + 3, DEPG_HP.height / 3 * 2 + 3, DEPG_HP.width / 2 + 3 + DEPG_HP.height / 3, DEPG_HP.height / 3 * 2 + 3 + DEPG_HP.width / 2);
 }
 
+/**
+ * @brief Show full screen device status
+ *
+ */
 void status_rak14000(void)
 {
 	uint16_t y_pos = 0;
@@ -922,7 +1005,7 @@ void epd_task(void *pvParameters)
 
 	display.begin();
 
-	display.setRotation(1);
+	display.setRotation(3);
 	MYLOG("EPD", "Rotation %d", display.getRotation());
 
 	// Clear display
@@ -930,11 +1013,20 @@ void epd_task(void *pvParameters)
 
 	// Draw Welcome Logo
 	display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
-	// display.drawBitmap(DEPG_HP.width / 2 - 75, DEPG_HP.height / 2 - 28, rak_img, 150, 56, txt_color);
-	display.drawBitmap(DEPG_HP.width / 2 - 75, 100, rak_img, 150, 56, txt_color);
+	display.drawBitmap(DEPG_HP.width / 2 - 75, 50, rak_img, 150, 56, txt_color);
 
-	// rak14000_text(DEPG_HP.width / 2 - 75, DEPG_HP.height / 2 - 28 + 50, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
-	rak14000_text(DEPG_HP.width / 2 - 75, 150, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
+	int16_t x1;
+	int16_t y1;
+	uint16_t w;
+	uint16_t h;
+
+	display.setTextSize(2);
+	display.getTextBounds((char *)"IoT Made Easy", 0, 0, &x1, &y1, &w, &h);
+	rak14000_text(DEPG_HP.width / 2 - (w/2), 110, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
+
+	display.setTextSize(1);
+	display.getTextBounds((char *)"Wait for connect", 0, 0, &x1, &y1, &w, &h);
+	rak14000_text(DEPG_HP.width / 2 - (w/2), 200, (char *)"Wait for connect", (uint16_t)txt_color, 1);
 
 	display.display(false);
 
