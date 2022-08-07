@@ -79,4 +79,8 @@ void read_rak12037(void)
 	g_solution_data.addConcentration(LPP_CHANNEL_CO2_2, co2_reading);
 	g_solution_data.addTemperature(LPP_CHANNEL_CO2_Temp_2, temp_reading);
 	g_solution_data.addRelativeHumidity(LPP_CHANNEL_CO2_HUMID_2, humid_reading);
+
+#if HAS_EPD > 0
+		set_co2_rak14000(co2_reading);
+#endif
 }

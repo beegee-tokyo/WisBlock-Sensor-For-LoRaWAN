@@ -708,8 +708,17 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
-			// Force a sensor reading now
-			api_wake_loop(STATUS);
+			// // Force a sensor reading in 2 seconds
+			// api_wake_loop(STATUS);
+			// g_task_event_type |= STATUS;
+#ifdef NRF52_SERIES
+			delayed_sending.setPeriod(2000);
+			delayed_sending.start();
+#endif
+#ifdef ESP32
+			delayed_sending.attach_ms(2000, send_delayed);
+
+#endif
 
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
@@ -810,12 +819,30 @@ void lora_data_handler(void)
 		}
 		else
 		{
-			/**************************************************************/
-			/**************************************************************/
-			/// \todo LoRa data arrived
-			/// \todo parse them here
-			/**************************************************************/
-			/**************************************************************/
+			// Check if uplink was a send frequency change command
+			if ((g_last_fport == 3) && (g_rx_data_len == 6))
+			{
+				if (g_rx_lora_data[0] == 0xAA)
+				{
+					if (g_rx_lora_data[1] == 0x55)
+					{
+						uint32_t new_send_frequency = 0;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[2]) << 24;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[3]) << 16;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[4]) << 8;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[5]);
+
+						MYLOG("APP", "Received new send frequency %ld s\n", new_send_frequency);
+						// Save the new send frequency
+						g_lorawan_settings.send_repeat_time = new_send_frequency * 1000;
+
+						// Set the timer to the new send frequency
+						api_timer_restart(g_lorawan_settings.send_repeat_time);
+						// Save the new send frequency
+						save_settings();
+					}
+				}
+			}
 
 			if (g_lorawan_settings.lorawan_enable)
 			{
@@ -852,10 +879,19 @@ void lora_data_handler(void)
 void send_delayed(TimerHandle_t unused)
 {
 	api_wake_loop(STATUS);
+	delayed_sending.stop();
 }
 #elif defined ESP32 || defined ARDUINO_ARCH_RP2040
 void send_delayed(void)
 {
 	api_wake_loop(STATUS);
+	delayed_sending.detach();
 }
 #endif
+
+// #ifdef NRF52_SERIES
+// 						delayed_sending.stop();
+// #endif
+// #ifdef ESP32
+// 						delayed_sending.detach();
+// #endif

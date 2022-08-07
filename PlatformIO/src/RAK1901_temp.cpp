@@ -29,6 +29,7 @@ bool _has_last_values = false;
  */
 bool init_rak1901(void)
 {
+	Wire.setClock(100000); // Wire.setClock(400000);
 	if (shtc3.begin(Wire) != SHTC3_Status_Nominal)
 	{
 		MYLOG("T_H", "Could not initialize SHTC3");

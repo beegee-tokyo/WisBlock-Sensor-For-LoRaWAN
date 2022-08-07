@@ -28,6 +28,26 @@ void int_callback_rak12034(void);
 /** Sensor instance using Wire */
 RAK_BMX160 bmx160(&Wire);
 
+//******************************************************************//
+// RAK12034 INT1_PIN
+//******************************************************************//
+// Slot A      WB_IO1
+// Slot B      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot C      WB_IO3
+// Slot D      WB_IO5
+// Slot E      WB_IO4
+// Slot F      WB_IO6
+//******************************************************************//
+//******************************************************************//
+// RAK12034 INT2_PIN
+//******************************************************************//
+// Slot A      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot B      WB_IO1
+// Slot C      WB_IO4
+// Slot D      WB_IO6
+// Slot E      WB_IO3
+// Slot F      WB_IO5
+//******************************************************************//
 /** Interrupt pin, depends on slot */
 uint8_t bmx_int_pin = WB_IO4;
 

@@ -91,6 +91,9 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_CO2_HUMID_2 37	   // RAK12037
 #define LPP_CHANNEL_TEMP_3 38		   // RAK12003
 #define LPP_CHANNEL_TEMP_4 39		   // RAK12003
+#define LPP_CHANNEL_PM_1_0 40		   // RAK12039
+#define LPP_CHANNEL_PM_2_5 41		   // RAK12039
+#define LPP_CHANNEL_PM_10_0 42		   // RAK12039
 
 extern WisCayenne g_solution_data;
 
@@ -123,6 +126,7 @@ extern WisCayenne g_solution_data;
 #define TEMP_ARR_ID 25 // RAK12040 Temp Array sensor
 #define DOF_ID 26	   // RAK12034 9DOF BMX160 sensor
 #define ACC2_ID 27	   // RAK12032 ADXL313 accelerometer
+#define PM_ID 28	   // RAK12039 particle matter sensor
 
 /** Sensor functions */
 bool init_rak1901(void);
@@ -184,6 +188,8 @@ void int_assign_rak12032(uint8_t new_irq_pin);
 void clear_int_rak12032(void);
 bool init_rak12037(void);
 void read_rak12037(void);
+bool init_rak12039(void);
+void read_rak12039(void);
 bool init_rak12040(void);
 void read_rak12040(void);
 bool init_rak12047(void);
@@ -218,17 +224,23 @@ void wake_rak14000(void);
 void clear_rak14000(void);
 void refresh_rak14000(void);
 void set_voc_rak14000(uint16_t voc_value);
+extern bool voc_valid;
 void set_temp_rak14000(float temp_value);
 void set_humid_rak14000(float humid_value);
 void set_baro_rak14000(float baro_value);
 void set_co2_rak14000(float co2_value);
-void voc_rak14000(bool full);
-void temp_rak14000(bool full);
-void humid_rak14000(bool full);
-void baro_rak14000(bool full);
-void co2_rak14000(bool full);
-void status_general_rak14000(bool full);
+void set_pm_rak14000(uint16_t pm10_env, uint16_t pm25_env, uint16_t pm100_env);
+void voc_rak14000(void);
+void temp_rak14000(bool has_pm);
+void humid_rak14000(bool has_pm);
+void baro_rak14000(bool has_pm);
+void co2_rak14000(bool has_pm);
+void pm_rak14000(void);
+void status_general_rak14000(bool has_pm);
 void status_rak14000(void);
+
+/** Lock for 100kHz I2C access */
+extern SemaphoreHandle_t i2c_lock;
 
 /** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
 /** Logic high enables the device. Logic low disables the device */

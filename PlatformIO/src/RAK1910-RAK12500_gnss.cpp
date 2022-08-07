@@ -297,11 +297,6 @@ bool poll_gnss(void)
 				last_read_ok = true;
 			}
 		}
-		// }
-		// else
-		// {
-		// 	MYLOG("GNSS", "PVT not finished");
-		// }
 	}
 	else
 	{
@@ -330,7 +325,6 @@ bool poll_gnss(void)
 					accuracy = my_rak1910_gnss.hdop.hdop() * 100;
 				}
 			}
-			// if (has_pos && has_alt)
 			if (has_pos && has_alt)
 			{
 				MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);

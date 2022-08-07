@@ -47,7 +47,9 @@ bool init_rak1906(void)
 	bme.setHumidityOversampling(BME680_OS_2X);
 	bme.setPressureOversampling(BME680_OS_4X);
 	bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-	bme.setGasHeater(320, 150); // 320*C for 150 ms
+	// As we do not use the BSEC library here, the gas value is useless and just consumes battery. Better to switch it off
+	// bme.setGasHeater(320, 150); // 320*C for 150 ms
+	bme.setGasHeater(0, 0); // switch off
 
 	return true;
 }

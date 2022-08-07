@@ -1,0 +1,32 @@
+{
+	"name": "RAKwireless <CHIP or RAK#> library",
+	"version": "1.0.0",
+	"keywords": [
+		"LIN bus",
+		"TLE7259",
+		"RAKWireless",
+		"WisBlock",
+		"RAK13005"
+	],
+	"description": "RAKWireless library for the <RAK#> <Function> module with the <CHIP>",
+	"frameworks": [
+		"arduino"
+	],
+	"platforms": [
+		"*"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"email": "clark.li@rakwireless.com",
+			"url": "https://rakwireless.com",
+			"maintainer": true,
+			"name": "Clark Li"
+		}
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RAKWireless/RAK#-CHIP-Library"
+	},
+	"homepage": "https://rakwireless.com"
+}

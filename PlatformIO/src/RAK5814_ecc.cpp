@@ -13,13 +13,19 @@
 
 ECCX08Class eccx08(Wire, 0x59);
 
+/**
+ * @brief Initialize access to ECCX08 decryption module
+ * 
+ * @return true module found
+ * @return false error during initialization
+ */
 bool init_rak5814(void)
 {
 	Wire.setClock(100000);
 	if (!eccx08.begin())
 	{
 		MYLOG("ECC", "RAK5814 initialization failed");
-		Wire.setClock(400000);
+		Wire.setClock(100000); // Wire.setClock(400000);
 		return false;
 	}
 
@@ -27,18 +33,34 @@ bool init_rak5814(void)
 
 	MYLOG("ECC", "Chip is %slocked", eccx08.locked() ? "" : "not");
 
-	Wire.setClock(400000);
+	Wire.setClock(100000); // Wire.setClock(400000);
 	return true;
 }
 
+/**
+ * @brief Get random number for EXXX08
+ * 
+ * @param min lower limit
+ * @param max upper limit
+ * @return uint16_t random number
+ */
 uint16_t random_num_rak5814(uint16_t min, uint16_t max)
 {
 	Wire.setClock(100000);
 	uint16_t result = eccx08.random(min, max);
-	Wire.setClock(400000);
+	Wire.setClock(100000); // Wire.setClock(400000);
 	return result;
 }
 
+/**
+ * @brief Calculate SHA256
+ * 
+ * @param data buffer with the data
+ * @param length length of the buffer
+ * @param result variable to write SHA256 to
+ * @return true calculation success
+ * @return false calculation failed
+ */
 bool sha256_rak5814(byte *data, uint32_t length, byte *result)
 {
 	// Wire.setClock(100000);
@@ -46,14 +68,14 @@ bool sha256_rak5814(byte *data, uint32_t length, byte *result)
 	// int result = 0;
 	// if (eccx08.beginSHA256() != 0)
 	// {
-	// 	Wire.setClock(400000);
+	// 	Wire.setClock(100000); // Wire.setClock(400000);
 	// 	return false;
 	// }
 	// while ((length - 32) > 64)
 	// {
 	// 	if (eccx08.updateSHA256(&data[index]) != 0)
 	// 	{
-	// 		Wire.setClock(400000);
+	// 		Wire.setClock(100000); // Wire.setClock(400000);
 	// 		return false;
 	// 	}
 	// 	index += 32;
@@ -65,16 +87,16 @@ bool sha256_rak5814(byte *data, uint32_t length, byte *result)
 	// 	memcpy(left_over, &data[index], length);
 	// 	if (eccx08.updateSHA256(left_over) != 0)
 	// 	{
-	// 		Wire.setClock(400000);
+	// 		Wire.setClock(100000); // Wire.setClock(400000);
 	// 		return false;
 	// 	}
 	// }
 	// if (eccx08.endSHA256(result) != 0)
 	// {
-	// 	Wire.setClock(400000);
+	// 	Wire.setClock(100000); // Wire.setClock(400000);
 	// 	return false;
 	// }
-	// Wire.setClock(400000);
+	// Wire.setClock(100000); // Wire.setClock(400000);
 	// return true;
 
 	// eccx08.ecdsaVerify()
