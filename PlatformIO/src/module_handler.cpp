@@ -122,9 +122,9 @@ void find_modules(void)
 					MYLOG("SCAN", "RAK12039 answered at %ld ms", millis());
 					break;
 				}
-				if ((millis() - wait_sensor) > 10000)
+				if ((millis() - wait_sensor) > 5000)
 				{
-					MYLOG("SCAN", "RAK12039 timeout after %ld ms", 10000);
+					MYLOG("SCAN", "RAK12039 timeout after %ld ms", 5000);
 					break;
 				}
 			}

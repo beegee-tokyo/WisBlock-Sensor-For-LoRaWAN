@@ -261,7 +261,6 @@ void refresh_rak14000(void)
 			snprintf(disp_text, 59, "RAK10702  Batt: %.2f V",
 					 read_batt() / 1000.0);
 		}
-		snprintf(disp_text, 59, "RAK10702 Battery: %.2f V", read_batt() / 1000.0);
 		display.getTextBounds(disp_text, 0, 0, &txt_x1, &txt_y1, &txt_w, &txt_h);
 		rak14000_text((DEPG_HP.width / 2) - (txt_w / 2), 1, disp_text, (uint16_t)txt_color, 1);
 	}
@@ -273,8 +272,9 @@ void refresh_rak14000(void)
 	if (found_sensors[PM_ID].found_sensor)
 	{
 		pm_rak14000();
-		display.drawLine(DEPG_HP.width / 2 + 50, 10, DEPG_HP.width / 2 + 50, DEPG_HP.height, (uint16_t)txt_color);
 		display.drawLine(0, DEPG_HP.height / 2 + 3, DEPG_HP.width / 2 + 50, DEPG_HP.height / 2 + 3, (uint16_t)txt_color);
+		display.drawLine(DEPG_HP.width / 2 + 50, DEPG_HP.height / 5, DEPG_HP.width, DEPG_HP.height / 5, (uint16_t)txt_color);
+		display.drawLine(DEPG_HP.width / 2 + 50, 10, DEPG_HP.width / 2 + 50, DEPG_HP.height, (uint16_t)txt_color);
 	}
 	else
 	{
