@@ -19,8 +19,8 @@ union int_union_s
 /** Latitude/Longitude value union */
 union latLong_s
 {
-	uint32_t val32;
-	uint8_t val8[4];
+	int32_t val32;
+	int8_t val8[4];
 };
 
 /**

@@ -46,16 +46,17 @@ sensors_t found_sensors[] = {
 	{0x69, false}, // 26 ✔ RAK12034 BMX160 9DOF sensor
 	{0x1D, false}, // 27 ✔ RAK12032 ADXL313 accelerometer
 	{0x12, false}, // 28 ✔ RAK12039 PMSA003I particle matter sensor
-	{0x57, false}, // 29 RAK12012 MAX30102 heart rate sensor
-	{0x54, false}, // 30 RAK12016 Flex sensor
-	{0x47, false}, // 31 RAK13004 PWM expander module
-	{0x38, false}, // 32 RAK14001 RGB LED module
-	{0x5F, false}, // 33 RAK14004 Keypad interface
-	{0x61, false}, // 34 RAK16001 ADC sensor !! conflict with RAK12037
-	{0x59, false}, // 35 RAK13600 NFC !! conflict with RAK12047, RAK13600, RAK5814
-	{0x59, false}, // 36 RAK16002 Coulomb sensor !! conflict with RAK13600, RAK12047, RAK5814
-	{0x20, false}, // 37 RAK13003 IO expander module !! conflict with RAK12035
-	{0x59, false}, // 38 ✔ RAK5814 ACC608 encryption module (limited I2C speed 100000) !! conflict with RAK12047, RAK13600, RAK13003
+	{0x55, false}, // 29 ✔ RAK12027 D7S seismic sensor
+	{0x57, false}, // 30 RAK12012 MAX30102 heart rate sensor
+	{0x54, false}, // 31 RAK12016 Flex sensor
+	{0x47, false}, // 32 RAK13004 PWM expander module
+	{0x38, false}, // 33 RAK14001 RGB LED module
+	{0x5F, false}, // 34 RAK14004 Keypad interface
+	{0x61, false}, // 35 RAK16001 ADC sensor !! conflict with RAK12037
+	{0x59, false}, // 36 RAK13600 NFC !! conflict with RAK12047, RAK13600, RAK5814
+	{0x59, false}, // 37 RAK16002 Coulomb sensor !! conflict with RAK13600, RAK12047, RAK5814
+	{0x20, false}, // 38 RAK13003 IO expander module !! conflict with RAK12035
+	{0x59, false}, // 39 ✔ RAK5814 ACC608 encryption module (limited I2C speed 100000) !! conflict with RAK12047, RAK13600, RAK13003
 };
 
 /**
@@ -99,7 +100,7 @@ void find_modules(void)
 		}
 		else
 		{
-			pinMode(WB_IO4, INPUT);
+			pinMode(xshut_pin, INPUT);
 		}
 		if (address == 0x12)
 		{
@@ -110,6 +111,7 @@ void find_modules(void)
 			pinMode(WB_IO6, OUTPUT);
 			// Sensor on
 			digitalWrite(WB_IO6, HIGH);
+			delay(500);
 			time_t wait_sensor = millis();
 			MYLOG("SCAN", "RAK12039 scan start %ld ms", millis());
 			while (1)
@@ -125,6 +127,7 @@ void find_modules(void)
 				if ((millis() - wait_sensor) > 5000)
 				{
 					MYLOG("SCAN", "RAK12039 timeout after %ld ms", 5000);
+					pinMode(WB_IO6, INPUT);
 					break;
 				}
 			}
@@ -322,12 +325,18 @@ void find_modules(void)
 		}
 	}
 
+	// I2C address conflict with RAK12027 Seismic Sensor and RAK12009 Gas Sensor
 	if (found_sensors[MQ3_ID].found_sensor)
 	{
-		if (init_rak12009())
+		if (init_rak12027())
 		{
-			snprintf(g_ble_dev_name, 9, "RAK_GAS");
+			found_sensors[MQ3_ID].found_sensor = false;
+			found_sensors[SEISM_ID].found_sensor = true;
 		}
+		// else if (init_rak12009())
+		// {
+		// 	snprintf(g_ble_dev_name, 9, "RAK_GAS");
+		// }
 		else
 		{
 			found_sensors[MQ3_ID].found_sensor = false;
@@ -771,6 +780,17 @@ void announce_modules(void)
 		read_rak12025();
 	}
 
+	if (!found_sensors[SEISM_ID].found_sensor)
+	{
+		// MYLOG("APP", "D7S error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12027 OK\n");
+		read_rak12027(false);
+	}
+
 	if (!found_sensors[ACC2_ID].found_sensor)
 	{
 		// MYLOG("APP", "ADXL313 error");
@@ -971,6 +991,11 @@ void get_sensor_values(void)
 		// Get the I3G4240D sensor values
 		read_rak12025();
 	}
+	// if (found_sensors[SEISM_ID].found_sensor)
+	// {
+	// 	// Get the D7S sensor values
+	// 	read_rak12027(false);
+	// }
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		// Get the soil moisture sensor values

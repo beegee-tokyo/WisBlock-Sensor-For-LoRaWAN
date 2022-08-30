@@ -129,6 +129,9 @@ void setup_app(void)
  */
 bool init_app(void)
 {
+	/** Set permanent RX mode for LoRa P2P */
+	g_lora_p2p_rx_mode = RX_MODE_RX;
+
 	MYLOG("APP", "init_app");
 
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
@@ -351,12 +354,87 @@ void app_event_handler(void)
 				read_rak12008();
 			}
 
-#if HAS_EPD > 0
-			// Refresh display
-			MYLOG("APP", "Refresh RAK14000");
-			wake_rak14000();
-			// refresh_rak14000();
+			if (found_sensors[SEISM_ID].found_sensor)
+			{
+				if ((earthquake_end) && !(g_task_event_type & SEISMIC_EVENT) && !(g_task_event_type & SEISMIC_ALERT))
+				{
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_EVENT, false);
+				}
+			}
+			// Handle Seismic Events
+			if ((g_task_event_type & SEISMIC_EVENT) == SEISMIC_EVENT)
+			{
+				MYLOG("APP", "Earthquake event");
+				g_task_event_type &= N_SEISMIC_EVENT;
+				switch (check_event_rak12027(false))
+				{
+				case 4:
+					// Earthquake start
+					MYLOG("APP", "Earthquake start alert!");
+					read_rak12027(false);
+					earthquake_end = false;
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_EVENT, true);
+					break;
+				case 5:
+					// Earthquake end
+					MYLOG("APP", "Earthquake end alert!");
+					read_rak12027(true);
+					earthquake_end = true;
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_SHUTOFF, shutoff_alert);
+					shutoff_alert = false;
+
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_COLLAPSE, collapse_alert);
+					collapse_alert = false;
+
+					// Reset flags
+					shutoff_alert = false;
+					collapse_alert = false;
+					// Send another packet in 30 seconds
+#ifdef NRF52_SERIES
+					delayed_sending.setPeriod(30000);
+					delayed_sending.start();
 #endif
+#ifdef ESP32
+					delayed_sending.attach_ms(2000, send_delayed);
+
+#endif
+					break;
+				default:
+					// False alert
+					MYLOG("APP", "Earthquake false alert!");
+					return;
+					break;
+				}
+			}
+
+			if ((g_task_event_type & SEISMIC_ALERT) == SEISMIC_ALERT)
+			{
+				g_task_event_type &= N_SEISMIC_ALERT;
+				switch (check_event_rak12027(true))
+				{
+				case 1:
+					// Collapse alert
+					collapse_alert = true;
+					MYLOG("APP", "Earthquake collapse alert!");
+					break;
+				case 2:
+					// ShutDown alert
+					shutoff_alert = true;
+					MYLOG("APP", "Earthquake shutoff alert!");
+					break;
+				case 3:
+					// Collapse & ShutDown alert
+					collapse_alert = true;
+					shutoff_alert = true;
+					MYLOG("APP", "Earthquake collapse & shutoff alert!");
+					break;
+				default:
+					// False alert
+					MYLOG("APP", "Earthquake false alert!");
+					break;
+				}
+				return;
+			}
 
 			MYLOG("APP", "Packetsize %d", g_solution_data.getSize());
 			if (g_lorawan_settings.lorawan_enable)
@@ -418,6 +496,13 @@ void app_event_handler(void)
 			}
 			// Reset the packet
 			g_solution_data.reset();
+
+#if HAS_EPD > 0
+			// Refresh display
+			MYLOG("APP", "Refresh RAK14000");
+			wake_rak14000();
+			// refresh_rak14000();
+#endif
 		}
 	}
 
@@ -708,11 +793,9 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
-			// // Force a sensor reading in 2 seconds
-			// api_wake_loop(STATUS);
-			// g_task_event_type |= STATUS;
+			// // Force a sensor reading in 10 seconds
 #ifdef NRF52_SERIES
-			delayed_sending.setPeriod(2000);
+			delayed_sending.setPeriod(10000);
 			delayed_sending.start();
 #endif
 #ifdef ESP32

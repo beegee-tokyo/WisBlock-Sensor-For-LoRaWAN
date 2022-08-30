@@ -1,5 +1,5 @@
 /**
- * @file RAK12039_dust.cpp
+ * @file RAK12039_pm.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief PMSA003I particle matter sensor support
  * @version 0.1

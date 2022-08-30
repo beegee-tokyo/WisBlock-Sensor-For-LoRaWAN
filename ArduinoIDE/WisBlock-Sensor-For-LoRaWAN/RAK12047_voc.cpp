@@ -33,7 +33,7 @@ mbed::Ticker voc_read_timer;
 #endif
 
 /** Calculated VOC index */
-int32_t voc_index = 0;
+volatile int32_t voc_index = 0;
 
 /** Flag if the VOC index is valid */
 bool voc_valid = false;
@@ -163,7 +163,7 @@ void read_rak12047(void)
 		MYLOG("VOC", "No valid VOC available");
 	}
 #if HAS_EPD > 0
-	set_voc_rak14000(voc_index);
+	set_voc_rak14000((uint16_t)voc_index);
 #endif
 }
 
@@ -236,14 +236,14 @@ void do_read_rak12047(void)
 			voc_index = voc_algorithm.process(srawVoc);
 			discard_counter++;
 			MYLOG("VOC", "First good reading: %ld", voc_index);
+			voc_valid = true;
 		}
 		else
 		{
 			uint32_t new_voc_index = voc_algorithm.process(srawVoc);
 			voc_index = ((voc_index + new_voc_index) / 2);
+			MYLOG("VOC", "VOC: %ld", voc_index);
 		}
-		MYLOG("VOC", "VOC Index: %ld", voc_index);
-		voc_valid = true;
 	}
 
 #if MY_DEBUG > 0

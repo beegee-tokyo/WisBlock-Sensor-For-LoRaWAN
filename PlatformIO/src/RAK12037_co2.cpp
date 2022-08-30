@@ -36,7 +36,7 @@ bool init_rak12037(void)
 
 	//**************init SCD30 sensor *****************************************************
 	// Change number of seconds between measurements: 2 to 1800 (30 minutes), stored in non-volatile memory of SCD30
-	scd30.setMeasurementInterval(10000);
+	scd30.setMeasurementInterval(10);
 
 	// Enable self calibration
 	scd30.setAutoSelfCalibration(true);

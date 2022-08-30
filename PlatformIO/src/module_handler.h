@@ -30,16 +30,19 @@ void send_delayed(void);
 #endif
 
 /** Wakeup triggers for application events */
-#define MOTION_TRIGGER 0b1000000000000000
-#define N_MOTION_TRIGGER 0b0111111111111111
-#define GNSS_FIN 0b0100000000000000
-#define N_GNSS_FIN 0b1011111111111111
-#define VOC_REQ 0b0010000000000000
-#define N_VOC_REQ 0b1101111111111111
-#define TOUCH_EVENT 0b0001000000000000
-#define N_TOUCH_EVENT 0b1110111111111111
-// #define BUTTON_EVENT 0b0000100000000000
-// #define N_BUTTON_EVENT 0b1111011111111111
+#define MOTION_TRIGGER      0b1000000000000000
+#define N_MOTION_TRIGGER    0b0111111111111111
+#define GNSS_FIN            0b0100000000000000
+#define N_GNSS_FIN          0b1011111111111111
+#define VOC_REQ             0b0010000000000000
+#define N_VOC_REQ           0b1101111111111111
+#define TOUCH_EVENT         0b0001000000000000
+#define N_TOUCH_EVENT       0b1110111111111111
+#define SEISMIC_EVENT       0b0000100000000000
+#define N_SEISMIC_EVENT     0b1111011111111111
+#define SEISMIC_ALERT       0b0000010000000000
+#define N_SEISMIC_ALERT     0b1111101111111111
+
 
 typedef struct sensors_s
 {
@@ -94,6 +97,11 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_PM_1_0 40		   // RAK12039
 #define LPP_CHANNEL_PM_2_5 41		   // RAK12039
 #define LPP_CHANNEL_PM_10_0 42		   // RAK12039
+#define LPP_CHANNEL_EQ_EVENT 43		   // RAK12027
+#define LPP_CHANNEL_EQ_SI 44		   // RAK12027
+#define LPP_CHANNEL_EQ_PGA 45		   // RAK12027
+#define LPP_CHANNEL_EQ_SHUTOFF 46	   // RAK12027
+#define LPP_CHANNEL_EQ_COLLAPSE 47	   // RAK12027
 
 extern WisCayenne g_solution_data;
 
@@ -127,6 +135,7 @@ extern WisCayenne g_solution_data;
 #define DOF_ID 26	   // RAK12034 9DOF BMX160 sensor
 #define ACC2_ID 27	   // RAK12032 ADXL313 accelerometer
 #define PM_ID 28	   // RAK12039 particle matter sensor
+#define SEISM_ID 29	   // RAK12027 D7S seismic sensor
 
 /** Sensor functions */
 bool init_rak1901(void);
@@ -180,6 +189,13 @@ void read_rak12019();
 #define GYRO_INT_PIN WB_IO4
 bool init_rak12025(void);
 void read_rak12025(void);
+bool init_rak12027(void);
+bool calib_rak12027(void);
+void read_rak12027(bool add_values);
+uint8_t check_event_rak12027(bool is_int1);
+extern bool shutoff_alert;
+extern bool collapse_alert;
+extern bool earthquake_end;
 void clear_int_rak12025(void);
 bool init_rak12034(void);
 void clear_int_rak12034(void);

@@ -88,6 +88,14 @@ uint8_t is_serial = 0;
 /** Unified Serial port (Serial1 or Serial2) */
 HardwareSerial *gnssSerial;
 
+/** Switcher between different fake locations */
+uint8_t fake_gnss_selector = 0;
+
+int64_t fake_latitude[] = {144213730, 414861950, -80533010, -274789700};
+int64_t fake_longitude[] = {1210069140, -816814860, -349049060, 1530410440};
+
+// PH 144213730, 1210069140, 35.000 // Ohio 414861950, -816814860 // Recife -80533010, -349049060 // Brisbane -274789700, 1530410440
+
 /**
  * @brief Initialize GNSS module
  *
@@ -387,9 +395,14 @@ bool poll_gnss(void)
 		// No location found
 #if FAKE_GPS > 0
 		MYLOG("GNSS", "Faking GPS");
-		// 14.4213730, 121.0069140, 35.000
-		latitude = 144213730;
-		longitude = 1210069140;
+		// PH 144213730, 1210069140, 35.000 // Ohio 414861950, -816814860 // Recife -80533010, -349049060 // Brisbane -274789700, 1530410440
+		latitude = fake_latitude[fake_gnss_selector];
+		longitude = fake_longitude[fake_gnss_selector];
+		fake_gnss_selector ++;
+		if (fake_gnss_selector == 4)
+		{
+			fake_gnss_selector = 0;
+		}
 		altitude = 35000;
 		accuracy = 1;
 		satellites = 5;

@@ -9,7 +9,7 @@
  *
  */
 #include "app.h"
-
+#if HAS_EPD == 2 || HAS_EPD == 3
 #include <Adafruit_GFX.h>
 #include <Adafruit_EPD.h>
 
@@ -43,12 +43,15 @@ typedef struct DEPG
 	int position4_y;
 } DEPG;
 
-// DEPG  DEPG_HP = {250,122,40,20,40,30,40,50,90,40};  //use DEPG0213RWS800F41HP as default B/W/R
-// DEPG  DEPG_HP = {212,104,30,15,30,25,30,45,80,30};  //  this is for DEPG0213BNS800F42HP B/W
-DEPG DEPG_HP = {400, 300, 30, 15, 30, 25, 30, 45, 80, 30}; //  this is for DEPG0420BNS19AF4 B/W
+#if HAS_EPD == 3
+DEPG DEPG_HP = {250, 122, 40, 20, 40, 30, 40, 50, 90, 40}; // use DEPG0213RWS800F41HP as default B/W/R
+#else
+DEPG DEPG_HP = {212, 104, 30, 15, 30, 25, 30, 45, 80, 30}; //  this is for DEPG0213BNS800F42HP B/W
+#endif
+// DEPG DEPG_HP = {400, 300, 30, 15, 30, 25, 30, 45, 80, 30}; //  this is for DEPG0420BNS19AF4 B/W
 
 // 2.13" EPD with SSD1680
-Adafruit_SSD1681 display(DEPG_HP.height, DEPG_HP.width, EPD_MOSI,
+Adafruit_SSD1680 display(DEPG_HP.width, DEPG_HP.height, EPD_MOSI,
 						 EPD_SCK, EPD_DC, EPD_RESET,
 						 EPD_CS, SRAM_CS, EPD_MISO,
 						 EPD_BUSY);
@@ -127,9 +130,6 @@ void butt_left_int(void)
 	button_event = true;
 
 	wake_rak14000();
-
-	// api_wake_loop(BUTTON_EVENT);
-	// refresh_rak14000();
 }
 
 void butt_mid_int(void)
@@ -147,9 +147,6 @@ void butt_mid_int(void)
 	button_event = true;
 
 	wake_rak14000();
-
-	// api_wake_loop(BUTTON_EVENT);
-	// refresh_rak14000();
 }
 
 void butt_right_int(void)
@@ -167,9 +164,6 @@ void butt_right_int(void)
 	button_event = true;
 
 	wake_rak14000();
-
-	// api_wake_loop(BUTTON_EVENT);
-	// refresh_rak14000();
 }
 
 void init_rak14000(void)
@@ -189,19 +183,6 @@ void init_rak14000(void)
 	pinMode(RIGHT_BUTTON, INPUT);
 	attachInterrupt(RIGHT_BUTTON, butt_right_int, FALLING);
 
-	// display.begin();
-
-	// // Clear display
-	// display.clearBuffer();
-
-	// // Draw Welcome Logo
-	// display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
-	// display.drawBitmap(DEPG_HP.position1_x, DEPG_HP.position1_y, rak_img, 150, 56, txt_color);
-
-	// rak14000_text(DEPG_HP.position1_x, DEPG_HP.position1_y + 50, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
-
-	// display.display(true);
-
 #if defined NRF52_SERIES || defined ESP32
 	// Create the EPD event semaphore
 	g_epd_sem = xSemaphoreCreateBinary();
@@ -216,11 +197,12 @@ void init_rak14000(void)
 	epd_task_handle.set_priority(osPriorityNormal);
 #endif
 #if defined NRF52_SERIES || defined ESP32
-	if (!xTaskCreate(epd_task, "GNSS", 4096, NULL, TASK_PRIO_LOW, &epd_task_handle))
+	if (!xTaskCreate(epd_task, "EPD", 4096, NULL, TASK_PRIO_LOW, &epd_task_handle))
 #endif
 	{
-		MYLOG("APP", "Failed to start EPD task");
+		MYLOG("EPD", "Failed to start EPD task");
 	}
+	MYLOG("EPD", "Initialized 2.13\" display");
 }
 
 void wake_rak14000(void)
@@ -238,7 +220,6 @@ void wake_rak14000(void)
 
 /**
    @brief Write a text on the display
-
    @param x x position to start
    @param y y position to start
    @param text text to write
@@ -285,7 +266,7 @@ void refresh_rak14000(void)
 		{
 			display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
 			display.drawBitmap(DEPG_HP.position1_x, DEPG_HP.position1_y, rak_img, 150, 56, txt_color);
-			rak14000_text(DEPG_HP.position1_x, DEPG_HP.position1_y + 50, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
+			rak14000_text(DEPG_HP.position1_x, DEPG_HP.position1_y + 50, (char *)"IoT Made Easy", txt_color, 2);
 			display.display(true);
 
 			button_event = false;
@@ -302,25 +283,18 @@ void refresh_rak14000(void)
 	{
 	case DISP_ALL:
 		display.clearBuffer();
-		voc_rak14000(false);
+		voc_rak14000();
 		co2_rak14000(false);
 		temp_rak14000(false);
 		humid_rak14000(false);
 		baro_rak14000(false);
 		status_general_rak14000(false);
-		display.drawLine(DEPG_HP.width / 2, 0, DEPG_HP.width / 2, DEPG_HP.height, (uint16_t)txt_color);
-		display.drawLine(0, DEPG_HP.height / 3, DEPG_HP.width, DEPG_HP.height / 3, (uint16_t)txt_color);
-		display.drawLine(0, DEPG_HP.height / 3 * 2, DEPG_HP.width, DEPG_HP.height / 3 * 2, (uint16_t)txt_color);
-		// For partial update only
-		// if (first_time)
-		// {
-		// 	first_time = false;
-		// 	display.display(false);
-		// }
-		// return;
+		display.drawLine(DEPG_HP.width / 2 + 10, 0, DEPG_HP.width / 2 + 10, DEPG_HP.height, txt_color);
+		display.drawLine(0, DEPG_HP.height / 3, DEPG_HP.width, DEPG_HP.height / 3, txt_color);
+		display.drawLine(0, DEPG_HP.height / 3 * 2, DEPG_HP.width, DEPG_HP.height / 3 * 2, txt_color);
 		break;
 	case DISP_VOC:
-		voc_rak14000(true);
+		voc_rak14000();
 		break;
 	case DISP_TEMP:
 		temp_rak14000(true);
@@ -443,93 +417,103 @@ void set_baro_rak14000(float baro_value)
 	baro_idx++;
 }
 
-void voc_rak14000(bool full)
+void voc_rak14000(void)
 {
 	uint16_t x_text = 2;
 	uint16_t y_text = 1;
 	uint16_t s_text = 2;
 	uint16_t w_text = DEPG_HP.width / 2;
-	uint16_t h_text = DEPG_HP.height / 3;
+	uint16_t h_text = DEPG_HP.height / 2;
 	uint16_t x_graph = 0;
 	uint16_t y_graph = 40;
-	uint16_t h_bar = DEPG_HP.height / 3 - 40;
+	uint16_t h_bar = DEPG_HP.height / 2 - 40;
 	uint16_t w_bar = 2;
 	uint16_t bar_divider = 500.0 / h_bar;
 
+	uint16_t use_txt_color = txt_color;
+	if (voc_values[voc_idx - 1] > 250)
+	{
+		use_txt_color = EPD_RED;
+	}
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
 	snprintf(disp_text, 29, "VOC Index");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text, disp_text, use_txt_color, s_text);
 	snprintf(disp_text, 29, "%d", voc_values[voc_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text + 20, disp_text, use_txt_color, s_text);
 
-	// Draw VOC values
-	for (int idx = 0; idx < num_values; idx++)
-	{
-		if (voc_values[idx] != 0.0)
-		{
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
-							 txt_color);
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + 1 + ((h_bar) - (voc_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
-							 txt_color);
-		}
-	}
-	display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, (uint16_t)txt_color);
+	// // Draw VOC values
+	// for (int idx = 0; idx < num_values; idx++)
+	// {
+	// 	if (voc_values[idx] != 0.0)
+	// 	{
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + 1 + ((h_bar) - (voc_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (voc_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 	}
+	// }
+	// display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, txt_color);
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", x_text, y_text, x_text + w_text, y_text + h_text);
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
-void co2_rak14000(bool full)
+void co2_rak14000(bool has_pm)
 {
-	uint16_t x_text = DEPG_HP.width / 2 + 3;
+	uint16_t x_text = DEPG_HP.width / 2 + 13;
 	uint16_t y_text = 1;
 	uint16_t s_text = 2;
 	uint16_t w_text = DEPG_HP.width / 2;
-	uint16_t h_text = DEPG_HP.height / 3;
+	uint16_t h_text = DEPG_HP.height / 2;
 	uint16_t x_graph = DEPG_HP.width / 2;
 	uint16_t y_graph = 40;
-	uint16_t h_bar = DEPG_HP.height / 3 - 40;
+	uint16_t h_bar = DEPG_HP.height / 2 - 40;
 	uint16_t w_bar = 2;
 	float bar_divider = 4.0 / h_bar;
 
+	uint16_t use_txt_color = txt_color;
+	if (co2_values[co2_idx - 1] > 2.0)
+	{
+		use_txt_color = EPD_RED;
+	}
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
 	snprintf(disp_text, 29, "CO2");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text, disp_text, use_txt_color, s_text);
 	snprintf(disp_text, 29, "%.2f %%", co2_values[co2_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text + 20, disp_text, use_txt_color, s_text);
 
-	// Draw CO2 values
-	for (int idx = 0; idx < num_values; idx++)
-	{
-		if (co2_values[idx] != 0.0)
-		{
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
-							 txt_color);
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + 1 + ((h_bar) - (co2_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
-							 txt_color);
-		}
-	}
-	display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, (uint16_t)txt_color);
+	// // Draw CO2 values
+	// for (int idx = 0; idx < num_values; idx++)
+	// {
+	// 	if (co2_values[idx] != 0.0)
+	// 	{
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + 1 + ((h_bar) - (co2_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (co2_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 	}
+	// }
+	// display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, txt_color);
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", x_text, y_text, x_text + w_text, y_text + h_text);
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
-void temp_rak14000(bool full)
+void temp_rak14000(bool has_pm)
 {
 	uint16_t x_text = 2;
 	uint16_t y_text = DEPG_HP.height / 3 + 3;
@@ -542,39 +526,44 @@ void temp_rak14000(bool full)
 	uint16_t w_bar = 2;
 	float bar_divider = 1;
 
+	uint16_t use_txt_color = txt_color;
+	if (temp_values[temp_idx - 1] > 40.0)
+	{
+		use_txt_color = EPD_RED;
+	}
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
 	snprintf(disp_text, 29, "Temperature");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text, disp_text, use_txt_color, s_text);
 	snprintf(disp_text, 29, "%.2f %cC", temp_values[temp_idx - 1], (char)247);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text + 20, disp_text, use_txt_color, s_text);
 
-	// Draw Temperature values
-	for (int idx = 0; idx < num_values; idx++)
-	{
-		if (temp_values[idx] != 0.0)
-		{
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
-							 txt_color);
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + 1 + ((h_bar) - (temp_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
-							 txt_color);
-		}
-	}
-	display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, (uint16_t)txt_color);
+	// // Draw Temperature values
+	// for (int idx = 0; idx < num_values; idx++)
+	// {
+	// 	if (temp_values[idx] != 0.0)
+	// 	{
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + 1 + ((h_bar) - (temp_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (temp_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 	}
+	// }
+	// display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, txt_color);
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", x_text, y_text, x_text + w_text, y_text + h_text);
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
-void humid_rak14000(bool full)
+void humid_rak14000(bool has_pm)
 {
-	uint16_t x_text = DEPG_HP.width / 2 + 3;
+	uint16_t x_text = DEPG_HP.width / 2 + 13;
 	uint16_t y_text = DEPG_HP.height / 3 + 3;
 	uint16_t s_text = 2;
 	uint16_t w_text = DEPG_HP.width / 2;
@@ -585,50 +574,48 @@ void humid_rak14000(bool full)
 	uint16_t w_bar = 2;
 	float bar_divider = 100.0 / h_bar;
 
-	MYLOG("EPD", "y_graph = %d", y_graph);
-	MYLOG("EPD", "h_bar = %d", h_bar);
-	MYLOG("EPD", "bar_divider = %.2f", bar_divider);
-	MYLOG("EPD", "value = %.2f", co2_values[0]);
-	MYLOG("EPD", "y = %d", (int16_t)(y_graph + ((h_bar) - (humid_values[0] / bar_divider))));
-
+	uint16_t use_txt_color = txt_color;
+	if (humid_values[humid_idx - 1] > 60.0)
+	{
+		use_txt_color = EPD_RED;
+	}
 	// Write value
 	display.fillRect(x_text, y_text, w_text, h_text, bg_color);
 	snprintf(disp_text, 29, "Humidity");
-	rak14000_text(x_text, y_text, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text, disp_text, use_txt_color, s_text);
 	snprintf(disp_text, 29, "%.2f %%RH", humid_values[humid_idx - 1]);
-	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
+	rak14000_text(x_text, y_text + 20, disp_text, use_txt_color, s_text);
 
-	// Draw Humidity values
-	for (int idx = 0; idx < num_values; idx++)
-	{
-		if (humid_values[idx] != 0.0)
-		{
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
-							 txt_color);
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + 1 + ((h_bar) - (humid_values[idx] / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
-							 txt_color);
-		}
-	}
-	display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, (uint16_t)txt_color);
+	// // Draw Humidity values
+	// for (int idx = 0; idx < num_values; idx++)
+	// {
+	// 	if (humid_values[idx] != 0.0)
+	// 	{
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + 1 + ((h_bar) - (humid_values[idx] / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar) - (humid_values[idx] / bar_divider))),
+	// 						 txt_color);
+	// 	}
+	// }
+	// display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, txt_color);
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", x_text, y_text, x_text + w_text, y_text + h_text);
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
-void baro_rak14000(bool full)
+void baro_rak14000(bool has_pm)
 {
 	uint16_t x_text = 2;
 	uint16_t y_text = DEPG_HP.height / 3 * 2 + 3;
 	uint16_t s_text = 2;
 	uint16_t w_text = DEPG_HP.width / 2;
 	uint16_t h_text = DEPG_HP.height / 3;
-	;
 	uint16_t x_graph = 0;
 	uint16_t y_graph = DEPG_HP.height / 3 * 2 + 40;
 	uint16_t h_bar = DEPG_HP.height / 3 - 40;
@@ -642,138 +629,167 @@ void baro_rak14000(bool full)
 	snprintf(disp_text, 29, "%.0f mBar", baro_values[baro_idx - 1]);
 	rak14000_text(x_text, y_text + 20, disp_text, txt_color, s_text);
 
-	// Draw Barometer values
-	for (int idx = 0; idx < num_values; idx++)
-	{
-		if (baro_values[idx] != 0.0)
-		{
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
-							 txt_color);
-			display.drawLine((int16_t)(x_graph + (idx * w_bar)),
-							 (int16_t)(y_graph + 1 + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
-							 (int16_t)(x_graph + 2 + (idx * w_bar)),
-							 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
-							 txt_color);
-		}
-	}
-	display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, (uint16_t)txt_color);
+	// // Draw Barometer values
+	// for (int idx = 0; idx < num_values; idx++)
+	// {
+	// 	if (baro_values[idx] != 0.0)
+	// 	{
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
+	// 						 txt_color);
+	// 		display.drawLine((int16_t)(x_graph + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + 1 + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
+	// 						 (int16_t)(x_graph + 2 + (idx * w_bar)),
+	// 						 (int16_t)(y_graph + ((h_bar / 2) - ((baro_values[idx] - 1000) / bar_divider))),
+	// 						 txt_color);
+	// 	}
+	// }
+	// display.drawLine(x_graph, y_graph + h_bar, x_graph + DEPG_HP.width / 2, y_graph + h_bar, txt_color);
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", x_text, y_text, x_text + w_text, y_text + h_text);
 	// display.displayPartial(x_text, y_text, x_text + w_text, y_text + h_text);
 }
 
-void status_general_rak14000(bool full)
+void status_general_rak14000(bool has_pm)
 {
+	uint16_t x_pos = DEPG_HP.width / 2 + 13;
 	uint16_t y_pos = DEPG_HP.height / 3 * 2 + 3;
-	uint16_t x_pos = DEPG_HP.width / 2 + 3;
 
-	rak14000_text(x_pos, y_pos, (char *)"RAK10702 AQ", txt_color, 2);
-	y_pos = y_pos + 20;
-	snprintf(disp_text, 59, "Battery Level: %.2f", read_batt() / 1000.0);
-	rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
-	y_pos = y_pos + 10;
-	snprintf(disp_text, 59, "Send Int: %ld s", g_lorawan_settings.send_repeat_time / 1000);
-	rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
-	y_pos = y_pos + 10;
-	if (g_lorawan_settings.lorawan_enable)
+	double batt_val = read_batt() / 1000.0;
+	for (int idx = 0; idx < 5; idx++)
 	{
-		snprintf(disp_text, 59, "LoRaWAN Region: %s", regions[g_lorawan_settings.lora_region]);
-		rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
+		batt_val += read_batt() / 1000.0;
+		batt_val = batt_val / 2;
+	}
+
+	uint16_t use_txt_color = txt_color;
+	if (batt_val < 3.6)
+	{
+		use_txt_color = EPD_RED;
+	}
+
+	rak14000_text(x_pos, y_pos, (char *)"RAK10702", use_txt_color, 2);
+	y_pos = y_pos + 20;
+
+	if (found_sensors[RTC_ID].found_sensor)
+	{
+		snprintf(disp_text, 59, "Battery: %.2f V", batt_val);
+		rak14000_text(x_pos, y_pos, disp_text, use_txt_color, 1);
 		y_pos = y_pos + 10;
-		snprintf(disp_text, 59, "LoRaWAN status: %s", g_lpwan_has_joined ? "Joined" : "Not Joined");
-		rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
-		y_pos = y_pos + 10;
+		read_rak12002();
+
+		snprintf(disp_text, 59, "%d/%d/%d %02d:%02d", g_date_time.date, g_date_time.month, g_date_time.year,
+				 g_date_time.hour, g_date_time.minute);
+		rak14000_text(x_pos, y_pos, disp_text, use_txt_color, 1);
 	}
 	else
 	{
-		snprintf(disp_text, 59, "LoRa P2P Frequency: %ld Hz", g_lorawan_settings.p2p_frequency);
-		rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
-		y_pos = y_pos + 10;
+		snprintf(disp_text, 59, "Batt: %.2f V", batt_val);
+		rak14000_text(x_pos, y_pos, disp_text, use_txt_color, 2);
 	}
-	y_pos = y_pos + 5;
-	rak14000_text(x_pos, y_pos, (char *)"Sensors", txt_color, 1);
-	y_pos = y_pos + 10;
-	if (found_sensors[ENV_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK1906", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
-	if (found_sensors[TEMP_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK1901", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
-	if (found_sensors[PRESS_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK1902", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
-	if (found_sensors[VOC_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK12047", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
-	if (found_sensors[CO2_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK12037", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
-	if (found_sensors[SCT31_ID].found_sensor)
-	{
-		rak14000_text(x_pos, y_pos, (char *)"RAK12008", txt_color, 1);
-		if (x_pos == DEPG_HP.width / 2 + 3)
-		{
-			x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
-		}
-		else
-		{
-			x_pos = DEPG_HP.width / 2 + 3;
-			y_pos = y_pos + 10;
-		}
-	}
+	return;
+
+	// snprintf(disp_text, 59, "Send Int: %ld s", g_lorawan_settings.send_repeat_time / 1000);
+	// rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
+	// y_pos = y_pos + 10;
+	// if (g_lorawan_settings.lorawan_enable)
+	// {
+	// 	snprintf(disp_text, 59, "LoRaWAN Region: %s", regions[g_lorawan_settings.lora_region]);
+	// 	rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
+	// 	y_pos = y_pos + 10;
+	// 	snprintf(disp_text, 59, "LoRaWAN status: %s", g_lpwan_has_joined ? "Joined" : "Not Joined");
+	// 	rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
+	// 	y_pos = y_pos + 10;
+	// }
+	// else
+	// {
+	// 	snprintf(disp_text, 59, "LoRa P2P Frequency: %ld Hz", g_lorawan_settings.p2p_frequency);
+	// 	rak14000_text(x_pos, y_pos, disp_text, txt_color, 1);
+	// 	y_pos = y_pos + 10;
+	// }
+	// y_pos = y_pos + 5;
+	// rak14000_text(x_pos, y_pos, (char *)"Sensors", txt_color, 1);
+	// y_pos = y_pos + 10;
+	// if (found_sensors[ENV_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK1906", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
+	// if (found_sensors[TEMP_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK1901", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
+	// if (found_sensors[PRESS_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK1902", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
+	// if (found_sensors[VOC_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK12047", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
+	// if (found_sensors[CO2_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK12037", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
+	// if (found_sensors[SCT31_ID].found_sensor)
+	// {
+	// 	rak14000_text(x_pos, y_pos, (char *)"RAK12008", txt_color, 1);
+	// 	if (x_pos == DEPG_HP.width / 2 + 3)
+	// 	{
+	// 		x_pos = (DEPG_HP.width / 2) + (DEPG_HP.width / 4) + 3;
+	// 	}
+	// 	else
+	// 	{
+	// 		x_pos = DEPG_HP.width / 2 + 3;
+	// 		y_pos = y_pos + 10;
+	// 	}
+	// }
 	// For partial update only
 	// MYLOG("EPD", "Updating x1 %d y1 %d x2 %d y2 %d", DEPG_HP.width / 2 + 3, DEPG_HP.height / 3 * 2 + 3, DEPG_HP.width / 2 + 3 + DEPG_HP.height / 3, DEPG_HP.height / 3 * 2 + 3 + DEPG_HP.width / 2);
 	// display.displayPartial(DEPG_HP.width / 2 + 3, DEPG_HP.height / 3 * 2 + 3, DEPG_HP.width / 2 + 3 + DEPG_HP.height / 3, DEPG_HP.height / 3 * 2 + 3 + DEPG_HP.width / 2);
@@ -922,19 +938,32 @@ void epd_task(void *pvParameters)
 
 	display.begin();
 
-	display.setRotation(1);
+	display.setRotation(0);
 	MYLOG("EPD", "Rotation %d", display.getRotation());
 
 	// Clear display
 	display.clearBuffer();
 
+	int16_t txt_x1;
+	int16_t txt_y1;
+	uint16_t txt_w;
+	uint16_t txt_h;
+
 	// Draw Welcome Logo
 	display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
 	// display.drawBitmap(DEPG_HP.width / 2 - 75, DEPG_HP.height / 2 - 28, rak_img, 150, 56, txt_color);
-	display.drawBitmap(DEPG_HP.width / 2 - 75, 100, rak_img, 150, 56, txt_color);
+	display.drawBitmap(DEPG_HP.width / 2 - 75, 5, rak_img, 150, 56, txt_color);
 
-	// rak14000_text(DEPG_HP.width / 2 - 75, DEPG_HP.height / 2 - 28 + 50, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
-	rak14000_text(DEPG_HP.width / 2 - 75, 150, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
+	// rak14000_text(DEPG_HP.width / 2 - 75, DEPG_HP.height / 2 - 28 + 50, (char *)"IoT Made Easy", txt_color, 2);
+	// rak14000_text(DEPG_HP.width / 2 - 75, 60, (char *)"IoT Made Easy", txt_color, 2);
+
+	display.setTextSize(2);
+	display.getTextBounds((char *)"IoT Made Easy", 0, 0, &txt_x1, &txt_y1, &txt_w, &txt_h);
+	rak14000_text(DEPG_HP.width / 2 - (txt_w / 2), 60, (char *)"IoT Made Easy", (uint16_t)txt_color, 2);
+
+	display.setTextSize(1);
+	display.getTextBounds((char *)"Wait for connect", 0, 0, &txt_x1, &txt_y1, &txt_w, &txt_h);
+	rak14000_text(DEPG_HP.width / 2 - (txt_w / 2), 80, (char *)"Wait for connect", (uint16_t)txt_color, 1);
 
 	display.display(false);
 
@@ -978,3 +1007,4 @@ void epd_task(void *pvParameters)
 		}
 	}
 }
+#endif

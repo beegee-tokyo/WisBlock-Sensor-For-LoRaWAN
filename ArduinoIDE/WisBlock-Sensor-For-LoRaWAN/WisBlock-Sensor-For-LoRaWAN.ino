@@ -50,6 +50,10 @@
 // RAKwireless Storage                    //Click here to install the library => http://librarymanager/All#RAKwireless_Storage
 // ArduinoECCX08                          //Click here to install the library => http://librarymanager/All#ArduinoECCX08
 // Adafruit FRAM I2C                      //Click here to install the library => http://librarymanager/All#Adafruit%20FRAM%20I2C
+// RAKwireless RAK12034                   //Click here to install the library => http://librarymanager/All#RAKwireless%20RAK12034
+// Adafruit EPD                           //Click here to install the library => http://librarymanager/All#Adafruit%20EPD
+// SparkFun STC3x Arduino Library         //Click here to install the library => http://librarymanager/All#SparkFun%20STC3x
+// D7S_Arduino_Library                    //Click here to install the library => http://librarymanager/All#D7S_Arduino_Library
 
 /*******************************************************************/
 
@@ -171,6 +175,9 @@ void setup_app(void)
  */
 bool init_app(void)
 {
+	/** Set permanent RX mode for LoRa P2P */
+	g_lora_p2p_rx_mode = RX_MODE_RX;
+
 	MYLOG("APP", "init_app");
 
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
@@ -393,12 +400,87 @@ void app_event_handler(void)
 				read_rak12008();
 			}
 
-#if HAS_EPD > 0
-			// Refresh display
-			MYLOG("APP", "Refresh RAK14000");
-			wake_rak14000();
-			// refresh_rak14000();
+			if (found_sensors[SEISM_ID].found_sensor)
+			{
+				if ((earthquake_end) && !(g_task_event_type & SEISMIC_EVENT) && !(g_task_event_type & SEISMIC_ALERT))
+				{
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_EVENT, false);
+				}
+			}
+			// Handle Seismic Events
+			if ((g_task_event_type & SEISMIC_EVENT) == SEISMIC_EVENT)
+			{
+				MYLOG("APP", "Earthquake event");
+				g_task_event_type &= N_SEISMIC_EVENT;
+				switch (check_event_rak12027(false))
+				{
+				case 4:
+					// Earthquake start
+					MYLOG("APP", "Earthquake start alert!");
+					read_rak12027(false);
+					earthquake_end = false;
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_EVENT, true);
+					break;
+				case 5:
+					// Earthquake end
+					MYLOG("APP", "Earthquake end alert!");
+					read_rak12027(true);
+					earthquake_end = true;
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_SHUTOFF, shutoff_alert);
+					shutoff_alert = false;
+
+					g_solution_data.addPresence(LPP_CHANNEL_EQ_COLLAPSE, collapse_alert);
+					collapse_alert = false;
+
+					// Reset flags
+					shutoff_alert = false;
+					collapse_alert = false;
+					// Send another packet in 30 seconds
+#ifdef NRF52_SERIES
+					delayed_sending.setPeriod(30000);
+					delayed_sending.start();
 #endif
+#ifdef ESP32
+					delayed_sending.attach_ms(2000, send_delayed);
+
+#endif
+					break;
+				default:
+					// False alert
+					MYLOG("APP", "Earthquake false alert!");
+					return;
+					break;
+				}
+			}
+
+			if ((g_task_event_type & SEISMIC_ALERT) == SEISMIC_ALERT)
+			{
+				g_task_event_type &= N_SEISMIC_ALERT;
+				switch (check_event_rak12027(true))
+				{
+				case 1:
+					// Collapse alert
+					collapse_alert = true;
+					MYLOG("APP", "Earthquake collapse alert!");
+					break;
+				case 2:
+					// ShutDown alert
+					shutoff_alert = true;
+					MYLOG("APP", "Earthquake shutoff alert!");
+					break;
+				case 3:
+					// Collapse & ShutDown alert
+					collapse_alert = true;
+					shutoff_alert = true;
+					MYLOG("APP", "Earthquake collapse & shutoff alert!");
+					break;
+				default:
+					// False alert
+					MYLOG("APP", "Earthquake false alert!");
+					break;
+				}
+				return;
+			}
 
 			MYLOG("APP", "Packetsize %d", g_solution_data.getSize());
 			if (g_lorawan_settings.lorawan_enable)
@@ -460,6 +542,13 @@ void app_event_handler(void)
 			}
 			// Reset the packet
 			g_solution_data.reset();
+
+#if HAS_EPD > 0
+			// Refresh display
+			MYLOG("APP", "Refresh RAK14000");
+			wake_rak14000();
+			// refresh_rak14000();
+#endif
 		}
 	}
 
@@ -750,8 +839,15 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
-			// Force a sensor reading now
-			api_wake_loop(STATUS);
+			// // Force a sensor reading in 10 seconds
+#ifdef NRF52_SERIES
+			delayed_sending.setPeriod(10000);
+			delayed_sending.start();
+#endif
+#ifdef ESP32
+			delayed_sending.attach_ms(2000, send_delayed);
+
+#endif
 
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
@@ -852,12 +948,30 @@ void lora_data_handler(void)
 		}
 		else
 		{
-			/**************************************************************/
-			/**************************************************************/
-			/// \todo LoRa data arrived
-			/// \todo parse them here
-			/**************************************************************/
-			/**************************************************************/
+			// Check if uplink was a send frequency change command
+			if ((g_last_fport == 3) && (g_rx_data_len == 6))
+			{
+				if (g_rx_lora_data[0] == 0xAA)
+				{
+					if (g_rx_lora_data[1] == 0x55)
+					{
+						uint32_t new_send_frequency = 0;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[2]) << 24;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[3]) << 16;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[4]) << 8;
+						new_send_frequency |= (uint32_t)(g_rx_lora_data[5]);
+
+						MYLOG("APP", "Received new send frequency %ld s\n", new_send_frequency);
+						// Save the new send frequency
+						g_lorawan_settings.send_repeat_time = new_send_frequency * 1000;
+
+						// Set the timer to the new send frequency
+						api_timer_restart(g_lorawan_settings.send_repeat_time);
+						// Save the new send frequency
+						save_settings();
+					}
+				}
+			}
 
 			if (g_lorawan_settings.lorawan_enable)
 			{
@@ -894,10 +1008,19 @@ void lora_data_handler(void)
 void send_delayed(TimerHandle_t unused)
 {
 	api_wake_loop(STATUS);
+	delayed_sending.stop();
 }
 #elif defined ESP32 || defined ARDUINO_ARCH_RP2040
 void send_delayed(void)
 {
 	api_wake_loop(STATUS);
+	delayed_sending.detach();
 }
 #endif
+
+// #ifdef NRF52_SERIES
+// 						delayed_sending.stop();
+// #endif
+// #ifdef ESP32
+// 						delayed_sending.detach();
+// #endif

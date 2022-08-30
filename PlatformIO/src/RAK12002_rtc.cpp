@@ -76,4 +76,7 @@ void read_rak12002(void)
 	g_date_time.hour = rtc.getHour();
 	g_date_time.minute = rtc.getMinute();
 	g_date_time.second = rtc.getSecond();
+	MYLOG("RTC", "Got %d %d %d %02d:%02d:%d",
+		  g_date_time.month, g_date_time.date, g_date_time.year,
+		  g_date_time.hour, g_date_time.minute, g_date_time.second);
 }

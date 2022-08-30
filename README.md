@@ -55,9 +55,11 @@ This code can be used without changes for
 | [RAK12019](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12019/Overview/) ⤴️ | WisBlock UV Light sensor | - |
 | [RAK12025](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12025/Overview/) ⤴️ | WisBlock Gyroscope sensor | - |
 | [RAK12023/RAK12035](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12023/Overview/) ⤴️ | WisBlock Soil Moisture and Temperature sensor | WisBlock Soil Sensor Solution |
+| [RAK12027](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12027/Overview/) ⤴️ | WisBlock Earthquake Sensor | - |
 | [RAK12032](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12032/Overview/) ⤴️ | WisBlock Acceleration Sensor | - |
 | [RAK12034](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12034/Overview/) ⤴️ | WisBlock 9 DOF sensor | - |
 | [RAK12037](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12037/Overview/) ⤴️ | WisBlock CO2 sensor | - |
+| [RAK12039](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12039/Overview/) ⤴️ | WisBlock Particle Matter sensor | - |
 | [RAK12040](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12040/Overview/) ⤴️ | WisBlock AMG8833 temperature array sensor | - |
 | [RAK12047](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12047/Overview/) ⤴️ | WisBlock VOC sensor | - |
 | [RAK12500](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12500/Overview/) ⤴️ | WisBlock GNSS Sensor | WisBlock Tracker for LoRaWAN |
@@ -130,6 +132,7 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 - [ArduinoECCX08](https://registry.platformio.org/libraries/arduino-libraries/ArduinoECCX08) ⤴️
 - [Adafruit FRAM I2C](https://registry.platformio.org/libraries/adafruit/Adafruit%20FRAM%20I2C) ⤴️
 
+... to be updated, check platformio.ini for a list of all libraries used
 
 ### _REMARK_     
 The project was developed using Platform IO. But for the users that _**still**_ stick to Arduino IDE, an Arduino IDE compatible copy of the sources is in the ArduinoIDE folder.    
@@ -220,12 +223,14 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | Touchpad left            | 32        | 102        | 1 bytes  | bool                                              | RAK14002          | presence_32        | 
 | Touchpad middle          | 33        | 102        | 1 bytes  | bool                                              | RAK14002          | presence_33        | 
 | Touchpad right           | 34        | 102        | 1 bytes  | bool                                              | RAK14002          | presence_34        | 
-| SCD30 CO2 concentration  | 35        | 125        | 2 bytes  | 1 ppm unsigned                                    | RAK12037          | 
-| SCD30 temperature        | 36        | 103        | 2 bytes  | in °C                                             | RAK12037          | 
-| SCD30 humidity           | 37        | 104        | 1 bytes  | in %RH                                            | RAK12037          | 
-| MLX90632 sensor temp     | 38        | 103        | 2 bytes  | in °C                                             | RAK12003          |
-| MLX90632 object temp     | 39        | 103        | 2 bytes  | in °C                                             | RAK12003          |
-
+| SCD30 CO2 concentration  | 35        | 125        | 2 bytes  | 1 ppm unsigned                                    | RAK12037          |  concentration_35 |
+| SCD30 temperature        | 36        | 103        | 2 bytes  | in °C                                             | RAK12037          | temperature_36 |
+| SCD30 humidity           | 37        | 104        | 1 bytes  | in %RH                                            | RAK12037          | humidity_37 |
+| MLX90632 sensor temp     | 38        | 103        | 2 bytes  | in °C                                             | RAK12003          | temperature_38 |
+| MLX90632 object temp     | 39        | 103        | 2 bytes  | in °C                                             | RAK12003          | temperature_39 |
+| PM 1.0 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_40             |
+| PM 2.5 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_41             |
+| PM 10 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_42             |
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 

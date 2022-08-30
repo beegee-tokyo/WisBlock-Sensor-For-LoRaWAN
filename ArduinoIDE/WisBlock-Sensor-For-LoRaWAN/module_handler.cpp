@@ -45,16 +45,18 @@ sensors_t found_sensors[] = {
 	{0x68, false}, // 25 ✔ RAK12040 AMG8833 temperature array sensor
 	{0x69, false}, // 26 ✔ RAK12034 BMX160 9DOF sensor
 	{0x1D, false}, // 27 ✔ RAK12032 ADXL313 accelerometer
-	{0x59, false}, // 28 ✔ RAK5814 ACC608 encryption module (limited I2C speed 100000) !! conflict with RAK12047, RAK13600, RAK13003
-	{0x57, false}, // 29 RAK12012 MAX30102 heart rate sensor
-	{0x54, false}, // 30 RAK12016 Flex sensor
-	{0x47, false}, // 31 RAK13004 PWM expander module
-	{0x38, false}, // 32 RAK14001 RGB LED module
-	{0x5F, false}, // 33 RAK14004 Keypad interface
-	{0x61, false}, // 34 RAK16001 ADC sensor !! conflict with RAK12037
-	{0x59, false}, // 35 RAK13600 NFC !! conflict with RAK12047, RAK13600, RAK5814
-	{0x59, false}, // 36 RAK16002 Coulomb sensor !! conflict with RAK13600, RAK12047, RAK5814
-	{0x20, false}, // 37 RAK13003 IO expander module !! conflict with RAK12035
+	{0x12, false}, // 28 ✔ RAK12039 PMSA003I particle matter sensor
+	{0x55, false}, // 29 ✔ RAK12027 D7S seismic sensor
+	{0x57, false}, // 30 RAK12012 MAX30102 heart rate sensor
+	{0x54, false}, // 31 RAK12016 Flex sensor
+	{0x47, false}, // 32 RAK13004 PWM expander module
+	{0x38, false}, // 33 RAK14001 RGB LED module
+	{0x5F, false}, // 34 RAK14004 Keypad interface
+	{0x61, false}, // 35 RAK16001 ADC sensor !! conflict with RAK12037
+	{0x59, false}, // 36 RAK13600 NFC !! conflict with RAK12047, RAK13600, RAK5814
+	{0x59, false}, // 37 RAK16002 Coulomb sensor !! conflict with RAK13600, RAK12047, RAK5814
+	{0x20, false}, // 38 RAK13003 IO expander module !! conflict with RAK12035
+	{0x59, false}, // 39 ✔ RAK5814 ACC608 encryption module (limited I2C speed 100000) !! conflict with RAK12047, RAK13600, RAK13003
 };
 
 /**
@@ -71,20 +73,23 @@ void find_modules(void)
 	digitalWrite(WB_IO2, HIGH);
 
 	Wire.begin();
-	Wire.setClock(400000);
+	// Some modules support only 100kHz
+	Wire.setClock(100000);
 	for (byte address = 1; address < 127; address++)
 	{
-		if ((address == 0x59 || (address == 0x73)))
-		{
-			// RAK5814 supports only low I2C speed
-			Wire.setClock(100000);
-		}
-		else
-		{
-			Wire.setClock(400000);
-		}
+		// if ((address == 0x59 || (address == 0x73)))
+		// {
+		// 	MYLOG("SCAN", "Reducing speed for RAK5814");
+		// 	// RAK5814 supports only low I2C speed
+		// 	Wire.setClock(100000);
+		// }
+		// else
+		// {
+		// 	Wire.setClock(100000); // Wire.setClock(400000);
+		// }
 		if (address == 0x29)
 		{
+			MYLOG("SCAN", "Enable xshut for RAK12014");
 			// RAK12014 has extra GPIO for power control
 			// On/Off control pin
 			pinMode(xshut_pin, OUTPUT);
@@ -95,25 +100,54 @@ void find_modules(void)
 		}
 		else
 		{
-			pinMode(WB_IO4, INPUT);
+			pinMode(xshut_pin, INPUT);
 		}
+		if (address == 0x12)
+		{
+			// // RAK12039 supports only low I2C speed
+			// Wire.setClock(100000);
+			// RAK12039 has extra GPIO for power control
+			// On/Off control pin
+			pinMode(WB_IO6, OUTPUT);
+			// Sensor on
+			digitalWrite(WB_IO6, HIGH);
+			delay(500);
+			time_t wait_sensor = millis();
+			MYLOG("SCAN", "RAK12039 scan start %ld ms", millis());
+			while (1)
+			{
+				delay(500);
+				Wire.beginTransmission(address);
+				error = Wire.endTransmission();
+				if (error == 0)
+				{
+					MYLOG("SCAN", "RAK12039 answered at %ld ms", millis());
+					break;
+				}
+				if ((millis() - wait_sensor) > 5000)
+				{
+					MYLOG("SCAN", "RAK12039 timeout after %ld ms", 5000);
+					pinMode(WB_IO6, INPUT);
+					break;
+				}
+			}
+		}
+		// else
+		// {
+		// 	// pinMode(WB_IO6, INPUT);
+		// 	// RAK5814 supports only low I2C speed
+		// 	Wire.setClock(100000); // Wire.setClock(400000);
+		// }
 		Wire.beginTransmission(address);
 		error = Wire.endTransmission();
 		if (error == 0)
 		{
-			MYLOG("SCAN", "Found sensor at I2C1 0x%02X\n", address);
+			MYLOG("SCAN", "Found sensor at I2C1 0x%02X", address);
 			for (uint8_t i = 0; i < sizeof(found_sensors) / sizeof(sensors_t); i++)
 			{
 				if (address == found_sensors[i].i2c_addr)
 				{
 					found_sensors[i].found_sensor = true;
-
-					// // EEPROM occupies 0x50 to 0x53
-					// if (address == 0x50)
-					// {
-					// 	MYLOG("SCAN", "Found EEPROM sensor at I2C1 0x%02X\n", address);
-					// 	address = 0x53;
-					// }
 					break;
 				}
 			}
@@ -121,7 +155,7 @@ void find_modules(void)
 		}
 	}
 
-	Wire.setClock(400000);
+	Wire.setClock(100000); /// \todo Wire.setClock(400000);
 
 	MYLOG("SCAN", "Found %d sensors", num_dev);
 	for (uint8_t i = 0; i < sizeof(found_sensors) / sizeof(sensors_t); i++)
@@ -131,6 +165,14 @@ void find_modules(void)
 			MYLOG("SCAN", "ID %d addr %02X", i, found_sensors[i].i2c_addr);
 		}
 	}
+
+// Create the semaphore for 100kHz I2C usage lock
+#if defined NRF52_SERIES || defined ESP32
+	// Create the GNSS event semaphore
+	i2c_lock = xSemaphoreCreateBinary();
+	// Initialize semaphore
+	xSemaphoreGive(i2c_lock);
+#endif
 
 	// Initialize the modules found
 	if (found_sensors[EEPROM_ID].found_sensor)
@@ -283,12 +325,18 @@ void find_modules(void)
 		}
 	}
 
+	// I2C address conflict with RAK12027 Seismic Sensor and RAK12009 Gas Sensor
 	if (found_sensors[MQ3_ID].found_sensor)
 	{
-		if (init_rak12009())
+		if (init_rak12027())
 		{
-			snprintf(g_ble_dev_name, 9, "RAK_GAS");
+			found_sensors[MQ3_ID].found_sensor = false;
+			found_sensors[SEISM_ID].found_sensor = true;
 		}
+		// else if (init_rak12009())
+		// {
+		// 	snprintf(g_ble_dev_name, 9, "RAK_GAS");
+		// }
 		else
 		{
 			found_sensors[MQ3_ID].found_sensor = false;
@@ -364,6 +412,18 @@ void find_modules(void)
 		}
 	}
 
+	if (found_sensors[PM_ID].found_sensor)
+	{
+		if (init_rak12039())
+		{
+			snprintf(g_ble_dev_name, 9, "RAK_ENV");
+		}
+		else
+		{
+			found_sensors[PM_ID].found_sensor = false;
+		}
+	}
+
 	if (found_sensors[TEMP_ARR_ID].found_sensor)
 	{
 		if (!init_rak12040())
@@ -428,7 +488,6 @@ void find_modules(void)
 		}
 	}
 
-	// Multiple sensors have the same I2C address, try to get the correct one
 	if (found_sensors[VOC_ID].found_sensor)
 	{
 		MYLOG("APP", "Initialize RAK12047");
@@ -721,6 +780,17 @@ void announce_modules(void)
 		read_rak12025();
 	}
 
+	if (!found_sensors[SEISM_ID].found_sensor)
+	{
+		// MYLOG("APP", "D7S error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12027 OK\n");
+		read_rak12027(false);
+	}
+
 	if (!found_sensors[ACC2_ID].found_sensor)
 	{
 		// MYLOG("APP", "ADXL313 error");
@@ -760,6 +830,17 @@ void announce_modules(void)
 	{
 		AT_PRINTF("+EVT:RAK12037 OK\n");
 		read_rak12037();
+	}
+
+	if (!found_sensors[PM_ID].found_sensor)
+	{
+		// MYLOG("APP", "PMSA003I error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12039 OK\n");
+		// read_rak12039();
 	}
 
 	if (!found_sensors[TEMP_ARR_ID].found_sensor)
@@ -910,10 +991,20 @@ void get_sensor_values(void)
 		// Get the I3G4240D sensor values
 		read_rak12025();
 	}
+	// if (found_sensors[SEISM_ID].found_sensor)
+	// {
+	// 	// Get the D7S sensor values
+	// 	read_rak12027(false);
+	// }
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
 		// Get the soil moisture sensor values
 		read_rak12035();
+	}
+	if (found_sensors[PM_ID].found_sensor)
+	{
+		// Get the particle matter sensor values
+		read_rak12039();
 	}
 	if (found_sensors[TEMP_ARR_ID].found_sensor)
 	{

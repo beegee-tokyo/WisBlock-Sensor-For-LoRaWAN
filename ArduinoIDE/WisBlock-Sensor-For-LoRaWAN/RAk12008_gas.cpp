@@ -30,7 +30,19 @@ bool init_rak12008(void)
 
 	if (stc31_sensor.setBinaryGas(STC3X_BINARY_GAS_CO2_AIR_25) == false)
 	{
-		MYLOG("STC31", "Could not set the binary gas! Freezing...");
+		MYLOG("STC31", "Could not set the binary gas!");
+		return false;
+	}
+
+	// if (stc31_sensor.forcedRecalibration(0.0005) == false)
+	// {
+	// 	MYLOG("STC31", "Could not set the forced calibration!");
+	// 	return false;
+	// }
+
+	if (stc31_sensor.enableAutomaticSelfCalibration() == false)
+	{
+		MYLOG("STC31", "Could not set AutomaticSelfCalibration!");
 		return false;
 	}
 
@@ -87,9 +99,9 @@ void read_rak12008(void)
 	{
 		float co2_perc = abs(stc31_sensor.getCO2());
 		MYLOG("CO2", "CO2: %.2f", co2_perc);
-		g_solution_data.addAnalogInput(LPP_CHANNEL_CO2_PERC, co2_perc); // Percent
-#if HAS_EPD > 0
-		set_co2_rak14000(co2_perc);
-#endif
+		g_solution_data.addAnalogInput(LPP_CHANNEL_CO2, co2_perc); // Percent
+// #if HAS_EPD > 0
+// 		set_co2_rak14000(co2_perc);
+// #endif
 	}
 }
