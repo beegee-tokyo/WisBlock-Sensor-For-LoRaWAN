@@ -18,7 +18,7 @@ using namespace Adafruit_LittleFS_Namespace;
 /** Filename to save GPS precision setting */
 static const char gnss_name[] = "GNSS";
 
-/** Filename to save GPS precision setting */
+/** Filename to save Battery check setting */
 static const char batt_name[] = "BATT";
 
 /** File to save GPS precision setting */
