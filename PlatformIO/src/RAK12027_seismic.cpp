@@ -35,8 +35,8 @@
 //******************************************************************//
 
 /** Interrupt pin, depends on slot */
-#define INT1_PIN WB_IO5 // interrupt pin INT1 of D7S attached to WB_IO5 of WisBlock Base Board Slot D
-#define INT2_PIN WB_IO6 // interrupt pin INT2 of D7S attached to WB_IO6 of WisBlock Base Board Slot D
+#define INT1_PIN WB_IO3 // interrupt pin INT1 of D7S attached to WB_IO5 of WisBlock Base Board Slot D
+#define INT2_PIN WB_IO4 // interrupt pin INT2 of D7S attached to WB_IO6 of WisBlock Base Board Slot D
 
 // flag variables to handle collapse/shutoff only one time during an earthquake
 bool shutoff_alert = false;

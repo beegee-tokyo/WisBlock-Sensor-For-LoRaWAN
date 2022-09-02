@@ -48,6 +48,28 @@ struct s_nvram_settings
 s_nvram_settings g_nvram_settings;
 
 /**
+ * @brief Wakeup
+ *
+ * @return int 0
+ */
+int at_query_modules(void)
+{
+	announce_modules();
+	return 0;
+}
+
+/**
+ * @brief List of all available commands with short help and pointer to functions
+ *
+ */
+atcmd_t g_user_at_cmd_list_modules[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// Module commands
+	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, at_query_modules},
+};
+
+
+/**
  * @brief Returns in g_at_query_buf the current settings for the GNSS precision
  *
  * @return int always 0
@@ -372,7 +394,7 @@ static int at_query_wet(void)
 
 atcmd_t g_user_at_cmd_list_soil[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
-	// GNSS commands
+	// Soil Sensor commands
 	{"+DRY", "Get/Set dry calibration value", at_query_dry, at_set_dry, at_exec_dry},
 	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet},
 };
@@ -477,7 +499,7 @@ static int at_query_rtc(void)
 
 atcmd_t g_user_at_cmd_list_rtc[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
-	// GNSS commands
+	// RTC commands
 	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, at_query_rtc},
 };
 
@@ -679,6 +701,8 @@ void init_user_at(void)
 	uint16_t index_next_cmds = 0;
 	uint16_t required_structure_size = sizeof(g_user_at_cmd_list_batt);
 	MYLOG("USR_AT", "Structure size %d Battery", required_structure_size);
+	required_structure_size += sizeof(g_user_at_cmd_list_modules);
+	MYLOG("USR_AT", "Structure size %d Modules", required_structure_size);
 
 	// Get required size of structure
 	if (found_sensors[SOIL_ID].found_sensor)
@@ -714,6 +738,12 @@ void init_user_at(void)
 	memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_batt, sizeof(g_user_at_cmd_list_batt));
 	index_next_cmds += sizeof(g_user_at_cmd_list_batt) / sizeof(atcmd_t);
 	MYLOG("USR_AT", "Index after adding battery check %d", index_next_cmds);
+
+	MYLOG("USR_AT", "Adding module AT commands");
+	g_user_at_cmd_num += sizeof(g_user_at_cmd_list_modules) / sizeof(atcmd_t);
+	memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_modules, sizeof(g_user_at_cmd_list_modules));
+	index_next_cmds += sizeof(g_user_at_cmd_list_modules) / sizeof(atcmd_t);
+	MYLOG("USR_AT", "Index after adding modules %d", index_next_cmds);
 
 	if (found_sensors[SOIL_ID].found_sensor)
 	{
