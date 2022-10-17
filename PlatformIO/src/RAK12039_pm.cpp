@@ -18,8 +18,6 @@ RAK_PMSA003I PMSA003I;
 /** Data structure */
 PMSA_Data_t data;
 
-/** Semaphore to lock the I2C bus for 100kHz operation */
-SemaphoreHandle_t i2c_lock;
 /*
  * @brief WB_IO6 is connected to the SET pin.
  *        Set pin/TTL level @3.3V, high level or suspending is normal working status.
@@ -80,7 +78,7 @@ void read_rak12039(void)
 
 		MYLOG("PMS","Std PM ug/m3: PM 1.0 %d PM 2.5 %d PM 10 %d",data.pm10_standard,data.pm25_standard,data.pm100_standard);
 		MYLOG("PMS","Env PM ug/m3: PM 1.0 %d PM 2.5 %d PM 10 %d",data.pm10_env,data.pm25_env,data.pm100_env);
-#if HAS_EPD > 0
+#if HAS_EPD == 1 || HAS_EPD == 4
 	set_pm_rak14000(data.pm10_env,data.pm25_env,data.pm100_env);
 #endif
 	}

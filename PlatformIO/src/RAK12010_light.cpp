@@ -23,12 +23,6 @@ Light_VEML7700 VEML = Light_VEML7700();
 bool init_rak12010(void)
 {
 	Wire.begin();
-	if (!VEML.begin(&Wire))
-	{
-		MYLOG("VEML", "VEML7700 not found");
-		return false;
-	}
-
 	if (!VEML.begin())
 	{
 		MYLOG("VEML", "VEML7700 not found");

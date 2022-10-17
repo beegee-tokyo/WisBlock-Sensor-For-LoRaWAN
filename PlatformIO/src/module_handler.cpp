@@ -104,8 +104,6 @@ void find_modules(void)
 		}
 		if (address == 0x12)
 		{
-			// // RAK12039 supports only low I2C speed
-			// Wire.setClock(100000);
 			// RAK12039 has extra GPIO for power control
 			// On/Off control pin
 			pinMode(WB_IO6, OUTPUT);
@@ -132,12 +130,6 @@ void find_modules(void)
 				}
 			}
 		}
-		// else
-		// {
-		// 	// pinMode(WB_IO6, INPUT);
-		// 	// RAK5814 supports only low I2C speed
-		// 	Wire.setClock(100000); // Wire.setClock(400000);
-		// }
 		Wire.beginTransmission(address);
 		error = Wire.endTransmission();
 		if (error == 0)
@@ -166,14 +158,6 @@ void find_modules(void)
 		}
 	}
 
-// Create the semaphore for 100kHz I2C usage lock
-#if defined NRF52_SERIES || defined ESP32
-	// Create the GNSS event semaphore
-	i2c_lock = xSemaphoreCreateBinary();
-	// Initialize semaphore
-	xSemaphoreGive(i2c_lock);
-#endif
-
 	// Initialize the modules found
 	if (found_sensors[EEPROM_ID].found_sensor)
 	{
@@ -192,10 +176,12 @@ void find_modules(void)
 	}
 
 	// Check if RAK15001 is available, it is a SPI device, not found by the scan
+#ifndef ARDUINO_ARCH_RP2040
 	if (init_rak15001())
 	{
 		MYLOG("SCAN", "RAK15001 found");
 	}
+#endif // ARDUINO_ARCH_RP2040
 
 	if (found_sensors[TEMP_ID].found_sensor)
 	{
@@ -603,56 +589,6 @@ void announce_modules(void)
 		{
 			AT_PRINTF("+EVT:RAK1910 OK\n");
 		}
-		// Prepare GNSS task
-#if defined NRF52_SERIES || defined ESP32
-		// Create the GNSS event semaphore
-		g_gnss_sem = xSemaphoreCreateBinary();
-		// Initialize semaphore
-		xSemaphoreGive(g_gnss_sem);
-		// Take semaphore
-		xSemaphoreTake(g_gnss_sem, 10);
-		// Create the GNSS polling semaphore
-		g_gnss_poll = xSemaphoreCreateBinary();
-		// Initialize semaphore
-		xSemaphoreGive(g_gnss_poll);
-		// Take semaphore
-		xSemaphoreTake(g_gnss_poll, 10);
-#endif
-
-#ifdef ARDUINO_ARCH_RP2040
-		gnss_task_handle.start(gnss_task);
-		gnss_task_handle.set_priority(osPriorityNormal);
-#endif
-#if defined NRF52_SERIES || defined ESP32
-		if (!xTaskCreate(gnss_task, "GNSS", 4096, NULL, TASK_PRIO_LOW, &gnss_task_handle))
-#endif
-		{
-			MYLOG("APP", "Failed to start GNSS task");
-		}
-		last_pos_send = millis();
-
-		char mode_text[64] = {0};
-		if (!g_gps_prec_6 && !g_is_helium && !g_is_tester)
-		{
-			snprintf(mode_text, 64, "+EVT:PREC_4_DIG\n");
-		}
-		else
-		{
-			if (g_gps_prec_6)
-			{
-				snprintf(mode_text, 64, "+EVT:PREC_6_DIG\n");
-			}
-			else if (g_is_helium)
-			{
-				snprintf(mode_text, 64, "+EVT:HELIUM_MAPPER\n");
-			}
-			else if (g_is_tester)
-			{
-				snprintf(mode_text, 64, "+EVT:FIELD_TESTER\n");
-			}
-		}
-		AT_PRINTF(mode_text);
-		AT_PRINTF("============================\n");
 	}
 
 	// Delayed sending timer is used by several modules

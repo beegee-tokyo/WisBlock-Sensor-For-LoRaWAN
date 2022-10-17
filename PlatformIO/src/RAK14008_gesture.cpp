@@ -9,7 +9,6 @@
  *
  */
 #include "app.h"
-
 #include <RevEng_PAJ7620.h>
 
 // Forward declarations

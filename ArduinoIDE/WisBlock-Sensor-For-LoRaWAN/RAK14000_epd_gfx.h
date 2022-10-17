@@ -1,13 +1,18 @@
 /**
  * @file RAK14000_epd.h
  * @author Bernd Giesecke (bernd@giesecke.tk)
- * @brief Images for the EPD display
+ * @brief Global definitions and forward declarations, Images for the EPD display
  * @version 0.1
  * @date 2022-06-25
  *
  * @copyright Copyright (c) 2022
  * Images cortesy of <a href="https://www.flaticon.com/free-icons" title="Freepik - Flaticon">Icons created by Freepik - Flaticon</a>
  */
+#ifndef RAK14000_GFX_H
+#define RAK14000_GFX_H
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_EPD.h>
 
 const unsigned char rak_img[] = {
 	// 'RAK-logo, 150x56px
@@ -1659,3 +1664,5 @@ const GFXglyph RAK_EPD_20pt_Glyphs[] PROGMEM = {
 
 const GFXfont RAK_EPD_20pt PROGMEM = {
 	(uint8_t *)RAK_EPD_20pt_Bitmaps, (GFXglyph *)RAK_EPD_20pt_Glyphs, 0x20, 0x80, 24};
+
+#endif // RAK14000_GFX_H

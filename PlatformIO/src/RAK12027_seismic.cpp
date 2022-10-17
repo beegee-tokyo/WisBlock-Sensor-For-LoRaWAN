@@ -9,8 +9,6 @@
  *
  */
 #include "app.h"
-
-#include <Wire.h>
 #include <D7S.h>
 
 //******************************************************************//
@@ -34,20 +32,44 @@
 // Slot F      WB_IO5
 //******************************************************************//
 
-/** Interrupt pin, depends on slot */
-#define INT1_PIN WB_IO3 // interrupt pin INT1 of D7S attached to WB_IO5 of WisBlock Base Board Slot D
-#define INT2_PIN WB_IO4 // interrupt pin INT2 of D7S attached to WB_IO6 of WisBlock Base Board Slot D
-
 // flag variables to handle collapse/shutoff only one time during an earthquake
 bool shutoff_alert = false;
 bool collapse_alert = false;
 bool earthquake_end = true;
 
+void report_status(void)
+{
+	uint8_t current_state = D7S.getState();
+	char status_txt[128];
+	switch (current_state)
+	{
+	case NORMAL_MODE:
+		sprintf(status_txt, "Normal");
+		break;
+	case NORMAL_MODE_NOT_IN_STANBY:
+		sprintf(status_txt, "Not in Standby");
+		break;
+	case INITIAL_INSTALLATION_MODE:
+		sprintf(status_txt, "Initial Installation");
+		break;
+	case OFFSET_ACQUISITION_MODE:
+		sprintf(status_txt, "Offset Acquisition");
+		break;
+	case SELFTEST_MODE:
+		sprintf(status_txt, "Selftest");
+		break;
+	default:
+		sprintf(status_txt, "Undefined");
+		break;
+	}
+	MYLOG("SEIS", "Current mode: %s", status_txt);
+}
+
 /**
  * @brief Callback for INT 1
  * Wakes up application with signal SEISMIC_ALERT
  * Activated on Collapse and Shutoff signals
- * 
+ *
  */
 void d7s_int1_handler(void)
 {
@@ -58,7 +80,7 @@ void d7s_int1_handler(void)
  * @brief Callback for INT 2
  * Wakes up application with signal SEISMIC_EVENT
  * Activated on Earthquake start and end
- * 
+ *
  */
 void d7s_int2_handler(void)
 {
@@ -124,14 +146,18 @@ bool init_rak12027(void)
 	D7S.resetEvents();
 
 	//--- READY TO GO ---
-	Serial.println("\nListening for earthquakes!");
+	MYLOG("SEIS", "Listening for earthquakes!");
+
+	//--- Report status
+	report_status();
+
 	return true;
 }
 
 /**
  * @brief Calibration of D7S sensor
  * Should be called if position of sensor is changing
- * 
+ *
  * @return true if calibrarion succeed
  * @return false if calibration timeout
  */
@@ -160,7 +186,7 @@ bool calib_rak12027(void)
 
 /**
  * @brief Get events from the D7S after interrupt occured
- * 
+ *
  * @param is_int1 true if it was INT1, false if it was INT2
  * @return uint8_t event code
  * 			0 no event found
@@ -172,6 +198,10 @@ bool calib_rak12027(void)
  */
 uint8_t check_event_rak12027(bool is_int1)
 {
+	MYLOG("SEIS", "Check Event");
+	//--- Report status
+	report_status();
+
 	uint8_t return_val = 0;
 	if (is_int1)
 	{
@@ -200,14 +230,18 @@ uint8_t check_event_rak12027(bool is_int1)
 }
 
 /**
- * @brief Read latest saved SI and PGA values 
- * 
- * @param add_values if true, values will be added to payload, false will just read 
+ * @brief Read latest saved SI and PGA values
+ *
+ * @param add_values if true, values will be added to payload, false will just read
  */
 void read_rak12027(bool add_values)
 {
 	// Seismic Intensity vs PGA
 	// I = 2.14 log10 (PGV) + 1.89
+
+	MYLOG("SEIS", "Read values");
+	//--- Report status
+	report_status();
 	
 	// get information about the current earthquake
 	float currentSI = D7S.getInstantaneusSI();

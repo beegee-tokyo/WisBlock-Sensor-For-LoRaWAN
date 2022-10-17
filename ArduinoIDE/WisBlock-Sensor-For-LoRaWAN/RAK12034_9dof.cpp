@@ -48,6 +48,7 @@ RAK_BMX160 bmx160(&Wire);
 // Slot E      WB_IO3
 // Slot F      WB_IO5
 //******************************************************************//
+
 /** Interrupt pin, depends on slot */
 uint8_t bmx_int_pin = WB_IO4;
 

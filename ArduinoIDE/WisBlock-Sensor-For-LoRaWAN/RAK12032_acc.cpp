@@ -9,8 +9,8 @@
  *
  */
 #include "app.h"
-
 #include <Wire.h>
+#ifndef ARDUINO_ARCH_RP2040
 #include <SparkFunADXL313.h>
 
 // Forward declarations
@@ -162,3 +162,39 @@ void clear_int_rak12032(void)
 		MYLOG("ACC2", "x: %d y: %d z: %d", adxl313.x, adxl313.y, adxl313.z);
 	}
 }
+#else // ARDUINO_ARCH_RP2040
+//**********************************************************/
+/// \todo Sparkfun library does not work with RP2040 SPI
+//**********************************************************/
+bool init_rak12032(void)
+{
+	return false;
+}
+
+/**
+ * @brief Assign/reassing interrupt pin
+ *
+ * @param new_irq_pin new GPIO to assign to interrupt
+ */
+void int_assign_rak12032(uint8_t new_irq_pin)
+{
+}
+
+/**
+ * @brief ACC interrupt handler
+ * @note gives semaphore to wake up main loop
+ *
+ */
+void int_callback_rak12032(void)
+{
+}
+
+/**
+ * @brief Clear ACC interrupt register to enable next wakeup
+ *
+ */
+void clear_int_rak12032(void)
+{
+}
+
+#endif // ARDUINO_ARCH_RP2040

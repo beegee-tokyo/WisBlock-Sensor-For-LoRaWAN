@@ -1,5 +1,5 @@
 /**
- * @file RAK14000_epd.cpp
+ * @file RAK14000_epd_4_2.cpp
  * @author Bernd Giesecke (bernd@giesecke.tk)
  * @brief Initialization and functions for EPD display
  * @version 0.1
@@ -9,11 +9,11 @@
  *
  */
 #include "app.h"
-#if HAS_EPD == 1
 #include <Adafruit_GFX.h>
 #include <Adafruit_EPD.h>
+#include "RAk14000_epd_gfx.h"
 
-#include "RAK14000_epd.h"
+#if HAS_EPD == 1
 
 #define SMALL_FONT &RAK_EPD_10pt
 #define LARGE_FONT &RAK_EPD_20pt

@@ -48,7 +48,7 @@ This code can be used without changes for
 | [RAK12002](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12002/Overview/) ⤴️ | WisBlock RTC module | - |
 | [RAK12003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12003/Overview/) ⤴️ | WisBlock FIR sensor | - |
 | [RAK12004](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12004/Overview/) ⤴️ | WisBlock MQ2 Gas sensor | - |
-| [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️ | WisBlock MG812 CO2 Gas sensor | - |
+| [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️ | WisBlock SCT31 CO2 Gas sensor | - |
 | [RAK12009](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12009/Overview/) ⤴️ | WisBlock MQ3 Alcohol Gas sensor | - |
 | [RAK12010](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12010/Overview/) ⤴️ | WisBlock Ambient Light sensor | - |
 | [RAK12014](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12014/Overview/) ⤴️ | WisBlock Laser ToF sensor | - |
@@ -89,7 +89,7 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 # Software used
 ## IDE
 - [PlatformIO](https://platformio.org/install) ⤴️
-- alternative [ArduinoIDE](https://www.arduino.cc/en/software) ⤴️
+- ~~alternative~~ [~~ArduinoIDE~~](https://www.arduino.cc/en/software) ⤴️ (Not compatible atm)
 - [Adafruit nRF52 BSP](https://docs.platformio.org/en/latest/boards/nordicnrf52/adafruit_feather_nrf52832.html) ⤴️
 - [Raspberry Pi RP2040 BSP](https://docs.platformio.org/en/latest/platforms/raspberrypi.html) ⤴️
 - [Patch to use RAK4631 & RAK11310 with PlatformIO](https://github.com/RAKWireless/WisBlock/tree/master/PlatformIO) ⤴️
@@ -100,47 +100,52 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 - [ArduinoJson](https://registry.platformio.org/libraries/bblanchon/ArduinoJson) ⤴️
 ## Sensor libraries
 - [Adafruit BME680 Library](https://registry.platformio.org/libraries/adafruit/Adafruit%20BME680%20Library) ⤴️
+- [Adafruit FRAM I2C](https://registry.platformio.org/libraries/adafruit/Adafruit%20FRAM%20I2C) ⤴️
 - [Adafruit LIS3DH](https://registry.platformio.org/libraries/adafruit/Adafruit%20LIS3DH) ⤴️
 - [Adafruit LPS2X](https://registry.platformio.org/libraries/adafruit/Adafruit%20LPS2X) ⤴️
 - [Adafruit MCP23017 Arduino Library](https://registry.platformio.org/libraries/adafruit/Adafruit%20MCP23017%20Arduino%20Library) ⤴️
 - [Adafruit Unified Sensor](https://registry.platformio.org/libraries/adafruit/Adafruit%20Unified%20Sensor) ⤴️
+- [Adafruit Unified Sensor](https://registry.platformio.org/libraries/adafruit/Adafruit%20Unified%20Sensor) ⤴️
+- [Adafruit EPD](https://registry.platformio.org/libraries/adafruit/Adafruit%20EPD) ⤴️
 - [ClosedCube OPT3001](https://github.com/beegee-tokyo/ClosedCube_OPT3001_Arduino) ⤴️
 - [Coulomb Counter](https://registry.platformio.org/libraries/seeed-studio/Grove%20-%20Coulomb%20Counter%20for%203.3V%20to%205V%20LTC2941) ⤴️
+- [D7S](https://github.com/alessandro1105/D7S_Arduino_Library) ⤴️
 - [INA219_WE](https://registry.platformio.org/libraries/wollewald/INA219_WE) ⤴️
+- [LPS35HW](https://registry.platformio.org/libraries/pilotak/LPS35HW) ⤴️
 - [Melopero RV3028](https://registry.platformio.org/libraries/melopero/Melopero%20RV3028) ⤴️
+- [MPU9250](https://registry.platformio.org/libraries/wollewald/MPU9250_WE) ⤴️
 - [nRF52_OLED](https://registry.platformio.org/libraries/beegee-tokyo/nRF52_OLED) ⤴️
 - [Pololu VL53L0X](https://registry.platformio.org/libraries/pololu/VL53L0X) ⤴️
 - [RAK12019_LTR390_UV_Light](https://registry.platformio.org/libraries/beegee-tokyo/RAK12019_LTR390_UV_Light) ⤴️
 - [RAK12035_SoilMoisture](https://registry.platformio.org/libraries/beegee-tokyo/RAK12035_SoilMoisture) ⤴️
+- [RAKwireless RAK12034](https://registry.platformio.org/libraries/beegee-tokyo/RAKwireless%20RAK12034) ⤴️
 - [RAKwireless CAP1293 Touch Pad library](https://registry.platformio.org/libraries/beegee-tokyo/Arduino%20CAP1293%20Touch%20Pad%20library) ⤴️
 - [RAK I3G4250D Gyroscope](https://registry.platformio.org/libraries/beegee-tokyo/RAK%20I3G4250D%20Gyroscope) ⤴️
 - [RAKwireless MQx library](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20MQx%20library) ⤴️
 - [RAKwireless VEML Light Sensor](https://registry.platformio.org/libraries/rakwireless/RAKwireless%20VEML%20Light%20Sensor) ⤴️
+- [RAKwireless Storage](https://registry.platformio.org/libraries/beegee-tokyo/RAKwireless%20Storage) ⤴️
 - [RevEng PAJ7620](https://registry.platformio.org/libraries/acrandal/RevEng%20PAJ7620) ⤴️
 - [Sensirion Core](https://registry.platformio.org/libraries/sensirion/Sensirion%20Core) ⤴️
 - [Sensirion Gas Index Algorithm](https://registry.platformio.org/libraries/sensirion/Sensirion%20Gas%20Index%20Algorithm) ⤴️
 - [Sensirion I2C SGP40](https://registry.platformio.org/libraries/sensirion/Sensirion%20I2C%20SGP40) ⤴️
 - [SparkFun SHTC3 Humidity and Temperature Sensor Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20SHTC3%20Humidity%20and%20Temperature%20Sensor%20Library) ⤴️
 - [SparkFun u-blox GNSS Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20u-blox%20GNSS%20Arduino%20Library) ⤴️
-- [TinyGPSPlus](https://registry.platformio.org/libraries/mikalhart/TinyGPSPlus) ⤴️
-- [LPS35HW](https://registry.platformio.org/libraries/pilotak/LPS35HW) ⤴️
 - [SparkFun SCD30 Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20SCD30%20Arduino%20Library) ⤴️
+- [SparkFun STC3x Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20STC3x%20Arduino%20Library) ⤴️
 - [SparkFun MLX90632 Noncontact Infrared Temperature Sensor](https://registry.platformio.org/libraries/sparkfun/SparkFun%20MLX90632%20Noncontact%20Infrared%20Temperature%20Sensor) ⤴️
-- [Melopero AMG8833](https://registry.platformio.org/libraries/melopero/Melopero%20AMG8833) ⤴️
 - [SparkFun ADXL313 Arduino Library](https://registry.platformio.org/libraries/sparkfun/SparkFun%20ADXL313%20Arduino%20Library) ⤴️
-- [RAKwireless Storage](https://registry.platformio.org/libraries/beegee-tokyo/RAKwireless%20Storage) ⤴️
-- [ArduinoECCX08](https://registry.platformio.org/libraries/arduino-libraries/ArduinoECCX08) ⤴️
-- [Adafruit FRAM I2C](https://registry.platformio.org/libraries/adafruit/Adafruit%20FRAM%20I2C) ⤴️
+- [SparkFun GridEYE AMG88](https://registry.platformio.org/libraries/sparkfun/SparkFun%20GridEYE%20AMG88%20Library) ⤴️
+- [TinyGPSPlus](https://registry.platformio.org/libraries/mikalhart/TinyGPSPlus) ⤴️
 
 ... to be updated, check platformio.ini for a list of all libraries used
 
 ### _REMARK_     
-The project was developed using Platform IO. But for the users that _**still**_ stick to Arduino IDE, an Arduino IDE compatible copy of the sources is in the ArduinoIDE folder.    
+The project was developed using Platform IO. ~~But for the users that _**still**_ stick to Arduino IDE, an Arduino IDE compatible copy of the sources is in the ArduinoIDE folder.~~ The code is not compiling on Arduino IDE atm.    
 The complete project for PIO is in the PlatformIO folder.    
 
 ### _REMARK_
 When using PlatformIO, the libraries are all listed in the **`platformio.ini`** and are automatically installed when the project is compiled.     
-When using Arduino IDE all libraries need to be installed manually using the Arduino Library Manager.
+~~When using Arduino IDE all libraries need to be installed manually using the Arduino Library Manager.~~
 
 ----
 
@@ -230,7 +235,8 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | MLX90632 object temp     | 39        | 103        | 2 bytes  | in °C                                             | RAK12003          | temperature_39 |
 | PM 1.0 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_40             |
 | PM 2.5 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_41             |
-| PM 10 value             | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_42             |
+| PM 10 value              | 40        | 103        | 2 bytes  | in ug/m3                                            | RAK12003          | voc_42             |
+
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 

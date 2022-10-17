@@ -170,7 +170,7 @@ void read_rak12047(void)
 /**
  * @brief Read the current VOC and feed it to the
  *        VOC algorithm
- *        Called every 1 second
+ *        Called every 10 second
  *
  */
 void do_read_rak12047(void)

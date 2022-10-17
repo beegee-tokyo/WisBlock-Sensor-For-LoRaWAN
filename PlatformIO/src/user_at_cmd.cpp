@@ -18,11 +18,17 @@ using namespace Adafruit_LittleFS_Namespace;
 /** Filename to save GPS precision setting */
 static const char gnss_name[] = "GNSS";
 
+/** Filename to save GPS precision setting */
+static const char gnss_power_name[] = "GNSS_2";
+
 /** Filename to save Battery check setting */
 static const char batt_name[] = "BATT";
 
 /** File to save GPS precision setting */
 File gps_file(InternalFS);
+
+/** File to save GPS shutoff setting */
+File gps_pwer_file(InternalFS);
 
 /** File to save battery check status */
 File batt_check(InternalFS);
@@ -47,8 +53,12 @@ struct s_nvram_settings
 /** User AT command defined settings */
 s_nvram_settings g_nvram_settings;
 
+/*****************************************
+ * Query modules AT commands
+ *****************************************/
+
 /**
- * @brief Wakeup
+ * @brief Query found modules
  *
  * @return int 0
  */
@@ -68,6 +78,9 @@ atcmd_t g_user_at_cmd_list_modules[] = {
 	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, at_query_modules},
 };
 
+/*****************************************
+ * GNSS AT commands
+ *****************************************/
 
 /**
  * @brief Returns in g_at_query_buf the current settings for the GNSS precision
@@ -108,28 +121,28 @@ static int at_exec_gnss(char *str)
 		g_is_helium = false;
 		g_gps_prec_6 = false;
 		g_is_tester = false;
-		save_gps_settings();
+		save_gps_settings(0);
 	}
 	else if (str[0] == '1')
 	{
 		g_is_helium = false;
 		g_gps_prec_6 = true;
 		g_is_tester = false;
-		save_gps_settings();
+		save_gps_settings(0);
 	}
 	else if (str[0] == '2')
 	{
 		g_is_helium = true;
 		g_gps_prec_6 = false;
 		g_is_tester = false;
-		save_gps_settings();
+		save_gps_settings(0);
 	}
 	else if (str[0] == '3')
 	{
 		g_is_helium = false;
 		g_gps_prec_6 = false;
 		g_is_tester = true;
-		save_gps_settings();
+		save_gps_settings(0);
 	}
 	else
 	{
@@ -139,10 +152,12 @@ static int at_exec_gnss(char *str)
 }
 
 /**
- * @brief Read saved setting for precision and packet format
+ * @brief Read saved setting for precision, packet format and power control
  *
+ * @param settings 0 = get precision and packet format
+ *                 1 = get power control settings
  */
-void read_gps_settings(void)
+void read_gps_settings(uint8_t settings) // Read saved setting for precision and packet format
 {
 	g_gps_prec_6 = false;
 	g_is_helium = false;
@@ -150,44 +165,84 @@ void read_gps_settings(void)
 	bool found_prefs = false;
 	char data[3] = {'0'};
 
-#ifdef NRF52_SERIES
-	if (InternalFS.exists(gnss_name))
+	if (settings == 0)
 	{
-		gps_file.open(gnss_name, FILE_O_READ);
-		// int read (void *buf, uint16_t nbyte);
-		gps_file.read(data, 1);
-		gps_file.close();
-		found_prefs = true;
-	}
+#ifdef NRF52_SERIES
+		if (InternalFS.exists(gnss_name))
+		{
+			gps_file.open(gnss_name, FILE_O_READ);
+			// int read (void *buf, uint16_t nbyte);
+			gps_file.read(data, 1);
+			gps_file.close();
+			found_prefs = true;
+		}
 #endif
 #ifdef ESP32
-	esp32_prefs.begin("gnss", false);
-	data[0] = esp32_prefs.getShort("fmt", 0);
-	esp32_prefs.end();
+		esp32_prefs.begin("gnss", false);
+		data[0] = esp32_prefs.getShort("fmt", 0);
+		esp32_prefs.end();
 #endif
-	if (found_prefs)
-	{
-		MYLOG("USR_AT", "File found, read %c", data[0]);
-		if (data[0] == '1')
+		if (found_prefs)
 		{
-			g_gps_prec_6 = true;
-			MYLOG("USR_AT", "File found, set format to 6 digit");
+			MYLOG("USR_AT", "File found, read %c", data[0]);
+			if (data[0] == '1')
+			{
+				g_gps_prec_6 = true;
+				MYLOG("USR_AT", "File found, set format to 6 digit");
+			}
+			else if (data[0] == '2')
+			{
+				g_is_helium = true;
+				MYLOG("USR_AT", "File found, set format to Helium");
+			}
+			else if (data[0] == '3')
+			{
+				g_is_tester = true;
+				MYLOG("USR_AT", "File found, set format to Tester");
+			}
 		}
-		else if (data[0] == '2')
+		else
 		{
-			g_is_helium = true;
-			MYLOG("USR_AT", "File found, set format to Helium");
-		}
-		else if (data[0] == '3')
-		{
+			MYLOG("USR_AT", "File not found, set format to Tester");
 			g_is_tester = true;
-			MYLOG("USR_AT", "File found, set format to Tester");
 		}
 	}
-	else
+	else if (settings == 1)
 	{
-		MYLOG("USR_AT", "File not found, set format to Tester");
-		g_is_tester = true;
+#ifdef NRF52_SERIES
+		if (InternalFS.exists(gnss_power_name))
+		{
+			gps_file.open(gnss_power_name, FILE_O_READ);
+			// int read (void *buf, uint16_t nbyte);
+			gps_file.read(data, 1);
+			gps_file.close();
+			found_prefs = true;
+		}
+#endif
+#ifdef ESP32
+		esp32_prefs.begin("gnss", false);
+		data[0] = esp32_prefs.getShort("pwr", 0);
+		esp32_prefs.end();
+#endif
+		if (found_prefs)
+		{
+			MYLOG("USR_AT", "File found, read %c", data[0]);
+			if (data[0] == '0')
+			{
+				g_gnss_power_off = true;
+				MYLOG("USR_AT", "File found, enable GNSS power off");
+			}
+			else if (data[0] == '1')
+			{
+				g_gnss_power_off = false;
+				MYLOG("USR_AT", "File found, disable GNSS power off");
+			}
+		}
+		else
+		{
+			MYLOG("USR_AT", "File not found, enable GNSS power off");
+			g_gnss_power_off = false;
+		}
 	}
 }
 
@@ -195,57 +250,92 @@ void read_gps_settings(void)
  * @brief Save the GPS settings
  *
  */
-void save_gps_settings(void)
+void save_gps_settings(uint8_t settings)
 {
+	if (settings == 0)
+	{
 #ifdef NRF52_SERIES
-	InternalFS.remove(gnss_name);
-	gps_file.open(gnss_name, FILE_O_WRITE);
-	if (g_gps_prec_6)
-	{
-		MYLOG("USR_AT", "Saved high precision");
-		gps_file.write("1");
-	}
-	else if (g_is_helium)
-	{
-		MYLOG("USR_AT", "Saved Helium format");
-		gps_file.write("2");
-	}
-	else if (g_is_tester)
-	{
-		MYLOG("USR_AT", "Saved Tester format");
-		gps_file.write("3");
-	}
-	else
-	{
-		MYLOG("USR_AT", "Saved low precision");
-		gps_file.write("0");
-	}
-	gps_file.close();
+			InternalFS.remove(gnss_name);
+		gps_file.open(gnss_name, FILE_O_WRITE);
+		if (g_gps_prec_6)
+		{
+			MYLOG("USR_AT", "Saved high precision");
+			gps_file.write("1");
+		}
+		else if (g_is_helium)
+		{
+			MYLOG("USR_AT", "Saved Helium format");
+			gps_file.write("2");
+		}
+		else if (g_is_tester)
+		{
+			MYLOG("USR_AT", "Saved Tester format");
+			gps_file.write("3");
+		}
+		else
+		{
+			MYLOG("USR_AT", "Saved low precision");
+			gps_file.write("0");
+		}
+		gps_file.close();
 #endif
 #ifdef ESP32
-	esp32_prefs.begin("gnss", false);
-	if (g_gps_prec_6)
-	{
-		MYLOG("USR_AT", "Saved high precision");
-		esp32_prefs.putShort("fmt", 1);
-	}
-	else if (g_is_helium)
-	{
-		MYLOG("USR_AT", "Saved Helium format");
-		esp32_prefs.putShort("fmt", 2);
-	}
-	else if (g_is_tester)
-	{
-		MYLOG("USR_AT", "Saved Tester format");
-		esp32_prefs.putShort("fmt", 3);
-	}
-	else
-	{
-		MYLOG("USR_AT", "Saved low precision");
-		esp32_prefs.putShort("fmt", 0);
-	}
-	esp32_prefs.end();
+		esp32_prefs.begin("gnss", false);
+		if (g_gps_prec_6)
+		{
+			MYLOG("USR_AT", "Saved high precision");
+			esp32_prefs.putShort("fmt", 1);
+		}
+		else if (g_is_helium)
+		{
+			MYLOG("USR_AT", "Saved Helium format");
+			esp32_prefs.putShort("fmt", 2);
+		}
+		else if (g_is_tester)
+		{
+			MYLOG("USR_AT", "Saved Tester format");
+			esp32_prefs.putShort("fmt", 3);
+		}
+		else
+		{
+			MYLOG("USR_AT", "Saved low precision");
+			esp32_prefs.putShort("fmt", 0);
+		}
+		esp32_prefs.end();
 #endif
+	}
+	else if (settings == 1)
+	{
+#ifdef NRF52_SERIES
+		InternalFS.remove(gnss_power_name);
+		gps_file.open(gnss_power_name, FILE_O_WRITE);
+		if (g_gnss_power_off)
+		{
+			MYLOG("USR_AT", "Saved power off enabled");
+			gps_file.write("0");
+		}
+		else 
+		{
+			MYLOG("USR_AT", "Saved power off disabled");
+			gps_file.write("1");
+		}
+		gps_file.close();
+#endif
+#ifdef ESP32
+		esp32_prefs.begin("gnss", false);
+		if (g_gnss_power_off)
+		{
+			MYLOG("USR_AT", "Saved power off enabled");
+			esp32_prefs.putShort("pwr", 0);
+		}
+		else
+		{
+			MYLOG("USR_AT", "Saved power off disabled");
+			esp32_prefs.putShort("pwr", 1);
+		}
+		esp32_prefs.end();
+#endif
+	}
 }
 
 /**
@@ -293,6 +383,38 @@ int at_wake(void)
 	return 0;
 }
 
+static int at_query_shutoff()
+{
+	if (g_gnss_power_off)
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "GNSS power off enabled");
+	}
+	else 
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "GNSS power off disabled");
+	}
+	return 0;
+}
+
+static int at_exec_shutoff(char *str)
+{
+	if (str[0] == '0')
+	{
+		g_gnss_power_off = true;
+		save_gps_settings(1);
+	}
+	else if (str[0] == '1')
+	{
+		g_gnss_power_off = false;
+		save_gps_settings(1);
+	}
+	else
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	return 0;
+}
+
 /**
  * @brief List of all available commands with short help and pointer to functions
  *
@@ -301,8 +423,13 @@ atcmd_t g_user_at_cmd_list_gps[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
 	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper, 3 = Field Tester", at_query_gnss, at_exec_gnss, at_query_gnss},
+	{"+GNSSSLEEP", "Enable/Disable GNSS module power off 0 = power off, 1 = keep power on", at_query_shutoff, at_exec_shutoff, at_query_shutoff},
 	{"+SLEEP", "Put device into sleep", NULL, NULL, at_sleep},
 };
+
+/*****************************************
+ * Soil moisture sensor AT commands
+ *****************************************/
 
 /**
  * @brief Start dry calibration
@@ -398,6 +525,10 @@ atcmd_t g_user_at_cmd_list_soil[] = {
 	{"+DRY", "Get/Set dry calibration value", at_query_dry, at_set_dry, at_exec_dry},
 	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet},
 };
+
+/*****************************************
+ * RTC AT commands
+ *****************************************/
 
 /**
  * @brief Set RTC time
@@ -503,6 +634,10 @@ atcmd_t g_user_at_cmd_list_rtc[] = {
 	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, at_query_rtc},
 };
 
+/*****************************************
+ * Altitude AT commands
+ *****************************************/
+
 /**
  * @brief Get altitude
  * @author kongduino
@@ -576,6 +711,10 @@ atcmd_t g_user_at_cmd_list_env[] = {
 	{"+ALT", "Get Altitude", at_query_alt, NULL, at_query_alt},
 	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, at_query_msl},
 };
+
+/*****************************************
+ * Battery check AT commands
+ *****************************************/
 
 /**
  * @brief Enable/Disable battery check

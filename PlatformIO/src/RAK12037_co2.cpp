@@ -30,7 +30,7 @@ bool init_rak12037(void)
 	if (!scd30.begin(Wire))
 	{
 		MYLOG("SCD30", "SCD30 not found");
-		digitalWrite(WB_IO2, LOW); // power down RAK12004
+		digitalWrite(WB_IO2, LOW); // power down RAK12037
 		return false;
 	}
 
@@ -81,6 +81,6 @@ void read_rak12037(void)
 	g_solution_data.addRelativeHumidity(LPP_CHANNEL_CO2_HUMID_2, humid_reading);
 
 #if HAS_EPD > 0
-		set_co2_rak14000(co2_reading);
+	set_co2_rak14000(co2_reading);
 #endif
 }

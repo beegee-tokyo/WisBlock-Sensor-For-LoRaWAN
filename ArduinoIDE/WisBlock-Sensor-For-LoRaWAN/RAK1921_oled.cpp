@@ -11,11 +11,6 @@
 #include "app.h"
 #include <nRF_SSD1306Wire.h>
 
-#ifdef ESP32
-#define PIN_WIRE_SDA SDA
-#define PIN_WIRE_SCL SCL
-#endif
-
 void disp_show(void);
 
 /** Width of the display in pixel */

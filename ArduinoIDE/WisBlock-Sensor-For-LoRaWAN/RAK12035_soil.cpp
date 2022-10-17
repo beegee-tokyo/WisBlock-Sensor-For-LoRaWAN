@@ -342,6 +342,6 @@ uint16_t set_calib_rak12035(bool is_dry, uint16_t calib_val)
 		calib_values.wet_cal = calib_val;
 	}
 	soil_sensor.sensor_sleep();
-	Wire.end();
+
 	return value;
 }

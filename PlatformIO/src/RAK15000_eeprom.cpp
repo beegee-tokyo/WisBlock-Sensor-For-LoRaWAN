@@ -15,11 +15,6 @@
 /** EEPROM class instance */
 Adafruit_EEPROM_I2C eeprom;
 
-/** Default I2C address */
-#define EEPROM_ADDR 0x50
-/** Max address of EEPROM */
-#define MAXADD 262143
-
 bool init_rak15000(void)
 {
 	uint8_t eepr_buff[110];

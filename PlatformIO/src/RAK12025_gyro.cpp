@@ -9,8 +9,27 @@
  *
  */
 #include "app.h"
-
 #include <I3G4250D.h>
+
+//******************************************************************//
+// RAK12025 interrupt guide
+//******************************************************************//
+// INT1
+// Slot A      WB_IO2 ( == power control )
+// Slot B      WB_IO1 ( not recommended, INT pin conflict with IO2)
+// Slot C      WB_IO4
+// Slot D      WB_IO6
+// Slot E      WB_IO3
+// Slot F      WB_IO5
+//******************************************************************//
+// INT2
+// Slot A      WB_IO1
+// Slot B      WB_IO2 ( not recommended, pin conflict with IO2)
+// Slot C      WB_IO3
+// Slot D      WB_IO5
+// Slot E      WB_IO4
+// Slot F      WB_IO6
+//******************************************************************//
 
 // Forward declarations
 void int_callback_rak12025(void);

@@ -29,8 +29,8 @@ mbed::Ticker delayed_sending;
 /** Flag if delayed sending is already activated */
 bool delayed_active = false;
 
-/** Minimum delay between sending new locations, set to 45 seconds */
-time_t min_delay = 45000;
+/** Minimum delay between sending new locations, set to 30 seconds */
+time_t min_delay = 30000;
 
 /** GPS precision */
 bool g_gps_prec_6 = true;
@@ -40,6 +40,9 @@ bool g_is_helium = false;
 
 /** Switch to Field Tester data packet */
 bool g_is_tester = false;
+
+/** Switch to enable/disable GNSS module power */
+bool g_gnss_power_off = false;
 
 /** Flag for battery protection enabled */
 bool battery_check_enabled = false;
@@ -142,7 +145,10 @@ bool init_app(void)
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
 		// Get precision settings
-		read_gps_settings();
+		read_gps_settings(0);
+
+		// Get GNSS power settings
+		read_gps_settings(1);
 
 		if (g_is_tester)
 		{
@@ -272,6 +278,9 @@ void app_event_handler(void)
 			}
 			if (found_sensors[GNSS_ID].found_sensor)
 			{
+				MYLOG("APP", "Start GNSS");
+				// Set activity flag
+				gnss_active = true;
 				// Start the GNSS location tracking
 #if defined NRF52_SERIES || defined ESP32
 				xSemaphoreGive(g_gnss_sem);
@@ -561,6 +570,12 @@ void app_event_handler(void)
 				read_rak14008();
 			}
 
+			if (gnss_active)
+			{
+				// GNSS is already running
+				return;
+			}
+
 #if defined NRF52_SERIES || defined ESP32
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
@@ -722,6 +737,10 @@ void app_event_handler(void)
 				}
 			}
 		}
+
+		// Reset activity flag
+		gnss_active = true;
+
 		// Reset the packet
 		g_solution_data.reset();
 	}
@@ -793,16 +812,18 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
-			// // Force a sensor reading in 10 seconds
+			if (!found_sensors[GNSS_ID].found_sensor)
+			{
+				// Force a sensor reading in 10 seconds
 #ifdef NRF52_SERIES
-			delayed_sending.setPeriod(10000);
-			delayed_sending.start();
+				delayed_sending.setPeriod(10000);
+				delayed_sending.start();
 #endif
 #ifdef ESP32
-			delayed_sending.attach_ms(2000, send_delayed);
+				delayed_sending.attach_ms(10000, send_delayed);
 
 #endif
-
+			}
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
 			// memcpy(test_multicast.NwkSKey, _mc_nwskey, 16);

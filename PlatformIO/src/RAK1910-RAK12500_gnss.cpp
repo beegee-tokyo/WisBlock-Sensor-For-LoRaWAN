@@ -36,7 +36,7 @@ SemaphoreHandle_t g_gnss_sem;
 Thread gnss_task_handle(osPriorityNormal, 4096);
 
 /** Thread id for lora event thread */
-osThreadId gnss_task_ide = NULL;
+osThreadId gnss_task_id = NULL;
 #endif
 
 /** Timer for GNSS polling */
@@ -62,7 +62,7 @@ SemaphoreHandle_t g_gnss_poll;
 #endif
 
 /** Flag for location timeout */
-bool poll_finished = false;
+volatile bool poll_finished = false;
 
 /** Limiter for GNSS polling */
 uint16_t check_gnss_max_try;
@@ -94,7 +94,68 @@ uint8_t fake_gnss_selector = 0;
 int64_t fake_latitude[] = {144213730, 414861950, -80533010, -274789700};
 int64_t fake_longitude[] = {1210069140, -816814860, -349049060, 1530410440};
 
+/** Flag for GPS active */
+volatile bool gnss_active = false;
+
 // PH 144213730, 1210069140, 35.000 // Ohio 414861950, -816814860 // Recife -80533010, -349049060 // Brisbane -274789700, 1530410440
+
+/**
+ * @brief Start the GNSS task to handle location acquisitions
+ *
+ */
+void start_gnss_task(void)
+{
+	// Prepare GNSS task
+#if defined NRF52_SERIES || defined ESP32
+	// Create the GNSS event semaphore
+	g_gnss_sem = xSemaphoreCreateBinary();
+	// Initialize semaphore
+	xSemaphoreGive(g_gnss_sem);
+	// Take semaphore
+	xSemaphoreTake(g_gnss_sem, 10);
+	// Create the GNSS polling semaphore
+	g_gnss_poll = xSemaphoreCreateBinary();
+	// Initialize semaphore
+	xSemaphoreGive(g_gnss_poll);
+	// Take semaphore
+	xSemaphoreTake(g_gnss_poll, 10);
+#endif
+
+#ifdef ARDUINO_ARCH_RP2040
+	gnss_task_handle.start(gnss_task);
+	gnss_task_handle.set_priority(osPriorityNormal);
+#endif
+#if defined NRF52_SERIES || defined ESP32
+	if (!xTaskCreate(gnss_task, "GNSS", 4096, NULL, TASK_PRIO_LOW, &gnss_task_handle))
+#endif
+	{
+		MYLOG("APP", "Failed to start GNSS task");
+	}
+	last_pos_send = millis();
+
+	char mode_text[64] = {0};
+	if (!g_gps_prec_6 && !g_is_helium && !g_is_tester)
+	{
+		snprintf(mode_text, 64, "+EVT:PREC_4_DIG\n");
+	}
+	else
+	{
+		if (g_gps_prec_6)
+		{
+			snprintf(mode_text, 64, "+EVT:PREC_6_DIG\n");
+		}
+		else if (g_is_helium)
+		{
+			snprintf(mode_text, 64, "+EVT:HELIUM_MAPPER\n");
+		}
+		else if (g_is_tester)
+		{
+			snprintf(mode_text, 64, "+EVT:FIELD_TESTER\n");
+		}
+	}
+	AT_PRINTF(mode_text);
+	AT_PRINTF("============================\n");
+}
 
 /**
  * @brief Initialize GNSS module
@@ -143,6 +204,8 @@ bool init_gnss(void)
 
 				my_gnss.saveConfiguration(); // Save the current settings to flash and BBR
 
+				start_gnss_task();
+
 				return true;
 			}
 		}
@@ -151,7 +214,7 @@ bool init_gnss(void)
 		Serial1.begin(9600);
 		delay(100);
 
-		Serial1.print("START");
+		// Serial1.print("START");
 
 		time_t timeout = millis();
 		while ((millis() - timeout) < 1000)
@@ -164,6 +227,9 @@ bool init_gnss(void)
 				MYLOG("GNSS", "Got data from RAK1910 after %ld", (uint32_t)(millis() - timeout));
 				is_serial = 1;
 				gnssSerial = &Serial1;
+
+				start_gnss_task();
+
 				return true;
 			}
 			delay(500);
@@ -176,7 +242,7 @@ bool init_gnss(void)
 		delay(100);
 
 		MYLOG("GNSS", "Initialize RAK1910 on Serial2");
-		Serial2.print("START");
+		// Serial2.print("START");
 
 		timeout = millis();
 		while ((millis() - timeout) < 1000)
@@ -189,6 +255,9 @@ bool init_gnss(void)
 				MYLOG("GNSS", "Got data from RAK1910 after %ld", (uint32_t)(millis() - timeout));
 				is_serial = 2;
 				gnssSerial = &Serial2;
+
+				start_gnss_task();
+
 				return true;
 			}
 			delay(500);
@@ -398,7 +467,7 @@ bool poll_gnss(void)
 		// PH 144213730, 1210069140, 35.000 // Ohio 414861950, -816814860 // Recife -80533010, -349049060 // Brisbane -274789700, 1530410440
 		latitude = fake_latitude[fake_gnss_selector];
 		longitude = fake_longitude[fake_gnss_selector];
-		fake_gnss_selector ++;
+		fake_gnss_selector++;
 		if (fake_gnss_selector == 4)
 		{
 			fake_gnss_selector = 0;
@@ -474,21 +543,26 @@ void gnss_task(void *pvParameters)
 	MYLOG("GNSS", "GNSS Task started");
 
 #ifdef NRF52_SERIES
-	poll_timer.begin(g_lorawan_settings.send_repeat_time / 2, end_poll, NULL, false);
+	MYLOG("GNSS", "GNSS using 5 seconds poll");
+	poll_timer.begin(5000, end_poll, NULL, true);
+
+	/** Limiter for GNSS polling */
+	uint16_t check_gnss_max_try;
+
+	/** Counter for GNSS polling */
+	uint16_t check_gnss_counter;
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	gnss_task_id = osThreadGetId();
 #endif
 
-	if (!g_is_helium && !g_is_tester)
+	if (!g_is_helium && !g_is_tester && g_gnss_power_off)
 	{
 		// Power down the module
+		MYLOG("GNSS", "Power down GNSS module");
 		digitalWrite(WB_IO2, LOW);
 		delay(100);
 	}
-
-	// Set PPS interrupt input
-	pinMode(WB_IO3, INPUT);
 
 	while (1)
 	{
@@ -518,32 +592,42 @@ void gnss_task(void *pvParameters)
 			poll_timer.start();
 #endif
 #ifdef ESP32
-			poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
+			// poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
+			poll_timer.attach_ms(5000, end_poll);
 #endif
 #ifdef ARDUINO_ARCH_RP2040
-			poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
+			// poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
+			poll_timer.attach(end_poll, (microseconds)(5000 * 1000));
 #endif
 
 			MYLOG("GNSS", "GNSS timeout is %ld", g_lorawan_settings.send_repeat_time / 2);
 
-			poll_finished = false;
-
-			// Attach interrupt to PPS signal
-			attachInterrupt(WB_IO3, wake_poll, RISING);
+			check_gnss_counter = 0;
+			if (g_lorawan_settings.send_repeat_time != 0)
+			{
+				check_gnss_max_try = g_lorawan_settings.send_repeat_time / 2 / 5000;
+			}
+			else
+			{
+				check_gnss_max_try = 10;
+			}
+#ifdef NRF52_SERIES
+			poll_timer.start();
+#endif
+#ifdef ESP32
+			// poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
+			poll_timer.attach_ms(5000, end_poll);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+			// poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
+			poll_timer.attach(end_poll, (microseconds)(5000 * 1000));
+#endif
 
 			bool got_location = false;
-
-			// Do a first read to check
-			g_solution_data.reset();
-			got_location = poll_gnss();
-			if (got_location)
+			while (check_gnss_counter < check_gnss_max_try)
 			{
-				poll_finished = true;
-			}
-
-			while (!poll_finished)
-			{
-				// MYLOG("GNSS", "GNSS Wait for semaphore");
+				MYLOG("GNSS", "GNSS Wait for semaphore");
+				check_gnss_counter++;
 #ifdef ARDUINO_ARCH_RP2040
 				// Wait for event
 				osSignalWait(0x01, osWaitForever);
@@ -562,21 +646,8 @@ void gnss_task(void *pvParameters)
 					{
 						// Found location, finish polling
 						check_gnss_counter = check_gnss_max_try + 1;
-						poll_finished = true;
+						// break;
 					}
-					else
-					{
-						MYLOG("GNSS", "GNSS poll no location");
-					}
-				}
-				if (poll_finished)
-				{
-					MYLOG("GNSS", "GNSS timeout");
-					got_location = false;
-				}
-				else
-				{
-					MYLOG("GNSS", "GNSS PPS wakeup");
 				}
 			}
 #ifdef NRF52_SERIES
@@ -585,9 +656,6 @@ void gnss_task(void *pvParameters)
 #if defined ESP32 || defined ARDUINO_ARCH_RP2040
 			poll_timer.detach();
 #endif
-
-			// detach interrupt from PPS signal
-			detachInterrupt(WB_IO3);
 
 			AT_PRINTF("+EVT:LOCATION %s\n", got_location ? "FIX" : "NOFIX");
 
@@ -605,9 +673,10 @@ void gnss_task(void *pvParameters)
 				api_wake_loop(GNSS_FIN);
 			}
 
-			if (!g_is_helium && !g_is_tester)
+			if (!g_is_helium && !g_is_tester && g_gnss_power_off)
 			{
 				// Power down the module
+				MYLOG("GNSS", "Power down GNSS module");
 				digitalWrite(WB_IO2, LOW);
 				delay(100);
 			}

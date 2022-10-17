@@ -8,8 +8,9 @@
  * @copyright Copyright (c) 2022
  *
  */
+#ifndef ARDUINO_ARCH_RP2040
 #include "app.h"
-#include "RAK_FLASH_SPI.h" //Click here to get the library: http://librarymanager/All#RAK_Storage
+#include <RAK_FLASH_SPI.h> //Click here to get the library: http://librarymanager/All#RAK_Storage
 
 // SPI Flash Interface instance
 RAK_FlashInterface_SPI g_flashTransport(SS, SPI);
@@ -153,3 +154,4 @@ bool write_rak15001(uint16_t sector, uint8_t *buffer, uint16_t size)
 	}
 	return true;
 }
+#endif // ARDUINO_ARCH_RP2040

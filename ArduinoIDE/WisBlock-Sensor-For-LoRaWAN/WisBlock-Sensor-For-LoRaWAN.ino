@@ -1,5 +1,5 @@
 /**
- * @file WisBlock-Sensor-For-LoRaWAN.ino
+ * @file app.cpp
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Application specific functions. Mandatory to have init_app(),
  *        app_event_handler(), ble_data_handler(), lora_data_handler()
@@ -10,52 +10,6 @@
  * @copyright Copyright (c) 2022
  *
  */
-/*******************************************************************/
-/*******************************************************************/
-/** For Arduino IDE these libraries need to be installed manually: */
-/*******************************************************************/
-/*******************************************************************/
-// SX126x-Arduino                         //Click here to install the library => http://librarymanager/All#SX126x-Arduino
-// WisBlock-API                           //Click here to install the library => http://librarymanager/All#WisBlock-API
-// SparkFun SHTC3                         //Click here to install the library => http://librarymanager/All#SparkFun_SHTC3
-// Adafruit LPS2X                         //Click here to install the library => http://librarymanager/All#Adafruit_LPS2X
-// Adafruit BME680                        //Click here to install the library => http://librarymanager/All#Adafruit_BME680
-// CayenneLPP                             //Click here to install the library => http://librarymanager/All#CayenneLPP
-// SparkFun u-blox GNSS                   //Click here to install the library => http://librarymanager/All#SparkFun_u-blox_GNSS
-// TinyGPSPlus                            //Click here to install the library => http://librarymanager/All#TinyGPSPlus
-// Adafruit LIS3DH                        //Click here to install the library => http://librarymanager/All#Adafruit_LIS3DH
-// RAK12035_SoilMoisture                  //Click here to install the library => http://librarymanager/All#RAK12035_SoilMoisture
-// RAKwireless VEML Light Sensor          //Click here to install the library => http://librarymanager/All#RAKwireless_VEML_Light_Sensor
-// Sensirion Core                         //Click here to install the library => http://librarymanager/All#Sensirion_Core
-// Sensirion Gas Index Algorithm          //Click here to install the library => http://librarymanager/All#Sensirion_Gas_Index_Algorithm
-// Sensirion I2C SGP40                    //Click here to install the library => http://librarymanager/All#Sensirion_I2C_SGP40
-// RAKwireless MQx                        //Click here to install the library => http://librarymanager/All#RAKwireless_MQx
-// Adafruit MCP23017                      //Click here to install the library => http://librarymanager/All#Adafruit_MCP23017
-// VL53L0X                                //Click here to install the library => http://librarymanager/All#VL53L0X (CHOOSE THE ONE FROM POLOLU)
-// RAK I3G4250D                           //Click here to install the library => http://librarymanager/All#RAK_I3G4250D
-// RevEng PAJ7620                         //Click here to install the library => http://librarymanager/All#RevEng_PAJ7620
-// nRF52_OLED                             //Click here to install the library => http://librarymanager/All#nRF52_OLED
-// Melopero RV3028                        //Click here to install the library => http://librarymanager/All#Melopero_RV3028
-// Coulomb Counter for 3.3V to 5V LTC2941 //Click here to install the library => http://librarymanager/All#Grove_Coulomb-Counter
-// RAK12019_LTR390                        //Click here to install the library => http://librarymanager/All#RAK12019_LTR390
-// INA219_WE                              //Click here to install the library => http://librarymanager/All#INA219_WE
-// RAKwireless CAP1293                    //Click here to install the library => http://librarymanager/All#RAKwireless_CAP1293
-// MPU9250_WE                             //Click here to install the library => http://librarymanager/All#MPU9250_WE
-// ClosedCube_OPT3001                     //Click here to install the library => http://librarymanager/All#ClosedCube_OPT3001
-// LPS35HW                                //Click here to install the library => http://librarymanager/All#LPS35HW (CHOOSE THE ONE FROM PAVEL SLAMA)
-// Sparkfun SCD30                         //Click here to install the library => http://librarymanager/All#Sparkfun_SCD30
-// Sparkfun MLX90632                      //Click here to install the library => http://librarymanager/All#Sparkfun_MLX90632
-// Melopero AMG8833                       //Click here to install the library => http://librarymanager/All#Melopero_AMG8833
-// SparkFun ADXL313 Arduino Library       //Click here to install the library => http://librarymanager/All#SparkFun_AMG8833
-// RAKwireless Storage                    //Click here to install the library => http://librarymanager/All#RAKwireless_Storage
-// ArduinoECCX08                          //Click here to install the library => http://librarymanager/All#ArduinoECCX08
-// Adafruit FRAM I2C                      //Click here to install the library => http://librarymanager/All#Adafruit%20FRAM%20I2C
-// RAKwireless RAK12034                   //Click here to install the library => http://librarymanager/All#RAKwireless%20RAK12034
-// Adafruit EPD                           //Click here to install the library => http://librarymanager/All#Adafruit%20EPD
-// SparkFun STC3x Arduino Library         //Click here to install the library => http://librarymanager/All#SparkFun%20STC3x
-// D7S_Arduino_Library                    //Click here to install the library => http://librarymanager/All#D7S_Arduino_Library
-
-/*******************************************************************/
 
 #include "app.h"
 
@@ -75,8 +29,8 @@ mbed::Ticker delayed_sending;
 /** Flag if delayed sending is already activated */
 bool delayed_active = false;
 
-/** Minimum delay between sending new locations, set to 45 seconds */
-time_t min_delay = 45000;
+/** Minimum delay between sending new locations, set to 30 seconds */
+time_t min_delay = 30000;
 
 /** GPS precision */
 bool g_gps_prec_6 = true;
@@ -86,6 +40,9 @@ bool g_is_helium = false;
 
 /** Switch to Field Tester data packet */
 bool g_is_tester = false;
+
+/** Switch to enable/disable GNSS module power */
+bool g_gnss_power_off = false;
 
 /** Flag for battery protection enabled */
 bool battery_check_enabled = false;
@@ -188,7 +145,10 @@ bool init_app(void)
 	if (found_sensors[GNSS_ID].found_sensor)
 	{
 		// Get precision settings
-		read_gps_settings();
+		read_gps_settings(0);
+
+		// Get GNSS power settings
+		read_gps_settings(1);
 
 		if (g_is_tester)
 		{
@@ -318,6 +278,9 @@ void app_event_handler(void)
 			}
 			if (found_sensors[GNSS_ID].found_sensor)
 			{
+				MYLOG("APP", "Start GNSS");
+				// Set activity flag
+				gnss_active = true;
 				// Start the GNSS location tracking
 #if defined NRF52_SERIES || defined ESP32
 				xSemaphoreGive(g_gnss_sem);
@@ -607,6 +570,12 @@ void app_event_handler(void)
 				read_rak14008();
 			}
 
+			if (gnss_active)
+			{
+				// GNSS is already running
+				return;
+			}
+
 #if defined NRF52_SERIES || defined ESP32
 			// If BLE is enabled, restart Advertising
 			if (g_enable_ble)
@@ -768,6 +737,10 @@ void app_event_handler(void)
 				}
 			}
 		}
+
+		// Reset activity flag
+		gnss_active = true;
+
 		// Reset the packet
 		g_solution_data.reset();
 	}
@@ -839,16 +812,18 @@ void lora_data_handler(void)
 			// Reset join failed counter
 			join_send_fail = 0;
 
-			// // Force a sensor reading in 10 seconds
+			if (!found_sensors[GNSS_ID].found_sensor)
+			{
+				// Force a sensor reading in 10 seconds
 #ifdef NRF52_SERIES
-			delayed_sending.setPeriod(10000);
-			delayed_sending.start();
+				delayed_sending.setPeriod(10000);
+				delayed_sending.start();
 #endif
 #ifdef ESP32
-			delayed_sending.attach_ms(2000, send_delayed);
+				delayed_sending.attach_ms(10000, send_delayed);
 
 #endif
-
+			}
 			// // Add Multicast support
 			// test_multicast.Address = _mc_devaddr;
 			// memcpy(test_multicast.NwkSKey, _mc_nwskey, 16);

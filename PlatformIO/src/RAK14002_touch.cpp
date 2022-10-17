@@ -9,7 +9,6 @@
  *
  */
 #include "app.h"
-
 #include <Wire.h>
 #include <CAP1293.h>
 

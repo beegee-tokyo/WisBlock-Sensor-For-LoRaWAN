@@ -9,10 +9,10 @@
  *
  */
 #include "app.h"
-#include <Melopero_AMG8833.h>
+#include <SparkFun_GridEYE_Arduino_Library.h>
 
 /** Sensor instance */
-Melopero_AMG8833 amg8833;
+GridEYE amg8833;
 
 /** HOT value (in degrees C) to adjust the contrast */
 #define HOT 40
@@ -37,10 +37,9 @@ bool init_rak12040(void)
 {
 	digitalWrite(WB_IO2, HIGH);
 	Wire.begin();
-	amg8833.initI2C(AMG8833_I2C_ADDRESS_A, Wire);
+	amg8833.begin(0x68, Wire);
 
-	MYLOG("IR_ARR", "Reset result %s", amg8833.getErrorDescription(amg8833.resetFlagsAndSettings()).c_str());
-	MYLOG("IR_ARR", "Setting FPS result %s", amg8833.getErrorDescription(amg8833.setFPSMode(FPS_MODE::FPS_10)).c_str());
+	amg8833.setFramerate10FPS();
 
 	return true;
 }
@@ -51,22 +50,20 @@ bool init_rak12040(void)
  */
 void read_rak12040()
 {
-	MYLOG("IR_ARR", "Updating thermistor temperature result %s", amg8833.getErrorDescription(amg8833.updateThermistorTemperature()).c_str());
-	MYLOG("IR_ARR", "Updating pixel matrix result %s", amg8833.getErrorDescription(amg8833.updatePixelMatrix()).c_str());
-
 	// loop through all 64 pixels on the device and map each float value to a number
 	// between 0 and 3 using the HOT and COLD values we set at the top of the sketch
-	for (int x = 0; x < 8; x++)
+	for (unsigned char i = 0; i < 64; i++)
 	{
-		for (int y = 0; y < 8; y++)
-		{
-			pixelTable[x + y] = map(amg8833.pixelMatrix[y][x], COLD, HOT, 0, 3);
-			Serial.print(amg8833.pixelMatrix[y][x]);
-			Serial.print(" ");
-		}
-		Serial.println();
+		pixelTable[i] = map(amg8833.getPixelTemperature(i), COLD, HOT, 0, 3);
 	}
-	Serial.println();
+
+	// for (unsigned char x = 0; x < 64; x++)
+	// {
+	// 	pixelTable[x] = map(amg8833.getPixelTemperature[x], COLD, HOT, 0, 3);
+	// 	Serial.print(amg8833.getPixelTemperature[x]);
+	// 	Serial.print(" ");
+	// }
+	// Serial.println();
 
 	// loop through the table of mapped values and print a character corresponding to each
 	// pixel's temperature. Add a space between each. Start a new line every 8 in order to

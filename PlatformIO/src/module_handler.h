@@ -13,22 +13,6 @@
 #ifndef MODULE_HANDLER_H
 #define MODULE_HANDLER_H
 
-extern bool init_result;
-extern time_t min_delay;
-extern time_t last_pos_send;
-#ifdef NRF52_SERIES
-extern SoftwareTimer delayed_sending;
-void send_delayed(TimerHandle_t unused);
-#endif
-#ifdef ESP32
-extern Ticker delayed_sending;
-void send_delayed(void);
-#endif
-#ifdef ARDUINO_ARCH_RP2040
-extern mbed::Ticker delayed_sending;
-void send_delayed(void);
-#endif
-
 /** Wakeup triggers for application events */
 #define MOTION_TRIGGER      0b1000000000000000
 #define N_MOTION_TRIGGER    0b0111111111111111
@@ -138,193 +122,46 @@ extern WisCayenne g_solution_data;
 #define SEISM_ID 29	   // RAK12027 D7S seismic sensor
 
 /** Sensor functions */
-bool init_rak1901(void);
-void read_rak1901(void);
-void get_rak1901_values(float *values);
-bool init_rak1902(void);
-void start_rak1902(void);
-void read_rak1902(void);
-float get_rak1902(void);
-uint16_t get_alt_rak1902(void);
-bool init_rak1903(void);
-void read_rak1903();
-#if BASE_BOARD == 0
-#define ACC_INT_PIN WB_IO3
-#else
-#define ACC_INT_PIN WB_IO5
-#endif
-bool init_rak1904(void);
-void int_assign_rak1904(uint8_t new_irq_pin);
-void clear_int_rak1904(void);
-bool init_rak1905(void);
-void clear_int_rak1905(void);
-bool init_rak1906(void);
-void start_rak1906(void);
-bool read_rak1906(void);
-void get_rak1906_values(float *values);
-uint16_t get_alt_rak1906(void);
-bool init_rak1921(void);
-void rak1921_add_line(char *line);
-void rak1921_show(void);
-void rak1921_write_header(char *header_line);
-bool init_rak5814(void);
-bool init_rak12002(void);
-void set_rak12002(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t minute);
-void read_rak12002(void);
-bool init_rak12003(void);
-void read_rak12003(void);
-bool init_rak12004(void);
-void read_rak12004(void);
-bool init_rak12008(void);
-void read_rak12008(void);
-bool init_rak12009(void);
-void read_rak12009(void);
-bool init_rak12010(void);
-void read_rak12010();
-extern uint8_t xshut_pin;
-bool init_rak12014(void);
-void read_rak12014(void);
-bool init_rak12019(void);
-void read_rak12019();
-#define GYRO_INT_PIN WB_IO4
-bool init_rak12025(void);
-void read_rak12025(void);
-bool init_rak12027(void);
-bool calib_rak12027(void);
-void read_rak12027(bool add_values);
-uint8_t check_event_rak12027(bool is_int1);
-extern bool shutoff_alert;
-extern bool collapse_alert;
-extern bool earthquake_end;
-void clear_int_rak12025(void);
-bool init_rak12034(void);
-void clear_int_rak12034(void);
-bool init_rak12032(void);
-void int_assign_rak12032(uint8_t new_irq_pin);
-void clear_int_rak12032(void);
-bool init_rak12037(void);
-void read_rak12037(void);
-bool init_rak12039(void);
-void read_rak12039(void);
-bool init_rak12040(void);
-void read_rak12040(void);
-bool init_rak12047(void);
-void read_rak12047(void);
-void do_read_rak12047(void);
-#define TOUCH_INT_PIN WB_IO6
-bool init_rak14002(void);
-void read_rak14002(void);
-void get_rak14002(void);
-bool init_rak14003(void);
-void set_rak14003(uint8_t *leds);
-#define GESTURE_INT_PIN WB_IO6
-bool init_rak14008(void);
-void read_rak14008(void);
-bool init_rak15000(void);
-bool read_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num);
-bool write_rak15000(uint16_t addr, uint8_t *buffer, uint16_t num);
-bool init_rak15001(void);
-bool read_rak15001(uint16_t address, uint8_t *buffer, uint16_t size);
-bool write_rak15001(uint16_t address, uint8_t *buffer, uint16_t size);
-extern bool g_has_rak15001;
-bool init_rak16000(void);
-void read_rak16000(void);
+#include "RAK1901_temp.h"
+#include "RAK1902_press.h"
+#include "RAK1903_light.h"
+#include "RAK1904_acc.h"
+#include "RAK1905_9dof.h"
+#include "RAK1906_env.h"
+#include "RAK1910-RAK12500_gnss.h"
+#include "RAK1921_oled.h"
+#include "RAK5814_ecc.h"
+#include "RAK12002_rtc.h"
+#include "RAK12003_fir.h"
+#include "RAK12004_gas.h"
+#include "RAK12008_gas.h"
+#include "RAK12009_gas.h"
+#include "RAK12010_light.h"
+#include "RAK12014_tof.h"
+#include "RAK12019_uv.h"
+#include "RAK12025_gyro.h"
+#include "RAK12027_seismic.h"
+#include "RAK12032_acc.h"
+#include "RAK12034_9dof.h"
+#include "RAK12035_soil.h"
+#include "RAK12037_co2.h"
+#include "RAK12039_pm.h"
+#include "RAK12040_temp_array.h"
+#include "RAK12047_voc.h"
+#include "RAK14000_epd.h"
+#include "RAK14002_touch.h"
+#include "RAK14003_bar.h"
+#include "RAK14008_gesture.h"
+#include "RAK15000_eeprom.h"
+#ifndef ARDUINO_ARCH_RP2040
+#include "RAK15001_flash.h"
+#endif // ARDUINO_ARCH_RP2040
+#include "RAK16000_current.h"
+
+#include "user_at_cmd.h"
 
 void find_modules(void);
 void announce_modules(void);
 void get_sensor_values(void);
-
-// RAK14000 EPD stuff
-void init_rak14000(void);
-void wake_rak14000(void);
-void clear_rak14000(void);
-void refresh_rak14000(void);
-void set_voc_rak14000(uint16_t voc_value);
-extern bool voc_valid;
-void set_temp_rak14000(float temp_value);
-void set_humid_rak14000(float humid_value);
-void set_baro_rak14000(float baro_value);
-void set_co2_rak14000(float co2_value);
-void set_pm_rak14000(uint16_t pm10_env, uint16_t pm25_env, uint16_t pm100_env);
-void voc_rak14000(void);
-void temp_rak14000(bool has_pm);
-void humid_rak14000(bool has_pm);
-void baro_rak14000(bool has_pm);
-void co2_rak14000(bool has_pm);
-void pm_rak14000(void);
-void status_general_rak14000(bool has_pm);
-void status_rak14000(void);
-
-/** Lock for 100kHz I2C access */
-extern SemaphoreHandle_t i2c_lock;
-
-/** Gas Sensor stuff RAK12004, RAK12008 and RAK12009 */
-/** Logic high enables the device. Logic low disables the device */
-#define EN_PIN WB_IO6
-/** Alarm trigger, a high indicates that the respective limit has been violated. */
-#define ALERT_PIN WB_IO5
-/** Clean Air ratio. RS / R0 = 1.0 ppm */
-#define RatioGasCleanAir (1.0)
-/** RL on the modules, RL = 10KΩ  can adjust */
-#define Gas_RL (10.0)
-/** Voltage amplification factor */
-#define V_RATIO 3.0
-
-extern float sensorPPM;
-extern float PPMpercentage;
-extern uint16_t last_gas;
-
-// Environment and barometric pressure sensor stuff
-extern float at_MSL;
-
-/** Soil sensor stuff */
-bool init_rak12035(void);
-void read_rak12035(void);
-uint16_t start_calib_rak12035(bool is_dry);
-uint16_t get_calib_rak12035(bool is_dry);
-uint16_t set_calib_rak12035(bool is_dry, uint16_t calib_val);
-
-// GNSS functions
-#define NO_GNSS_INIT 0
-#define RAK1910_GNSS 1
-#define RAK12500_GNSS 2
-bool init_gnss(void);
-bool poll_gnss(void);
-
-#ifndef TASK_PRIO_LOW
-#define TASK_PRIO_LOW 1
-#endif
-
-#if defined NRF52_SERIES || defined ESP32
-extern SemaphoreHandle_t g_gnss_sem;
-extern SemaphoreHandle_t g_gnss_poll;
-extern TaskHandle_t gnss_task_handle;
-void gnss_task(void *pvParameters);
-#endif
-#ifdef ARDUINO_ARCH_RP2040
-extern Thread gnss_task_handle; // (osPriorityNormal, 4096);
-extern osThreadId gnss_task_id;
-void gnss_task(void);
-#endif
-
-extern volatile bool last_read_ok;
-extern uint8_t g_gnss_option;
-
-extern bool g_gps_prec_6;
-extern bool g_is_helium;
-extern bool g_is_tester;
-
-void read_gps_settings(void);
-void save_gps_settings(void);
-
-void read_batt_settings(void);
-void save_batt_settings(bool check_batt_enables);
-
-/** Latitude/Longitude value union */
-union latLong_s
-{
-	uint32_t val32;
-	uint8_t val8[4];
-};
 
 #endif
