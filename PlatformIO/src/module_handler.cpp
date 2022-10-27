@@ -500,6 +500,10 @@ void find_modules(void)
 	{
 		// api_deinit_gpio(WB_IO2);
 		Wire.end();
+#if HAS_EPD == 0
+		MYLOG("APP", "Switching off 3V3_S, no modules found");
+		digitalWrite(WB_IO2, LOW);
+#endif
 		// api_deinit_gpio(PIN_WIRE_SDA);
 		// api_deinit_gpio(PIN_WIRE_SCL);
 	}
