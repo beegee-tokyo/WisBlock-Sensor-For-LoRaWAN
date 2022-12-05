@@ -1,1 +1,0 @@
-Place datasheets for the used sensor or interface chip here

@@ -26,7 +26,8 @@
 #define N_SEISMIC_EVENT     0b1111011111111111
 #define SEISMIC_ALERT       0b0000010000000000
 #define N_SEISMIC_ALERT     0b1111101111111111
-
+#define BSEC_REQ            0b0000001000000000
+#define N_BSEC_REQ          0b1111110111111111
 
 typedef struct sensors_s
 {
@@ -37,7 +38,7 @@ typedef struct sensors_s
 extern sensors_t found_sensors[];
 
 // LoRaWAN stuff
-#include "wisblock_cayenne.h"
+#include <wisblock_cayenne.h>
 // Cayenne LPP Channel numbers per sensor value
 #define LPP_CHANNEL_BATT 1			   // Base Board
 #define LPP_CHANNEL_HUMID 2			   // RAK1901
@@ -86,6 +87,7 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_EQ_PGA 45		   // RAK12027
 #define LPP_CHANNEL_EQ_SHUTOFF 46	   // RAK12027
 #define LPP_CHANNEL_EQ_COLLAPSE 47	   // RAK12027
+#define LPP_CHANNEL_SWITCH 48		   // RAK13011
 
 extern WisCayenne g_solution_data;
 
@@ -127,7 +129,11 @@ extern WisCayenne g_solution_data;
 #include "RAK1903_light.h"
 #include "RAK1904_acc.h"
 #include "RAK1905_9dof.h"
+#if USE_BSEC == 0
 #include "RAK1906_env.h"
+#else
+#include "RAK1906_bsec.h"
+#endif
 #include "RAK1910-RAK12500_gnss.h"
 #include "RAK1921_oled.h"
 #include "RAK5814_ecc.h"

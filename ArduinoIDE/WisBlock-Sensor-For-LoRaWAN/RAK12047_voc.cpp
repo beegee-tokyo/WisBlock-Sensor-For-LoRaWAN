@@ -200,7 +200,11 @@ void do_read_rak12047(void)
 	}
 	else if (found_sensors[ENV_ID].found_sensor)
 	{
+#if USE_BSEC == 0
 		get_rak1906_values(t_h_values);
+#else
+		get_rak1906_bsec_values(t_h_values);
+#endif
 		// MYLOG("VOC", "Rh: %.2f T: %.2f", humidity, temperature);
 
 		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))

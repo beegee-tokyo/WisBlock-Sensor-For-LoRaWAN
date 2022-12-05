@@ -9,11 +9,11 @@
  *
  */
 #include "app.h"
+#if HAS_EPD == 1
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_EPD.h>
-#include "RAk14000_epd_gfx.h"
-
-#if HAS_EPD == 1
+#include "RAK14000_epd_gfx.h"
 
 #define SMALL_FONT &RAK_EPD_10pt
 #define LARGE_FONT &RAK_EPD_20pt
@@ -912,7 +912,7 @@ void epd_task(void *pvParameters)
 
 	display.begin();
 
-	display.setRotation(3);
+	display.setRotation(3); // 1 for Gavin 3 for mine
 	MYLOG("EPD", "Rotation %d", display.getRotation());
 
 	// Clear display
@@ -920,7 +920,7 @@ void epd_task(void *pvParameters)
 
 	// Draw Welcome Logo
 	display.fillRect(0, 0, DEPG_HP.width, DEPG_HP.height, bg_color);
-	display.drawBitmap(DEPG_HP.width / 2 - 75, 50, rak_img, 150, 56, txt_color);
+	display.drawBitmap(DEPG_HP.width / 2 - 75, 50, rak_img, 184, 56, txt_color); // 184x56
 
 	// If RTC is available, write the date
 	if (found_sensors[RTC_ID].found_sensor)

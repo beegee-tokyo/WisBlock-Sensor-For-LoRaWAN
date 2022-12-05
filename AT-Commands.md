@@ -19,6 +19,25 @@ In LoRaWAN® Class C mode the received data is not shown in the AT Command inter
 In P2P LoRa® mode the received data is not shown in the AT Command interface. The data has to be handled in the user application
 
 _**REMARK 5**_
+Even this AT commands are very similar to the AT commands in RAKwireless RUI3, there are differences. The main difference is in the setting of the region. The numbers assigned for the different regions are different.
+
+| Region   | WisBlock-API region number | RUI3 region number |
+| ---      | ---                        | ---                |
+| AS923-1  | 0                          | 8                  |
+| AU915    | 1                          | 6                  |
+| CN470    | 2                          | 1                  |
+| CN779    | 3                          | na                 |
+| EU433    | 4                          | 0                  |
+| EU868    | 5                          | 4                  |
+| KR920    | 6                          | 7                  |
+| IN865    | 7                          | 3                  |
+| US915    | 8                          | 5                  |
+| AS923-2  | 9                          | 9                  |
+| AS923-3  | 10                         | 10                 |
+| AS923-4  | 11                         | 11                 |
+| RU864    | 12                         | 2                  |
+
+_**REMARK 6**_    
 LoRa® is a registered trademark or service mark of Semtech Corporation or its affiliates. LoRaWAN® is a licensed mark.
 
 ----
@@ -27,8 +46,8 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 ### General commands
 * [AT Command syntax](#at-command-syntax)
 * [AT?](#at) Help
-* [ATR](#atr) Reset device
-* [ATZ](#atz) Reset to default configuration
+* [ATR](#atr) Reset to default configuration
+* [ATZ](#atz) Reset device
 ### LoRaWAN commands
 * [AT+APPEUI](#atappeui) Set/Get Application EUI
 * [AT+APPKEY](#atappkey) Set/Get Application Key
@@ -40,7 +59,8 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 * [AT+JOIN](#atjoin) Join LoRaWAN® Network
 * [AT+NJS](#atnjs) Get Network Join Status
 * [AT+NJM](#atnjm) Get/Set Network Join Mode
-* [AT+SENDFREQ](#atsendfreq) Get/Set Automatic Send Interval 
+* [AT+SENDFREQ](#atsendint) Deprecated, use SENDINT 
+* [AT+SENDINT](#atsendint) Get/Set Automatic Send Interval 
 * [AT+SEND](#atsend) Send LoRaWAN® packet
 * [AT+ADR](#atadr) Set/Get ADR Mode
 * [AT+CLASS](#atclass) Set/Get Class
@@ -147,7 +167,7 @@ AT+CFM      Get or set the confirm mode
 AT+JOIN     Join network
 AT+NJS      Get the join status
 AT+NJM      Get or set the network join mode
-AT+SENDFREQ Get or Set the automatic send time
+AT+SENDINT  Get or Set the automatic send interval
 AT+SEND	Send data
 AT+ADR      Get or set the adaptive data rate setting
 AT+CLASS    Get or set the device class
@@ -589,32 +609,32 @@ AT+NJM=2
 
 ----
 
-## AT+SENDFREQ
+## AT+SENDINT
 
-Description: Set the automatic transmission period
+Description: Set the automatic transmission interval
 
-This command allows to set the period in seconds between automatic packet transmissions. If set to 0, automatic packet transmission is disabled.
+This command allows to set the interval in seconds between automatic packet transmissions. If set to 0, automatic packet transmission is disabled.
 
 | Command                    | Input Parameter | Return Value                                                  | Return Code              |
 | -------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |
-| AT+SENDFREQ?                    | -               | `AT+SENDFREQ: Get or Set the automatic send time` | `OK`                     |
-| AT+SENDFREQ=?                   | -               | `<period in seconds>`                                                    | `OK`                     |
-| AT+SENDFREQ=`<Input Parameter>` | `<period in seconds>`      | -                                                             | `OK` or `AT_PARAM_ERROR` |
+| AT+SENDINT?                    | -               | `AT+SENDINT: "Get or Set the automatic send interval` | `OK`                     |
+| AT+SENDINT=?                   | -               | `<interval in seconds>`                                                    | `OK`                     |
+| AT+SENDINT=`<Input Parameter>` | `<interval in seconds>`      | -                                                             | `OK` or `AT_PARAM_ERROR` |
 
 **Examples**:
 
 ```
-AT+SENDFREQ?
+AT+SENDINT?
 
-AT+SENDFREQ: Get or Set the automatic send time 
+AT+SENDINT: Get or Set the automatic send interval 
 OK
 
-AT+SENDFREQ=?
+AT+SENDINT=?
 
-AT+SENDFREQ:60
+AT+SENDINT:60
 OK
 
-AT+SENDFREQ=60
+AT+SENDINT=60
 
 OK
 ```
@@ -934,7 +954,7 @@ This command allows to read the battery voltage of the device
 | AT+BAT?                    | -               | `AT+BAT:  Get battery level` | `OK`                     |
 | AT+BAT=?                   | -               | *< value >*                              | `OK` or `AT+PARAM_ERROR` |
 
-_**The battery level is returned as a value between 0 and 255**_
+_**The battery level is returned in volt**_
 
 **Examples**:
 
@@ -946,7 +966,7 @@ OK
 
 AT+BAT=?
 
-+BAT:254
++BAT:3.54V
 OK
 ```
 
@@ -1275,9 +1295,9 @@ OK
 
 ## AT+PTP
 
-Description: P2P mode coding rate
+Description: P2P mode TX power
 
-This command is used to access and configure P2P mode coding rate. (4/5=1, 4/6=2, 4/7=3, 4/8=4)
+This command is used to access and configure P2P mode TX power (0 = lowest, 22 = highest).
 
 | Command                    | Input Parameter | Return Value                | Return Code |
 | -------------------------- | --------------- | --------------------------- | ----------- |

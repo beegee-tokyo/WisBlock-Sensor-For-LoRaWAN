@@ -247,11 +247,17 @@ void app_event_handler(void)
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
 
-		if (found_sensors[ENV_ID].found_sensor && !g_is_helium && !g_is_tester)
+#if USE_BSEC == 0
+		/*********************************************/
+		/** Select between Bosch BSEC algorithm for  */
+		/** IAQ index or simple T/H/P readings       */
+		/*********************************************/
+		if (found_sensors[ENV_ID].found_sensor && !g_is_helium && !g_is_tester) // Using simple T/H/P readings
 		{
 			// Startup the BME680
 			start_rak1906();
 		}
+#endif
 		if (found_sensors[PRESS_ID].found_sensor && !g_is_helium && !g_is_tester)
 		{
 			// Startup the LPS22HB
@@ -315,7 +321,7 @@ void app_event_handler(void)
 		// Protection against battery drain if battery check is enabled
 		if (battery_check_enabled)
 		{
-			if (batt_level_f < 2900)
+			if (batt_level_f < 3300)
 			{
 				// Battery is very low, change send time to 1 hour to protect battery
 				low_batt_protection = true; // Set low_batt_protection active
@@ -346,11 +352,17 @@ void app_event_handler(void)
 		if (!found_sensors[GNSS_ID].found_sensor)
 		{
 			// Get data from the slower sensors
-			if (found_sensors[ENV_ID].found_sensor)
+#if USE_BSEC == 0
+			/*********************************************/
+			/** Select between Bosch BSEC algorithm for  */
+			/** IAQ index or simple T/H/P readings       */
+			/*********************************************/
+			if (found_sensors[ENV_ID].found_sensor) // Using simple T/H/P readings
 			{
 				// Read environment data
 				read_rak1906();
 			}
+#endif
 			if (found_sensors[PRESS_ID].found_sensor)
 			{
 				// Read environment data
@@ -479,19 +491,24 @@ void app_event_handler(void)
 			}
 			else
 			{
+				// Add unique identifier in front of the P2P packet, here we use the DevEUI
+				uint8_t p2p_buffer[g_solution_data.getSize() + 8];
+				memcpy(p2p_buffer, g_lorawan_settings.node_device_eui, 8);
+				// Add the packet data
+				memcpy(&p2p_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
 				// Send packet over LoRa
-				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
+				if (send_p2p_packet(p2p_buffer, g_solution_data.getSize() + 8))
 				{
 					if (found_sensors[OLED_ID].found_sensor)
 					{
 						if (found_sensors[RTC_ID].found_sensor)
 						{
 							read_rak12002();
-							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize());
+							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize()+8);
 						}
 						else
 						{
-							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize());
+							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize()+8);
 						}
 						rak1921_add_line(disp_txt);
 					}
@@ -521,6 +538,20 @@ void app_event_handler(void)
 		g_task_event_type &= N_VOC_REQ;
 
 		do_read_rak12047();
+	}
+
+	/*********************************************/
+	/** Select between Bosch BSEC algorithm for  */
+	/** IAQ index or simple T/H/P readings       */
+	/*********************************************/
+	// BSEC read request event
+	if ((g_task_event_type & BSEC_REQ) == BSEC_REQ)
+	{
+		g_task_event_type &= N_BSEC_REQ;
+
+#if USE_BSEC == 1
+		do_read_rak1906_bsec();
+#endif
 	}
 
 	// ACC trigger event
@@ -662,11 +693,17 @@ void app_event_handler(void)
 		if (!g_is_helium && !g_is_tester)
 		{
 			// Get data from slower sensors
-			if (found_sensors[ENV_ID].found_sensor)
+#if USE_BSEC == 0
+			/*********************************************/
+			/** Select between Bosch BSEC algorithm for  */
+			/** IAQ index or simple T/H/P readings       */
+			/*********************************************/
+			if (found_sensors[ENV_ID].found_sensor) // Using simple T/H/P readings
 			{
 				// Get Environment data
 				read_rak1906();
 			}
+#endif
 			if (found_sensors[PRESS_ID].found_sensor)
 			{
 				// Get Environment data
@@ -725,8 +762,14 @@ void app_event_handler(void)
 			}
 			else
 			{
+				// Add unique identifier in front of the P2P packet, here we use the DevEUI
+				uint8_t p2p_buffer[g_solution_data.getSize()+8];
+				memcpy(p2p_buffer, g_lorawan_settings.node_device_eui, 8);
+				// Add the packet data
+				memcpy(&p2p_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
+
 				// Send packet over LoRa
-				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
+				if (send_p2p_packet(p2p_buffer, g_solution_data.getSize() + 8))
 				{
 					MYLOG("APP", "Packet enqueued");
 				}

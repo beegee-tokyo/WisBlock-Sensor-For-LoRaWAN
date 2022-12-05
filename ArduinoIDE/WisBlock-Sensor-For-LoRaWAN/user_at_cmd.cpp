@@ -75,7 +75,7 @@ int at_query_modules(void)
 atcmd_t g_user_at_cmd_list_modules[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// Module commands
-	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, at_query_modules},
+	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, NULL},
 };
 
 /*****************************************
@@ -658,7 +658,11 @@ static int at_query_alt()
 	}
 	if (found_sensors[ENV_ID].found_sensor)
 	{
+#if USE_BSEC == 0
 		result = get_alt_rak1906();
+#else
+		result = get_alt_rak1906_bsec();
+#endif
 		if (result == 0xFFFF)
 		{
 			return AT_ERRNO_EXEC_FAIL;

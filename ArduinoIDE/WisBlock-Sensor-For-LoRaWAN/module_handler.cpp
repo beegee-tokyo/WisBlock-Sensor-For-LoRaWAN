@@ -124,7 +124,7 @@ void find_modules(void)
 				}
 				if ((millis() - wait_sensor) > 5000)
 				{
-					MYLOG("SCAN", "RAK12039 timeout after %ld ms", 5000);
+					MYLOG("SCAN", "RAK12039 timeout after 5000 ms");
 					pinMode(WB_IO6, INPUT);
 					break;
 				}
@@ -249,7 +249,15 @@ void find_modules(void)
 
 	if (found_sensors[ENV_ID].found_sensor)
 	{
-		if (init_rak1906())
+		/*********************************************/
+		/** Select between Bosch BSEC algorithm for  */
+		/** IAQ index or simple T/H/P readings       */
+		/*********************************************/
+#if USE_BSEC == 1
+		if (init_rak1906_bsec()) // !!! USING Bosch BSEC
+#else
+		if (init_rak1906()) // !!! USING SIMPLE READINGS
+#endif
 		{
 			snprintf(g_ble_dev_name, 9, "RAK_ENV");
 		}
@@ -496,13 +504,16 @@ void find_modules(void)
 		}
 	}
 
-	// if ((num_dev == 0) && !found_sensors[GNSS_ID].found_sensor)
-	// {
-		// api_deinit_gpio(WB_IO2);
-		// Wire.end();
-		// api_deinit_gpio(PIN_WIRE_SDA);
-		// api_deinit_gpio(PIN_WIRE_SCL);
-	// }
+	if ((num_dev == 0) && !found_sensors[GNSS_ID].found_sensor)
+	{
+#ifndef ESP32
+		Wire.end();
+#endif // RAK11200
+#if HAS_EPD == 0
+		MYLOG("APP", "Switching off 3V3_S, no modules found");
+		digitalWrite(WB_IO2, LOW);
+#endif
+	}
 }
 
 /**
@@ -875,12 +886,24 @@ void get_sensor_values(void)
 		// Read environment data
 		read_rak1903();
 	}
-	// RAK1906 needs time to get correct value. Reading was already started and results will be gotten in app.cpp
-	// if (found_sensors[ENV_ID].found_sensor)
-	// {
-	// 	// Start reading environment data
-	// 	start_rak1906();
-	// }
+	/*********************************************/
+	/** Select between Bosch BSEC algorithm for  */
+	/** IAQ index or simple T/H/P readings       */
+	/*********************************************/
+#if USE_BSEC == 1
+	if (found_sensors[ENV_ID].found_sensor) // USING BOSCH BSEC
+	{
+		// Get last IAQ
+		read_rak1906_bsec();
+	}
+#else
+							// RAK1906 needs time to get correct value. Reading was already started and results will be gotten in app.cpp
+							// if (found_sensors[ENV_ID].found_sensor)
+							// {
+							// 	// Start reading environment data
+							// 	start_rak1906();
+							// }
+#endif
 	if (found_sensors[FIR_ID].found_sensor)
 	{
 		// Get the MLX90632 sensor values

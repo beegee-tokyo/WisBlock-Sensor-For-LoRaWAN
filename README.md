@@ -31,29 +31,29 @@ This code can be used without changes for
 # Hardware supported
 | Module | Function | Used in Kit |
 | --     | --       | --          |
-| [RAK4631](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview/) ⤴️ | WisBlock Core module | - |
+| [RAK4631](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview/) ⤴️     | WisBlock Core module | - |
 | [RAK5005-O](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5005-O/Overview/) ⤴️ | WisBlock Base board | - |
-| [RAK19007](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19007/Overview/) ⤴️ | WisBlock Base board | - |
-| [RAK19003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19003/Overview/) ⤴️ | WisBlock Mini Base board | - |
-| [RAK19001](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19001/Overview/) ⤴️ | WisBlock Fullsize Base board | - |
-| [RAK1901](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1901/Overview/) ⤴️ | WisBlock Temperature and Humidty Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
-| [RAK1902](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1902/Overview/) ⤴️ | WisBlock Barometer Pressure Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
-| [RAK1903](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1903/Overview/) ⤴️ | WisBlock Ambient Light Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
-| [RAK1904](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1904/Overview/) ⤴️ | WisBlock Acceleration Sensor (used for GNSS solutions) | WisBlock Kit 2 & 3, WisBlock Tracker for LoRaWAN, RAK Developer Kit 3 |
-| [RAK1905](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1905/Overview/) ⤴️ | WisBlock 9 DOF sensor | - |
-| [RAK1906](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/) ⤴️ | WisBlock Environment Sensor | WisBlock Kit 4, RAK Developer Kit 4 |
-| [RAK1910](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1910/Overview/) ⤴️ | WisBlock GNSS Sensor | WisBlock Kit 2 & 3, RAK Developer Kit 3|
-| [RAK1921](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1921/Overview/) ⤴️ | WisBlock OLED display | (Status display)|
-| [RAK5814](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5814/Overview/) ⤴️ | WisBlock ACC608 encryption module | - |
-| [RAK12002](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12002/Overview/) ⤴️ | WisBlock RTC module | - |
-| [RAK12003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12003/Overview/) ⤴️ | WisBlock FIR sensor | - |
-| [RAK12004](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12004/Overview/) ⤴️ | WisBlock MQ2 Gas sensor | - |
-| [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️ | WisBlock SCT31 CO2 Gas sensor | - |
-| [RAK12009](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12009/Overview/) ⤴️ | WisBlock MQ3 Alcohol Gas sensor | - |
-| [RAK12010](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12010/Overview/) ⤴️ | WisBlock Ambient Light sensor | - |
-| [RAK12014](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12014/Overview/) ⤴️ | WisBlock Laser ToF sensor | - |
-| [RAK12019](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12019/Overview/) ⤴️ | WisBlock UV Light sensor | - |
-| [RAK12025](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12025/Overview/) ⤴️ | WisBlock Gyroscope sensor | - |
+| [RAK19007](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19007/Overview/) ⤴️   | WisBlock Base board | - |
+| [RAK19003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19003/Overview/) ⤴️   | WisBlock Mini Base board | - |
+| [RAK19001](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19001/Overview/) ⤴️   | WisBlock Fullsize Base board | - |
+| [RAK1901](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1901/Overview/) ⤴️     | WisBlock Temperature and Humidty Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
+| [RAK1902](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1902/Overview/) ⤴️     | WisBlock Barometer Pressure Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
+| [RAK1903](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1903/Overview/) ⤴️     | WisBlock Ambient Light Sensor | WisBlock Kit 1, RAK Developer Kit 2 |
+| [RAK1904](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1904/Overview/) ⤴️     | WisBlock Acceleration Sensor (used for GNSS solutions) | WisBlock Kit 2 & 3, WisBlock Tracker for LoRaWAN, RAK Developer Kit 3 |
+| [RAK1905](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1905/Overview/) ⤴️     | WisBlock 9 DOF sensor | - |
+| [RAK1906](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/) ⤴️     | WisBlock Environment Sensor | WisBlock Kit 4, RAK Developer Kit 4 |
+| [RAK1910](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1910/Overview/) ⤴️     | WisBlock GNSS Sensor | WisBlock Kit 2 & 3, RAK Developer Kit 3|
+| [RAK1921](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1921/Overview/) ⤴️     | WisBlock OLED display | (Status display)|
+| [RAK5814](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5814/Overview/) ⤴️     | WisBlock ACC608 encryption module | - |
+| [RAK12002](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12002/Overview/) ⤴️   | WisBlock RTC module | - |
+| [RAK12003](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12003/Overview/) ⤴️   | WisBlock FIR sensor | - |
+| [RAK12004](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12004/Overview/) ⤴️   | WisBlock MQ2 Gas sensor | - |
+| [RAK12008](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12008/Overview/) ⤴️   | WisBlock SCT31 CO2 Gas sensor | - |
+| [RAK12009](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12009/Overview/) ⤴️   | WisBlock MQ3 Alcohol Gas sensor | - |
+| [RAK12010](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12010/Overview/) ⤴️   | WisBlock Ambient Light sensor | - |
+| [RAK12014](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12014/Overview/) ⤴️   | WisBlock Laser ToF sensor | - |
+| [RAK12019](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12019/Overview/) ⤴️   | WisBlock UV Light sensor | - |
+| [RAK12025](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12025/Overview/) ⤴️   | WisBlock Gyroscope sensor | - |
 | [RAK12023/RAK12035](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12023/Overview/) ⤴️ | WisBlock Soil Moisture and Temperature sensor | WisBlock Soil Sensor Solution |
 | [RAK12027](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12027/Overview/) ⤴️ | WisBlock Earthquake Sensor | - |
 | [RAK12032](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK12032/Overview/) ⤴️ | WisBlock Acceleration Sensor | - |
@@ -169,15 +169,15 @@ AT+APPKEY=AB00AB00AB00AB00AB00AB00AB00AB00
 AT+SENDFREQ=600
 ```
 
-| Command | Explanation | 
-| --- | --- | 
-| AT+NWM=1 | set the node into LoRaWAN mode |
-| AT+NJM=1 | set network join method to OTAA |
-| AT+BAND=10 | set LPWAN region (here AS923-3) see [AT Command Manual](https://github.com/beegee-tokyo/WisBlock-API/blob/main/AT-Commands.md#atband) ⤴️ for all regions |
-| AT+DEVEUI=1000000000000001 | set the device EUI, best to use the DevEUI that is printed on the label of your WisBlock Core module |
-| AT+APPEUI=AB00AB00AB00AB00 | set the application EUI, required on the LoRaWAN server |
-| | AT+APPKEY=AB00AB00AB00AB00AB00AB00AB00AB00 | set the application Key, used to encrypt the data packet during network join |
-AT+SENDFREQ=600 | set the frequency the sensor node will send data packets. 600 == 10 x 60 seconds == 10minutes |
+| Command                                    | Explanation                                                                                                                                              | 
+| ---                                        | ---                                                                                                                                                      |  
+| AT+NWM=1                                   | set the node into LoRaWAN mode                                                                                                                           |
+| AT+NJM=1                                   | set network join method to OTAA                                                                                                                          |
+| AT+BAND=10                                 | set LPWAN region (here AS923-3) see [AT Command Manual](https://github.com/beegee-tokyo/WisBlock-API/blob/main/AT-Commands.md#atband) ⤴️ for all regions |
+| AT+DEVEUI=1000000000000001                 | set the device EUI, best to use the DevEUI that is printed on the label of your WisBlock Core module                                                     |
+| AT+APPEUI=AB00AB00AB00AB00                 | set the application EUI, required on the LoRaWAN server                                                                                                  |
+| AT+APPKEY=AB00AB00AB00AB00AB00AB00AB00AB00 | set the application Key, used to encrypt the data packet during network join                                                                             |
+| AT+SENDFREQ=600                            | set the frequency the sensor node will send data packets. 600 == 10 x 60 seconds == 10minutes                                                            |
 
 ### _REMARK_
 The manual for all AT commands can be found here: [AT-Commands.md](https://github.com/beegee-tokyo/WisBlock-API/blob/main/AT-Commands.md) ⤴️
@@ -241,6 +241,7 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | Earthquake PGA value     | 45        | 2          | 2 bytes  | analog 10 * m/s2                                  | RAK12027          | analog_45          |
 | Earthquake SHUTOFF alert | 46        | 102        | 1 byte   | bool                                              | RAK12027          | presence_46        |
 | LPP_CHANNEL_EQ_COLLAPSE  | 47        | 102        | 1 byte   | bool                                              | RAK12027          | presence_47        |
+| Switch Status            | 48        | 102        | 1 byte   | bool                                              | RAK13011          | presence_48        |
 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.

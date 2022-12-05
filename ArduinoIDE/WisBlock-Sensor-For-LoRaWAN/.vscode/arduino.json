@@ -6,7 +6,7 @@
     "buildPreferences": [
         [
             "compiler.cpp.extra_flags",
-            "-DHAS_EPD=0"
+            "-DHAS_EPD=0 -DUSE_BSEC=1"
         ]
     ]
 }

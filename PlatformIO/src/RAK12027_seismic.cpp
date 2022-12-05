@@ -9,7 +9,9 @@
  *
  */
 #include "app.h"
-#include <D7S.h>
+#include <RAK12027_D7S.h> // Click here to get the library: http://librarymanager/RAK12027_D7S
+
+RAK_D7S D7S;
 
 //******************************************************************//
 // RAK12027 INT1_PIN
@@ -242,7 +244,7 @@ void read_rak12027(bool add_values)
 	MYLOG("SEIS", "Read values");
 	//--- Report status
 	report_status();
-	
+
 	// get information about the current earthquake
 	float currentSI = D7S.getInstantaneusSI();
 	float currentPGA = D7S.getInstantaneusPGA();

@@ -63,7 +63,11 @@ void read_rak12008(void)
 
 	if (found_sensors[ENV_ID].found_sensor)
 	{
+#if USE_BSEC == 0
 		get_rak1906_values(t_h_values);
+#else
+		get_rak1906_bsec_values(t_h_values);
+#endif
 		MYLOG("CO2", "Rh: %.2f T: %.2f P: %.2f", t_h_values[1], t_h_values[0], t_h_values[2]);
 
 		if ((t_h_values[0] != 0.0) && (t_h_values[1] != 0.0))
