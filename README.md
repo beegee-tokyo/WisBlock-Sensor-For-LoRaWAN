@@ -242,7 +242,9 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 | Earthquake SHUTOFF alert | 46        | 102        | 1 byte   | bool                                              | RAK12027          | presence_46        |
 | LPP_CHANNEL_EQ_COLLAPSE  | 47        | 102        | 1 byte   | bool                                              | RAK12027          | presence_47        |
 | Switch Status            | 48        | 102        | 1 byte   | bool                                              | RAK13011          | presence_48        |
-
+| SensorHub Wind Speed     | 49        | 190        | 2 byte   | 0.01 m/s                                              | SensorHub RK900-09          | wind_speed_49        |
+| SensorHub Wind Direction | 50        | 191        | 2 byte   | 1º                                              | SensorHub RK900-09          | wind_direction_50        |
+| Audio level              | 49        
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 

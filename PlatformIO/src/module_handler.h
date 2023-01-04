@@ -155,6 +155,23 @@ extern WisCayenne g_solution_data;
 #include "RAK12040_temp_array.h"
 #include "RAK12047_voc.h"
 #include "RAK14000_epd.h"
+#ifdef ST7789_DRIVER
+typedef struct
+{
+	uint16_t xSize;
+	uint16_t ySize;
+	uint8_t bitsPerPixel;
+	const unsigned short *date;
+} GUI_BITMAP;
+typedef struct touch_area_s
+{
+	uint16_t x_start; // X start
+	uint16_t y_start; // Y start
+	uint16_t x_end;	  // X end
+	uint16_t y_end;	  // Y end
+} touch_area_t;
+#include "RAK14014_tft.h"
+#endif // ST7789_DRIVER
 #include "RAK14002_touch.h"
 #include "RAK14003_bar.h"
 #include "RAK14008_gesture.h"
