@@ -13,7 +13,7 @@
 
 This is a new approach for WisBlock. It scans the I2C bus and Serial to detect which WisBlock modules are attached to the WisBlock base and creates an LoRaWAN payload in Cayenne LPP with the data of the found modules. 
 ### _REMARK_     
-This firmware is using the [WisBlock API](https://github.com/beegee-tokyo/WisBlock-API) ⤴️ which helps to create low power consumption application and taking the load to handle communications from your shoulder. 
+This firmware is using the [WisBlock API V2](https://github.com/beegee-tokyo/WisBlock-API-V2) ⤴️ which helps to create low power consumption application and taking the load to handle communications from your shoulder. WisBlock-API-V2 is a new version of the WisBlock API that has an AT command interface that is compatible with RAK's RUI3 AT command interface.    
 
 This code can be used without changes for    
 | Kit/Solution | Setup Guide |
@@ -94,7 +94,7 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 - [Raspberry Pi RP2040 BSP](https://docs.platformio.org/en/latest/platforms/raspberrypi.html) ⤴️
 - [Patch to use RAK4631 & RAK11310 with PlatformIO](https://github.com/RAKWireless/WisBlock/tree/master/PlatformIO) ⤴️
 ## LoRaWAN and BLE communication
-- [WisBlock-API](https://registry.platformio.org/libraries/beegee-tokyo/WisBlock-API) ⤴️
+- [WisBlock-API-V2](https://registry.platformio.org/libraries/beegee-tokyo/WisBlock-API-V2) ⤴️
 - [SX126x-Arduino LoRaWAN library](https://registry.platformio.org/libraries/beegee-tokyo/SX126x-Arduino) ⤴️
 - [CayenneLPP](https://registry.platformio.org/libraries/sabas1080/CayenneLPP) ⤴️
 - [ArduinoJson](https://registry.platformio.org/libraries/bblanchon/ArduinoJson) ⤴️
@@ -166,7 +166,7 @@ AT+BAND=10
 AT+DEVEUI=1000000000000001
 AT+APPEUI=AB00AB00AB00AB00
 AT+APPKEY=AB00AB00AB00AB00AB00AB00AB00AB00
-AT+SENDFREQ=600
+AT+SENDINT=600
 ```
 
 | Command                                    | Explanation                                                                                                                                              | 
@@ -177,13 +177,13 @@ AT+SENDFREQ=600
 | AT+DEVEUI=1000000000000001                 | set the device EUI, best to use the DevEUI that is printed on the label of your WisBlock Core module                                                     |
 | AT+APPEUI=AB00AB00AB00AB00                 | set the application EUI, required on the LoRaWAN server                                                                                                  |
 | AT+APPKEY=AB00AB00AB00AB00AB00AB00AB00AB00 | set the application Key, used to encrypt the data packet during network join                                                                             |
-| AT+SENDFREQ=600                            | set the frequency the sensor node will send data packets. 600 == 10 x 60 seconds == 10minutes                                                            |
+| AT+SENDINT=600                            | set the interval the sensor node will send data packets. 600 == 10 x 60 seconds == 10minutes                                                            |
 
 ### _REMARK_
-The manual for all AT commands can be found here: [AT-Commands.md](https://github.com/beegee-tokyo/WisBlock-API/blob/main/AT-Commands.md) ⤴️
+The manual for all AT commands can be found here: [AT-Commands.md](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/) ⤴️. WisBlock API V2 does not support _all_ RUI3 AT commands. You can check available AT commands with the command **`AT?`**    
 
 ### Over BLE
-Use the [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ⤴️, connect over Bluetooth with the Soil Sensor and setup the credentials. Do NOT activate automatic join yet.
+Use the [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ⤴️, connect over Bluetooth with the Soil Sensor and setup the credentials. Do NOT activate automatic join yet.     
 
 ----
 
@@ -248,7 +248,7 @@ The content of the packet depends on the modules installed on the WisBlock Base 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 
-Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [decoders](./decoders) ⤴️
+Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [RAKwireless_Standardized_Payload repo](https://github.com/RAKWireless/RAKwireless_Standardized_Payload) ⤴️
 
 ----
 
@@ -259,6 +259,8 @@ x.y.z is the version number. The version number is setup in the [./platformio.in
 YYYY.MM.dd.hh.mm.ss is the timestamp of the compilation.
 
 The generated **`.zip`** file can be used as well to update the device over BLE using either [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ⤴️ or [Nordic nRF Toolbox](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrftoolbox) ⤴️ or [nRF Connect](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp) ⤴️
+
+When using PlatformIO in addition a UF2 file for the RAK4631 is generated. You can force the RAK4631 into bootloader mode by double-pushing the reset button. A new USB drive will be installed. Pull the UF2 file into the new drive to flash the device.    
 
 ----
 
@@ -296,7 +298,7 @@ build_flags =
 	-DNO_BLE_LED=1   ; 1 Disable blue LED as BLE notificator
 lib_deps = 
 	beegee-tokyo/SX126x-Arduino
-	beegee-tokyo/WisBlock-API
+	beegee-tokyo/WisBlock-API-V2
 	sparkfun/SparkFun SHTC3 Humidity and Temperature Sensor Library
 	adafruit/Adafruit LPS2X
 	closedcube/ClosedCube OPT3001

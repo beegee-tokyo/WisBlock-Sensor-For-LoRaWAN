@@ -1,6 +1,6 @@
 {
-    "board": "rakwireless:mbed_rp2040:WisCoreRAK11300Board",
-    "port": "COM5",
+    "board": "rakwireless:nrf52:WisCoreRAK4631Board",
+    "port": "COM6",
     "output": "build",
     "sketch": "WisBlock-Sensor-For-LoRaWAN.ino",
     "buildPreferences": [
@@ -8,5 +8,6 @@
             "compiler.cpp.extra_flags",
             "-DHAS_EPD=0 -DUSE_BSEC=1"
         ]
-    ]
+    ],
+    "configuration": "softdevice=s140v6,debug=l0"
 }

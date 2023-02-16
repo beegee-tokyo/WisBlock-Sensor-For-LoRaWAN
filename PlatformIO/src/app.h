@@ -51,7 +51,7 @@ using namespace std::chrono;
 
 #include <Wire.h>
 /** Include the WisBlock-API */
-#include <WisBlock-API.h>
+#include <WisBlock-API-V2.h>
 
 // Add debug output macros
 #include "debug_log.h"
