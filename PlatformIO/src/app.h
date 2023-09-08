@@ -3,10 +3,10 @@
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief For application specific includes and definitions
  *        Will be included from main.h
- * @version 0.2
- * @date 2022-01-30
+ * @version 0.3
+ * @date 2023-03-16
  *
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2023
  *
  */
 
@@ -51,7 +51,7 @@ using namespace std::chrono;
 
 #include <Wire.h>
 /** Include the WisBlock-API */
-#include <WisBlock-API-V2.h>
+#include <WisBlock-API-V2.h> 
 
 // Add debug output macros
 #include "debug_log.h"

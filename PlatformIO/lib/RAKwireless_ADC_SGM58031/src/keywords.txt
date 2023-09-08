@@ -1,0 +1,48 @@
+#######################################
+# Syntax Coloring Map For SGM58031
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+RAK_ADC_SGM58031	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+writeByteRegister	KEYWORD2    
+writeWordRegister	KEYWORD2
+readByteRegister	KEYWORD2
+readWordRegister	KEYWORD2
+setAlertLowThreshold	KEYWORD2
+readAlertLowThreshold	KEYWORD2
+setAlertHighThreshold	KEYWORD2
+readAlertHighThreshold	KEYWORD2
+setConfig	KEYWORD2
+getConfig	KEYWORD2
+setConfig1	KEYWORD2
+getConfig1	KEYWORD2
+getChipID		KEYWORD2
+
+set_GN_Trim1	KEYWORD2
+get_GN_Trim1	KEYWORD2
+getAdcValue	KEYWORD2
+setVoltageResolution	KEYWORD2
+getVoltageResolution	KEYWORD2
+getVoltage	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+SGM58031_DEFAULT_ADDRESS	LITERAL1
+SGM58031_VDD_ADDRESS	LITERAL1
+SGM58031_SDA_ADDRESS	LITERAL1
+SGM58031_SCL_ADDRESS	LITERAL1
+DEVICE_ID	LITERAL1
+SGM58031_FS_6_144	LITERAL1	
+SGM58031_FS_4_096	LITERAL1	
+SGM58031_FS_2_048	LITERAL1		
+SGM58031_FS_1_024	LITERAL1	
+SGM58031_FS_0_512	LITERAL1	
+SGM58031_FS_0_256	LITERAL1	

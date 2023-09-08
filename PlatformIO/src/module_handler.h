@@ -88,40 +88,44 @@ extern sensors_t found_sensors[];
 #define LPP_CHANNEL_EQ_SHUTOFF 46	   // RAK12027
 #define LPP_CHANNEL_EQ_COLLAPSE 47	   // RAK12027
 #define LPP_CHANNEL_SWITCH 48		   // RAK13011
+#define LPP_CHANNEL_WLEVEL 61		   // RAK12059
+#define LPP_CHANNEL_WL_LOW 62		   // RAK12059
+#define LPP_CHANNEL_WL_HIGH 63		   // RAK12059
 
 extern WisCayenne g_solution_data;
 
 // Index for known I2C devices
-#define ACC_ID 0	   // RAK1904 accelerometer
-#define LIGHT_ID 1	   // RAK1903 light sensor
-#define GNSS_ID 2	   // RAK12500 GNSS sensor
-#define PRESS_ID 3	   // RAK1902 barometric pressure sensor
-#define TEMP_ID 4	   // RAK1901 temperature & humidity sensor
-#define ENV_ID 5	   // RAK1906 environment sensor
-#define SOIL_ID 6	   // RAK12035 soil moisture sensor
-#define LIGHT2_ID 7	   // RAK12010 light sensor
-#define EEPROM_ID 8	   // RAK15000 EEPROM module
-#define MQ2_ID 9	   // RAK12004 MQ2 CO2 gas sensor
-#define SCT31_ID 10	   // RAK12008 SCT31 CO2 gas sensor
-#define MQ3_ID 11	   // RAK12009 MQ3 Alcohol gas sensor
-#define TOF_ID 12	   // RAK12014 Laser ToF sensor
-#define RTC_ID 13	   // RAK12002 RTC module
-#define BAR_ID 14	   // RAK14003 LED bargraph module
-#define VOC_ID 15	   // RAK12047 VOC sensor
-#define GYRO_ID 16	   // RAK12025 Gyroscope
-#define GESTURE_ID 17  // RAK14008 Gesture sensor
-#define OLED_ID 18	   // RAK1921 OLED display
-#define UVL_ID 19	   // RAK12019 UV light sensor
-#define TOUCH_ID 20	   // RAK14002 Touch Pad
-#define CURRENT_ID 21  // RAK16000 current sensor
-#define MPU_ID 22	   // RAK1905 9DOF MPU9250 sensor
-#define CO2_ID 23	   // RAK12037 CO2 sensor
-#define FIR_ID 24	   // RAK12003 FIR temperature sensor
-#define TEMP_ARR_ID 25 // RAK12040 Temp Array sensor
-#define DOF_ID 26	   // RAK12034 9DOF BMX160 sensor
-#define ACC2_ID 27	   // RAK12032 ADXL313 accelerometer
-#define PM_ID 28	   // RAK12039 particle matter sensor
-#define SEISM_ID 29	   // RAK12027 D7S seismic sensor
+#define ACC_ID 0		  // RAK1904 accelerometer
+#define LIGHT_ID 1		  // RAK1903 light sensor
+#define GNSS_ID 2		  // RAK12500 GNSS sensor
+#define PRESS_ID 3		  // RAK1902 barometric pressure sensor
+#define TEMP_ID 4		  // RAK1901 temperature & humidity sensor
+#define ENV_ID 5		  // RAK1906 environment sensor
+#define SOIL_ID 6		  // RAK12035 soil moisture sensor
+#define LIGHT2_ID 7		  // RAK12010 light sensor
+#define EEPROM_ID 8		  // RAK15000 EEPROM module
+#define MQ2_ID 9		  // RAK12004 MQ2 CO2 gas sensor
+#define SCT31_ID 10		  // RAK12008 SCT31 CO2 gas sensor
+#define MQ3_ID 11		  // RAK12009 MQ3 Alcohol gas sensor
+#define TOF_ID 12		  // RAK12014 Laser ToF sensor
+#define RTC_ID 13		  // RAK12002 RTC module
+#define BAR_ID 14		  // RAK14003 LED bargraph module
+#define VOC_ID 15		  // RAK12047 VOC sensor
+#define GYRO_ID 16		  // RAK12025 Gyroscope
+#define GESTURE_ID 17	  // RAK14008 Gesture sensor
+#define OLED_ID 18		  // RAK1921 OLED display
+#define UVL_ID 19		  // RAK12019 UV light sensor
+#define TOUCH_ID 20		  // RAK14002 Touch Pad
+#define CURRENT_ID 21	  // RAK16000 current sensor
+#define MPU_ID 22		  // RAK1905 9DOF MPU9250 sensor
+#define CO2_ID 23		  // RAK12037 CO2 sensor
+#define FIR_ID 24		  // RAK12003 FIR temperature sensor
+#define TEMP_ARR_ID 25	  // RAK12040 Temp Array sensor
+#define DOF_ID 26		  // RAK12034 9DOF BMX160 sensor
+#define ACC2_ID 27		  // RAK12032 ADXL313 accelerometer
+#define PM_ID 28		  // RAK12039 particle matter sensor
+#define SEISM_ID 29		  // RAK12027 D7S seismic sensor
+#define WATER_LEVEL_ID 30 // RAK12059 Water Level sensor
 
 /** Sensor functions */
 #include "RAK1901_temp.h"
@@ -180,6 +184,7 @@ typedef struct touch_area_s
 #include "RAK15001_flash.h"
 #endif // ARDUINO_ARCH_RP2040
 #include "RAK16000_current.h"
+#include "RAK12059_wl.h"
 
 #include "user_at_cmd.h"
 

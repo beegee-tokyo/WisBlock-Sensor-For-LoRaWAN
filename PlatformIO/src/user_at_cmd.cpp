@@ -24,14 +24,17 @@ static const char gnss_power_name[] = "GNSS_2";
 /** Filename to save Battery check setting */
 static const char batt_name[] = "BATT";
 
+/** File name to save Water Level calibration values */
+static const char wl_name[] = "WLCS";
+
 /** File to save GPS precision setting */
 File gps_file(InternalFS);
 
-/** File to save GPS shutoff setting */
-File gps_pwer_file(InternalFS);
-
 /** File to save battery check status */
 File batt_check(InternalFS);
+
+/** File to save Water Level calibration values */
+File wl_file(InternalFS);
 #endif
 #ifdef ESP32
 #include <Preferences.h>
@@ -73,9 +76,9 @@ int at_query_modules(void)
  *
  */
 atcmd_t g_user_at_cmd_list_modules[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
 	// Module commands
-	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, NULL},
+	{"+MOD", "List all connected I2C devices", at_query_modules, NULL, NULL, "R"},
 };
 
 /*****************************************
@@ -255,7 +258,7 @@ void save_gps_settings(uint8_t settings)
 	if (settings == 0)
 	{
 #ifdef NRF52_SERIES
-			InternalFS.remove(gnss_name);
+		InternalFS.remove(gnss_name);
 		gps_file.open(gnss_name, FILE_O_WRITE);
 		if (g_gps_prec_6)
 		{
@@ -314,7 +317,7 @@ void save_gps_settings(uint8_t settings)
 			MYLOG("USR_AT", "Saved power off enabled");
 			gps_file.write("0");
 		}
-		else 
+		else
 		{
 			MYLOG("USR_AT", "Saved power off disabled");
 			gps_file.write("1");
@@ -389,7 +392,7 @@ static int at_query_shutoff()
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "GNSS power off enabled");
 	}
-	else 
+	else
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "GNSS power off disabled");
 	}
@@ -420,11 +423,11 @@ static int at_exec_shutoff(char *str)
  *
  */
 atcmd_t g_user_at_cmd_list_gps[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
 	// GNSS commands
-	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper, 3 = Field Tester", at_query_gnss, at_exec_gnss, at_query_gnss},
-	{"+GNSSSLEEP", "Enable/Disable GNSS module power off 0 = power off, 1 = keep power on", at_query_shutoff, at_exec_shutoff, at_query_shutoff},
-	{"+SLEEP", "Put device into sleep", NULL, NULL, at_sleep},
+	{"+GNSS", "Get/Set the GNSS precision and format 0 = 4 digit, 1 = 6 digit, 2 = Helium Mapper, 3 = Field Tester", at_query_gnss, at_exec_gnss, at_query_gnss, "RW"},
+	{"+GNSSSLEEP", "Enable/Disable GNSS module power off 0 = power off, 1 = keep power on", at_query_shutoff, at_exec_shutoff, at_query_shutoff, "RW"},
+	{"+SLEEP", "Put device into sleep", NULL, NULL, at_sleep, "W"},
 };
 
 /*****************************************
@@ -471,7 +474,8 @@ static int at_set_dry(char *str)
 static int at_query_dry()
 {
 	// Dry calibration value query
-	AT_PRINTF("Dry Calibration Value: %d", get_calib_rak12035(true));
+	// AT_PRINTF("Dry Calibration Value: %d", get_calib_rak12035(true));
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", get_calib_rak12035(true));
 	return 0;
 }
 
@@ -515,15 +519,16 @@ static int at_set_wet(char *str)
 static int at_query_wet(void)
 {
 	// Wet calibration value query
-	AT_PRINTF("Wet Calibration Value: %d", get_calib_rak12035(false));
+	// AT_PRINTF("Wet Calibration Value: %d", get_calib_rak12035(false));
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", get_calib_rak12035(false));
 	return 0;
 }
 
 atcmd_t g_user_at_cmd_list_soil[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
 	// Soil Sensor commands
-	{"+DRY", "Get/Set dry calibration value", at_query_dry, at_set_dry, at_exec_dry},
-	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet},
+	{"+DRY", "Get/Set dry calibration value", at_query_dry, at_set_dry, at_exec_dry, "RW"},
+	{"+WET", "Get/Set wet calibration value", at_query_wet, at_set_wet, at_exec_wet, "RW"},
 };
 
 /*****************************************
@@ -624,14 +629,16 @@ static int at_query_rtc(void)
 {
 	// Get date/time from the RTC
 	read_rak12002();
-	AT_PRINTF("%d.%02d.%02d %d:%02d:%02d", g_date_time.year, g_date_time.month, g_date_time.date, g_date_time.hour, g_date_time.minute, g_date_time.second);
+	// AT_PRINTF("%d.%02d.%02d %d:%02d:%02d", g_date_time.year, g_date_time.month, g_date_time.date, g_date_time.hour, g_date_time.minute, g_date_time.second);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%02d.%02d %d:%02d:%02d", g_date_time.year, g_date_time.month, g_date_time.date, g_date_time.hour, g_date_time.minute, g_date_time.second);
+
 	return 0;
 }
 
 atcmd_t g_user_at_cmd_list_rtc[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
 	// RTC commands
-	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, at_query_rtc},
+	{"+RTC", "Get/Set RTC time and date", at_query_rtc, at_set_rtc, at_query_rtc, "RW"},
 };
 
 /*****************************************
@@ -654,7 +661,8 @@ static int at_query_alt()
 		{
 			return AT_ERRNO_EXEC_FAIL;
 		}
-		AT_PRINTF("Altitude RAK1902: %d cm\r\n", result);
+		// AT_PRINTF("Altitude RAK1902: %d cm\r\n", result);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%dcm", result);
 	}
 	if (found_sensors[ENV_ID].found_sensor)
 	{
@@ -667,7 +675,8 @@ static int at_query_alt()
 		{
 			return AT_ERRNO_EXEC_FAIL;
 		}
-		AT_PRINTF("Altitude RAK1906: %d cm\r\n", result);
+		// AT_PRINTF("Altitude RAK1906: %d cm\r\n", result);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%dcm", result);
 	}
 	return 0;
 }
@@ -682,7 +691,8 @@ float at_MSL = 1013.25;
  */
 static int at_query_msl()
 {
-	AT_PRINTF("MSL: %d\r\n", at_MSL * 100);
+	// AT_PRINTF("MSL: %d\r\n", at_MSL * 100);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", at_MSL * 100);
 	return 0;
 }
 
@@ -710,10 +720,10 @@ static int at_set_msl(char *str)
  *
  */
 atcmd_t g_user_at_cmd_list_env[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
 	// ENV commands
-	{"+ALT", "Get Altitude", at_query_alt, NULL, at_query_alt},
-	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, at_query_msl},
+	{"+ALT", "Get Altitude", at_query_alt, NULL, at_query_alt, "R"},
+	{"+MSL", "Get/Set MSL value", at_query_msl, at_set_msl, at_query_msl, "RW"},
 };
 
 /*****************************************
@@ -754,7 +764,8 @@ static int at_set_batt_check(char *str)
 static int at_query_batt_check(void)
 {
 	// Wet calibration value query
-	AT_PRINTF("Battery check is %s", battery_check_enabled ? "enabled" : "disabled");
+	// AT_PRINTF("Battery check is %s", battery_check_enabled ? "enabled" : "disabled");
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%s", battery_check_enabled ? "enabled" : "disabled");
 	return 0;
 }
 
@@ -815,8 +826,283 @@ void save_batt_settings(bool check_batt_enables)
 atcmd_t g_user_at_cmd_list_batt[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// Battery check commands
-	{"+BATCHK", "Enable/Disable the battery charge check", at_query_batt_check, at_set_batt_check, at_query_batt_check},
+	{"+BATCHK", "Enable/Disable the battery charge check", at_query_batt_check, at_set_batt_check, at_query_batt_check, "RW"},
 };
+
+/*****************************************
+ * Water level sensor AT commands
+ *****************************************/
+
+/**
+ * @brief Start low calibration
+ *
+ * @return int 0
+ */
+static int at_exec_low()
+{
+	// Low calibration requested
+	AT_PRINTF("Start Low Calibration\n");
+	start_calib_rak12059(true);
+
+	AT_PRINTF("New Low Calibration Value: %.4f\n", g_v_low);
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+
+	return 0;
+}
+
+/**
+ * @brief Manually set low threshold value
+ *
+ * @param str
+ * @return int
+ */
+static int at_set_low(char *str)
+{
+	long new_val = strtol(str, NULL, 0);
+	if ((new_val < 0) || (new_val > 0xFFFF))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	g_low_level = new_val;
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+	return 0;
+}
+
+/**
+ * @brief Query low calibration value
+ *
+ * @return int 0
+ */
+static int at_query_low()
+{
+	// AT_PRINTF("Low Calibration Value: %.4f\n", g_v_low);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.4f", g_v_low);
+	return 0;
+}
+
+/**
+ * @brief Start high calibration
+ *
+ * @return int 0
+ */
+static int at_exec_high()
+{
+	AT_PRINTF("Start High Calibration\n");
+	start_calib_rak12059(false);
+
+	AT_PRINTF("New High Calibration Value: %.4f\n", g_v_high);
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+
+	return 0;
+}
+
+/**
+ * @brief Manually set high calibration value
+ *		High calibration voltage * 10000
+ * @param str with high calibration voltage * 10000
+ * @return int
+ */
+static int at_set_high(char *str)
+{
+	long new_val = strtol(str, NULL, 0);
+	if ((new_val < 0) || (new_val > 0xFFFF))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	g_v_high = (float)new_val / 10000.0;
+
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+	return 0;
+}
+
+/**
+ * @brief Query high calibration value
+ *
+ * @return int 0
+ */
+static int at_query_high(void)
+{
+	// High calibration value query
+	// AT_PRINTF("High Calibration Value: %.4f\n", g_v_high);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.4f", g_v_high);
+	return 0;
+}
+
+/**
+ * @brief Query low threshold value
+ * 		given in cm
+ *
+ * @return int
+ */
+static int at_query_th_low(void)
+{
+	// AT_PRINTF("Low Threshold Value: %.4f\n", get_thres_cm_rak12059(g_low_level));
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.4f", get_thres_cm_rak12059(g_low_level));
+	return 0;
+}
+
+/**
+ * @brief Set low threshold
+ *
+ * @param str threshold in 100 * cm
+ * @return int
+ */
+static int at_set_th_low(char *str)
+{
+	long new_val = strtol(str, NULL, 0);
+	if ((new_val < 0) || (new_val > 0xFFFF))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	g_low_level = calc_thres_rak12059(new_val);
+
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+	return 0;
+}
+
+/**
+ * @brief Query high threshold value
+ * 		given in cm
+ *
+ * @return int
+ */
+static int at_query_th_high(void)
+{
+	// AT_PRINTF("HIgh Threshold Value: %.4f\n", get_thres_cm_rak12059(g_high_level));
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.4f", get_thres_cm_rak12059(g_high_level));
+	return 0;
+}
+
+/**
+ * @brief Set high threshold
+ *
+ * @param str threshold in 100 * cm
+ * @return int
+ */
+static int at_set_th_high(char *str)
+{
+	long new_val = strtol(str, NULL, 0);
+	if ((new_val < 0) || (new_val > 0xFFFF))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+	g_high_level = calc_thres_rak12059(new_val);
+
+	// Save value
+	set_threshold_rak12059();
+	save_wl_calibration();
+	return 0;
+}
+
+atcmd_t g_user_at_cmd_list_wl[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | Permission |*/
+	// Water level Sensor commands
+	// {"+WLTHLOW", "Get/Set low threshold value", at_query_th_low, at_set_th_low, NULL, "RW"},
+	// {"+WLTHHIGH", "Get/Set high threshold value", at_query_th_high, at_set_th_high, NULL, "RW"},
+	{"+WLCALLOW", "Start low level calibration", at_query_low, at_set_low, at_exec_low, "XR"},
+	{"+WLCALHIGH", "Start high level calibration", at_query_high, at_set_high, at_exec_high, "XR"},
+};
+
+typedef struct water_level_calib_s
+{
+	uint64_t high_level = 21997;
+	uint64_t low_level = 14739;
+	uint64_t th_high = 3048;
+	uint64_t th_low = 254;
+} water_level_calib_t;
+
+water_level_calib_s water_level_calib;
+
+/**
+ * @brief Read saved water level sensor calibration values
+ *
+ */
+void read_wl_calibration(void)
+{
+#ifdef NRF52_SERIES
+	// Initialize Internal File System
+	InternalFS.begin();
+
+	if (InternalFS.exists(wl_name))
+	{
+		wl_file.open(wl_name, FILE_O_READ);
+		if (!wl_file)
+		{
+			MYLOG("USR_AT", "Water level calibration not found");
+			return;
+		}
+		// int read (void *buf, uint16_t nbyte);
+		wl_file.read((void *)&water_level_calib, sizeof(water_level_calib));
+		wl_file.close();
+		g_v_low = (float)water_level_calib.low_level / 10000.0;
+		g_v_high = (float)water_level_calib.high_level / 10000.0;
+		// g_low_level = calc_thres_rak12059(water_level_calib.th_low);
+		// g_high_level = calc_thres_rak12059(water_level_calib.th_high);
+
+		MYLOG("USR_AT", "Got water calib low %.4f", g_v_low);
+		MYLOG("USR_AT", "Got water calib high %.4f", g_v_high);
+		// MYLOG("USR_AT", "Got water low threshold %04X", g_low_level);
+		// MYLOG("USR_AT", "Got water high threshold %04X", g_high_level);
+	}
+	else
+	{
+		MYLOG("USR_AT", "No settings found, use default");
+		g_v_low = (float)water_level_calib.low_level / 10000.0;
+		g_v_high = (float)water_level_calib.high_level / 10000.0;
+		g_low_level = calc_thres_rak12059(water_level_calib.th_low);
+		g_high_level = calc_thres_rak12059(water_level_calib.th_high);
+	}
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("wl", false);
+	g_v_low = esp32_prefs.getFloat("v_low", 1.4739);
+	g_v_high = esp32_prefs.getFloat("v_high", 2.1997);
+	// g_low_level = esp32_prefs.getShort("v_th_low", calc_thres_rak12059(254));
+	// g_high_level = esp32_prefs.getShort("v_th_high", calc_thres_rak12059(3048));
+	MYLOG("AT", "Got water calib low %.4f", g_v_low);
+	MYLOG("AT", "Got water calib high %.4f", g_v_high);
+	// MYLOG("USR_AT", "Got water low threshold %04X", g_low_level);
+	// MYLOG("USR_AT", "Got water high threshold %04X", g_high_level);
+	esp32_prefs.end();
+#endif
+}
+
+/**
+ * @brief Save the water level calibration settings
+ *
+ */
+void save_wl_calibration(void)
+{
+#ifdef NRF52_SERIES
+	InternalFS.remove(wl_name);
+	wl_file.open(wl_name, FILE_O_WRITE);
+
+	water_level_calib.high_level = (uint64_t)(g_v_high * 10000.0);
+	water_level_calib.low_level = (uint64_t)(g_v_low * 10000.0);
+	water_level_calib.th_high = g_high_level;
+	water_level_calib.th_low = g_low_level;
+	wl_file.write((const char *)&water_level_calib, sizeof(water_level_calib));
+	wl_file.close();
+#endif
+#ifdef ESP32
+	esp32_prefs.begin("wl", false);
+	esp32_prefs.putFloat("v_low", g_v_low);
+	esp32_prefs.putFloat("v_high", g_v_high);
+	esp32_prefs.putShort("v_th_low", g_low_level);
+	esp32_prefs.putShort("v_th_high", g_high_level);
+	esp32_prefs.end();
+#endif
+}
 
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = 0;
@@ -871,6 +1157,11 @@ void init_user_at(void)
 		required_structure_size += sizeof(g_user_at_cmd_list_env);
 		MYLOG("USR_AT", "Structure size %d ENV/Pressure", required_structure_size);
 	}
+	if (found_sensors[WATER_LEVEL_ID].found_sensor)
+	{
+		required_structure_size += sizeof(g_user_at_cmd_list_wl);
+		MYLOG("USR_AT", "Structure size %d Water Level", required_structure_size);
+	}
 
 	// Reserve memory for the structure
 	g_user_at_cmd_list = (atcmd_t *)malloc(required_structure_size);
@@ -919,6 +1210,14 @@ void init_user_at(void)
 		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_env, sizeof(g_user_at_cmd_list_env));
 		index_next_cmds += sizeof(g_user_at_cmd_list_env) / sizeof(atcmd_t);
 		MYLOG("USR_AT", "Index after adding env %d", index_next_cmds);
+	}
+	if (found_sensors[WATER_LEVEL_ID].found_sensor)
+	{
+		MYLOG("USR_AT", "Adding Water Level user AT commands");
+		g_user_at_cmd_num += sizeof(g_user_at_cmd_list_wl) / sizeof(atcmd_t);
+		memcpy((void *)&g_user_at_cmd_list[index_next_cmds], (void *)g_user_at_cmd_list_wl, sizeof(g_user_at_cmd_list_wl));
+		index_next_cmds += sizeof(g_user_at_cmd_list_wl) / sizeof(atcmd_t);
+		MYLOG("USR_AT", "Index after adding Water Level %d", index_next_cmds);
 	}
 
 #if TEST_ALL_CMDS == 1

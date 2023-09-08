@@ -1,0 +1,32 @@
+{
+	"name": "RAKwireless_ADC_SGM58031_library",
+	"version": "1.0.1",
+	"keywords": [
+		"ADC",
+		"SGM58031",
+		"RAKWireless",
+		"WisBlock",
+		"RAK12034"
+	],
+	"description": "RAKWireless library for ADC",
+	"frameworks": [
+		"arduino"
+	],
+	"platforms": [
+		"*"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"email": "tianpeng.liu.li@rakwireless.com",
+			"url": "https://rakwireless.com",
+			"maintainer": true,
+			"name": "tianpeng.liu"
+		}
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RAKWireless/RAKwireless_ADC_SGM58031_library"
+	},
+	"homepage": "https://rakwireless.com"
+}

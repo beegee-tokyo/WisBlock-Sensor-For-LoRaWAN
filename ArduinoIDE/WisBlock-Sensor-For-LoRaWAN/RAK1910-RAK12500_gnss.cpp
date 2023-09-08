@@ -65,10 +65,10 @@ SemaphoreHandle_t g_gnss_poll;
 volatile bool poll_finished = false;
 
 /** Limiter for GNSS polling */
-uint16_t check_gnss_max_try;
+uint32_t check_gnss_max_try;
 
 /** Counter for GNSS polling */
-uint16_t check_gnss_counter;
+uint32_t check_gnss_counter;
 
 /** GNSS polling function */
 bool poll_gnss(void);
@@ -377,38 +377,43 @@ bool poll_gnss(void)
 	}
 	else
 	{
-		while (gnssSerial->available() > 0)
+		uint32_t start_time = millis();
+		while ((millis() - start_time) < check_gnss_max_try)
 		{
-			// char gnss = gnssSerial->read();
-			// Serial.print(gnss);
-			// if (my_rak1910_gnss.encode(gnss))
-			if (my_rak1910_gnss.encode(gnssSerial->read()))
+			if (gnssSerial->available() > 0)
 			{
-				if (my_rak1910_gnss.location.isUpdated() && my_rak1910_gnss.location.isValid())
+				char gnss = gnssSerial->read();
+				Serial.print(gnss);
+				if (my_rak1910_gnss.encode(gnss))
+				// if (my_rak1910_gnss.encode(gnssSerial->read()))
 				{
-					MYLOG("GNSS", "Location valid");
-					has_pos = true;
-					latitude = (my_rak1910_gnss.location.lat() * 10000000.0);
-					longitude = (my_rak1910_gnss.location.lng() * 10000000.0);
+					if (my_rak1910_gnss.location.isUpdated() && my_rak1910_gnss.location.isValid())
+					{
+						MYLOG("GNSS", "Location valid");
+						has_pos = true;
+						latitude = (my_rak1910_gnss.location.lat() * 10000000.0);
+						longitude = (my_rak1910_gnss.location.lng() * 10000000.0);
+					}
+					else if (my_rak1910_gnss.altitude.isUpdated() && my_rak1910_gnss.altitude.isValid())
+					{
+						MYLOG("GNSS", "Altitude valid");
+						has_alt = true;
+						altitude = (my_rak1910_gnss.altitude.meters() * 1000);
+					}
+					else if (my_rak1910_gnss.hdop.isUpdated() && my_rak1910_gnss.hdop.isValid())
+					{
+						accuracy = my_rak1910_gnss.hdop.hdop() * 100;
+					}
 				}
-				else if (my_rak1910_gnss.altitude.isUpdated() && my_rak1910_gnss.altitude.isValid())
+				if (has_pos && has_alt)
 				{
-					MYLOG("GNSS", "Altitude valid");
-					has_alt = true;
-					altitude = (my_rak1910_gnss.altitude.meters() * 1000);
+					MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
+					MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
+					MYLOG("GNSS", "Acy: %.2f ", accuracy / 100.0);
+					last_read_ok = true;
+					break;
 				}
-				else if (my_rak1910_gnss.hdop.isUpdated() && my_rak1910_gnss.hdop.isValid())
-				{
-					accuracy = my_rak1910_gnss.hdop.hdop() * 100;
-				}
-			}
-			if (has_pos && has_alt)
-			{
-				MYLOG("GNSS", "Lat: %.4f Lon: %.4f", latitude / 10000000.0, longitude / 10000000.0);
-				MYLOG("GNSS", "Alt: %.2f", altitude / 1000.0);
-				MYLOG("GNSS", "Acy: %.2f ", accuracy / 100.0);
-				last_read_ok = true;
-				break;
+				delay(10);
 			}
 		}
 		if (has_pos && has_alt)
@@ -546,11 +551,11 @@ void gnss_task(void *pvParameters)
 	MYLOG("GNSS", "GNSS using 5 seconds poll");
 	poll_timer.begin(5000, end_poll, NULL, true);
 
-	/** Limiter for GNSS polling */
-	uint16_t check_gnss_max_try;
+	// /** Limiter for GNSS polling */
+	// uint16_t check_gnss_max_try;
 
-	/** Counter for GNSS polling */
-	uint16_t check_gnss_counter;
+	// /** Counter for GNSS polling */
+	// uint16_t check_gnss_counter;
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	gnss_task_id = osThreadGetId();
@@ -563,6 +568,8 @@ void gnss_task(void *pvParameters)
 		digitalWrite(WB_IO2, LOW);
 		delay(100);
 	}
+
+	bool got_location = false;
 
 	while (1)
 	{
@@ -587,75 +594,85 @@ void gnss_task(void *pvParameters)
 			MYLOG("GNSS", "GNSS Task wake up");
 			AT_PRINTF("+EVT:START_LOCATION\n");
 
-			// Start waiting for PPS signal from the GNSS module
-#ifdef NRF52_SERIES
-			poll_timer.start();
-#endif
-#ifdef ESP32
-			// poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
-			poll_timer.attach_ms(5000, end_poll);
-#endif
-#ifdef ARDUINO_ARCH_RP2040
-			// poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
-			poll_timer.attach(end_poll, (microseconds)(5000 * 1000));
-#endif
-
 			MYLOG("GNSS", "GNSS timeout is %ld", g_lorawan_settings.send_repeat_time / 2);
 
-			check_gnss_counter = 0;
-			if (g_lorawan_settings.send_repeat_time != 0)
+			if (g_gnss_option == RAK1910_GNSS)
 			{
-				check_gnss_max_try = g_lorawan_settings.send_repeat_time / 2 / 5000;
+				// Calculate time to wait
+				if (g_lorawan_settings.send_repeat_time != 0)
+				{
+					// Max location aquisition time is half of send interval
+					check_gnss_max_try = g_lorawan_settings.send_repeat_time / 2;
+					if (check_gnss_max_try > 60000)
+					{
+						check_gnss_max_try = 60000;
+					}
+				}
+				else
+				{
+					check_gnss_max_try = 60000;
+				}
+
+				// Get location
+				got_location = poll_gnss();
 			}
 			else
 			{
-				check_gnss_max_try = 10;
-			}
+				check_gnss_counter = 0;
+				if (g_lorawan_settings.send_repeat_time != 0)
+				{
+					check_gnss_max_try = g_lorawan_settings.send_repeat_time / 2 / 5000;
+				}
+				else
+				{
+					check_gnss_max_try = 10;
+				}
+
 #ifdef NRF52_SERIES
-			poll_timer.start();
+				poll_timer.start();
 #endif
 #ifdef ESP32
-			// poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
-			poll_timer.attach_ms(5000, end_poll);
+				// poll_timer.attach_ms(g_lorawan_settings.send_repeat_time / 2, end_poll);
+				poll_timer.attach_ms(5000, end_poll);
 #endif
 #ifdef ARDUINO_ARCH_RP2040
-			// poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
-			poll_timer.attach(end_poll, (microseconds)(5000 * 1000));
+				// poll_timer.attach(end_poll, (microseconds)(g_lorawan_settings.send_repeat_time / 2 * 1000));
+				poll_timer.attach(end_poll, (microseconds)(5000 * 1000));
 #endif
-
-			bool got_location = false;
-			while (check_gnss_counter < check_gnss_max_try)
-			{
-				MYLOG("GNSS", "GNSS Wait for semaphore");
-				check_gnss_counter++;
+				got_location = false;
+				while (check_gnss_counter < check_gnss_max_try)
+				{
+					MYLOG("GNSS", "GNSS Wait for semaphore");
+					check_gnss_counter++;
 #ifdef ARDUINO_ARCH_RP2040
-				// Wait for event
-				osSignalWait(0x01, osWaitForever);
+					// Wait for event
+					osSignalWait(0x01, osWaitForever);
 #endif
 #if defined NRF52_SERIES || defined ESP32
-				if (xSemaphoreTake(g_gnss_poll, portMAX_DELAY) == pdTRUE)
+					if (xSemaphoreTake(g_gnss_poll, portMAX_DELAY) == pdTRUE)
 #endif
-				{
-					digitalWrite(LED_BLUE, HIGH);
-					MYLOG("GNSS", "GNSS polling");
-					// Get location
-					got_location = poll_gnss();
-
-					digitalWrite(LED_BLUE, LOW);
-					if (got_location)
 					{
-						// Found location, finish polling
-						check_gnss_counter = check_gnss_max_try + 1;
-						// break;
+						digitalWrite(LED_BLUE, HIGH);
+						MYLOG("GNSS", "GNSS polling");
+						// Get location
+						got_location = poll_gnss();
+
+						digitalWrite(LED_BLUE, LOW);
+						if (got_location)
+						{
+							// Found location, finish polling
+							check_gnss_counter = check_gnss_max_try + 1;
+							// break;
+						}
 					}
 				}
-			}
 #ifdef NRF52_SERIES
-			poll_timer.stop();
+				poll_timer.stop();
 #endif
 #if defined ESP32 || defined ARDUINO_ARCH_RP2040
-			poll_timer.detach();
+				poll_timer.detach();
 #endif
+			}
 
 			AT_PRINTF("+EVT:LOCATION %s\n", got_location ? "FIX" : "NOFIX");
 

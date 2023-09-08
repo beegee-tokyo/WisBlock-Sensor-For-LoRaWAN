@@ -492,23 +492,26 @@ void app_event_handler(void)
 			else
 			{
 				// Add unique identifier in front of the P2P packet, here we use the DevEUI
-				uint8_t p2p_buffer[g_solution_data.getSize() + 8];
-				memcpy(p2p_buffer, g_lorawan_settings.node_device_eui, 8);
-				// Add the packet data
-				memcpy(&p2p_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
+				g_solution_data.addDevID(0, &g_lorawan_settings.node_device_eui[4]);
+
+				// uint8_t p2p_buffer[g_solution_data.getSize() + 8];
+				// memcpy(p2p_buffer, g_lorawan_settings.node_device_eui, 8);
+				// // Add the packet data
+				// memcpy(&p2p_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
 				// Send packet over LoRa
-				if (send_p2p_packet(p2p_buffer, g_solution_data.getSize() + 8))
+				// if (send_p2p_packet(p2p_buffer, g_solution_data.getSize() + 8))
+				if (send_p2p_packet(g_solution_data.getBuffer(), g_solution_data.getSize()))
 				{
 					if (found_sensors[OLED_ID].found_sensor)
 					{
 						if (found_sensors[RTC_ID].found_sensor)
 						{
 							read_rak12002();
-							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize()+8);
+							snprintf(disp_txt, 64, "%d:%02d Pkg %d b", g_date_time.hour, g_date_time.minute, g_solution_data.getSize() + 8);
 						}
 						else
 						{
-							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize()+8);
+							snprintf(disp_txt, 64, "Packet sent %d b", g_solution_data.getSize() + 8);
 						}
 						rak1921_add_line(disp_txt);
 					}
@@ -715,9 +718,9 @@ void app_event_handler(void)
 				read_rak12008();
 			}
 
-			// Get battery level
-			float batt_level_f = read_batt();
-			g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
+			// // Get battery level
+			// float batt_level_f = read_batt();
+			// g_solution_data.addVoltage(LPP_CHANNEL_BATT, batt_level_f / 1000.0);
 		}
 
 		// Remember last time sending
@@ -763,7 +766,7 @@ void app_event_handler(void)
 			else
 			{
 				// Add unique identifier in front of the P2P packet, here we use the DevEUI
-				uint8_t p2p_buffer[g_solution_data.getSize()+8];
+				uint8_t p2p_buffer[g_solution_data.getSize() + 8];
 				memcpy(p2p_buffer, g_lorawan_settings.node_device_eui, 8);
 				// Add the packet data
 				memcpy(&p2p_buffer[8], g_solution_data.getBuffer(), g_solution_data.getSize());
@@ -828,7 +831,6 @@ void ble_data_handler(void)
  */
 void lora_data_handler(void)
 {
-
 	// LoRa Join finished handling
 	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
 	{
