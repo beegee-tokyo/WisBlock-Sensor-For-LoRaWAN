@@ -126,6 +126,7 @@ extern WisCayenne g_solution_data;
 #define PM_ID 28		  // RAK12039 particle matter sensor
 #define SEISM_ID 29		  // RAK12027 D7S seismic sensor
 #define WATER_LEVEL_ID 30 // RAK12059 Water Level sensor
+#define TEMP_ARR_2_ID 41	  // RAK12040 Temp Array sensor
 
 /** Sensor functions */
 #include "RAK1901_temp.h"
@@ -158,6 +159,7 @@ extern WisCayenne g_solution_data;
 #include "RAK12039_pm.h"
 #include "RAK12040_temp_array.h"
 #include "RAK12047_voc.h"
+#include "RAK12052_temp_array.h"
 #include "RAK14000_epd.h"
 #ifdef ST7789_DRIVER
 typedef struct

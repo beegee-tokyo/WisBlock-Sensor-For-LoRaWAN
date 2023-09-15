@@ -58,6 +58,7 @@ sensors_t found_sensors[] = {
 	{0x59, false}, // 38 RAK16002 Coulomb sensor !! conflict with RAK13600, RAK12047, RAK5814
 	{0x20, false}, // 39 RAK13003 IO expander module !! conflict with RAK12035
 	{0x59, false}, // 40 ✔ RAK5814 ACC608 encryption module (limited I2C speed 100000) !! conflict with RAK12047, RAK13600, RAK13003
+	{0x33, false}, // 41 ✔ RAK12052 MLX90640 IR array sensor
 };
 
 /**
@@ -497,6 +498,15 @@ void find_modules(void)
 		}
 	}
 
+
+	if (found_sensors[TEMP_ARR_2_ID].found_sensor)
+	{
+		if (!init_rak12052())
+		{
+			found_sensors[TEMP_ARR_2_ID].found_sensor = false;
+		}
+	}
+
 	if (found_sensors[CURRENT_ID].found_sensor)
 	{
 		if (!init_rak16000())
@@ -821,6 +831,16 @@ void announce_modules(void)
 		AT_PRINTF("+EVT:RAK12047 OK\n");
 	}
 
+	if (!found_sensors[TEMP_ARR_2_ID].found_sensor)
+	{
+		// MYLOG("APP", "Temp IR array Sensor error");
+		init_result = false;
+	}
+	else
+	{
+		AT_PRINTF("+EVT:RAK12052 OK\n");
+	}
+
 	if (!found_sensors[WATER_LEVEL_ID].found_sensor)
 	{
 		// MYLOG("APP", "Water level Sensor error");
@@ -995,9 +1015,14 @@ void get_sensor_values(void)
 		// Get the voc sensor values
 		read_rak12047();
 	}
+	if (found_sensors[TEMP_ARR_2_ID].found_sensor)
+	{
+		// Get the temp array sensor values
+		read_rak12052();
+	}
 	if (found_sensors[WATER_LEVEL_ID].found_sensor)
 	{
-		// Get the voc sensor values
+		// Get the water level sensor values
 		read_rak12059();
 	}
 	if (found_sensors[TOUCH_ID].found_sensor)
