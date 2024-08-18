@@ -50,7 +50,7 @@ RAK_BMX160 bmx160(&Wire);
 //******************************************************************//
 
 /** Interrupt pin, depends on slot */
-uint8_t bmx_int_pin = WB_IO4;
+uint8_t bmx_int_pin = WB_IO3;
 
 /**
  * @brief Initialize BMX160 9-axis
@@ -92,7 +92,7 @@ bool init_rak12034(void)
 	bmx160.InterruptConfig(HIGH_G_INT, HIGH_G_THRESHOLD);
 
 	// Set output data rate
-	bmx160.ODR_Config(BMX160_ACCEL_ODR_200HZ, BMX160_GYRO_ODR_200HZ);
+	bmx160.ODR_Config(BMX160_ACCEL_ODR_0_78HZ, BMX160_GYRO_ODR_25HZ); // BMX160_ACCEL_ODR_0_78HZ or BMX160_ACCEL_ODR_200HZ // BMX160_GYRO_ODR_25HZ or BMX160_GYRO_ODR_200HZ
 
 	/**
 	   enum{eGyroRange_2000DPS,

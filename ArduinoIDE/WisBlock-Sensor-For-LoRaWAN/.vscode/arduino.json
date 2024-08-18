@@ -1,6 +1,6 @@
 {
     "board": "rakwireless:nrf52:WisCoreRAK4631Board",
-    "port": "COM6",
+    "port": "COM14",
     "output": "build",
     "sketch": "WisBlock-Sensor-For-LoRaWAN.ino",
     "buildPreferences": [

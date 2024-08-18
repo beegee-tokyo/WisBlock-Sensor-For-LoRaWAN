@@ -207,6 +207,8 @@ void init_rak14000(void)
 
 void wake_rak14000(void)
 {
+	digitalWrite(POWER_ENABLE, HIGH);
+
 #if defined NRF52_SERIES || defined ESP32
 	xSemaphoreGiveFromISR(g_epd_sem, &xHigherPriorityTaskWoken);
 #endif
@@ -245,6 +247,9 @@ bool first_time = true;
 
 void refresh_rak14000(void)
 {
+	digitalWrite(POWER_ENABLE, HIGH);
+	delay(250);
+
 	if (show_status)
 	{
 		show_status = false;
@@ -273,6 +278,9 @@ void refresh_rak14000(void)
 			attachInterrupt(LEFT_BUTTON, butt_left_int, FALLING);
 			attachInterrupt(MIDDLE_BUTTON, butt_mid_int, FALLING);
 			attachInterrupt(RIGHT_BUTTON, butt_right_int, FALLING);
+
+			digitalWrite(POWER_ENABLE, LOW);
+
 			return;
 		}
 	}
@@ -315,6 +323,8 @@ void refresh_rak14000(void)
 		attachInterrupt(MIDDLE_BUTTON, butt_mid_int, FALLING);
 		attachInterrupt(RIGHT_BUTTON, butt_right_int, FALLING);
 	}
+
+	digitalWrite(POWER_ENABLE, LOW);
 }
 
 void set_voc_rak14000(uint16_t voc_value)
@@ -733,6 +743,9 @@ void epd_task(void *pvParameters)
 	epd_task_id = osThreadGetId();
 #endif
 
+	digitalWrite(POWER_ENABLE, HIGH);
+	delay(250);
+
 	display.begin();
 
 	display.setRotation(0);
@@ -770,7 +783,12 @@ void epd_task(void *pvParameters)
 		if (xSemaphoreTake(g_epd_sem, portMAX_DELAY) == pdTRUE)
 #endif
 		{
+			digitalWrite(POWER_ENABLE, HIGH);
+			delay(250);
 			refresh_rak14000();
+
+			digitalWrite(POWER_ENABLE, LOW);
+			delay(250);
 		}
 	}
 }
