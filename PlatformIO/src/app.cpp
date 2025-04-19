@@ -133,7 +133,7 @@ void setup_app(void)
 bool init_app(void)
 {
 	/** Set permanent RX mode for LoRa P2P */
-	g_lora_p2p_rx_mode = RX_MODE_RX;
+	// g_lora_p2p_rx_mode = RX_MODE_RX;
 
 	MYLOG("APP", "init_app");
 
