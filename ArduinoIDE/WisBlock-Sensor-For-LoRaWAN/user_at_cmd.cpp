@@ -666,11 +666,11 @@ static int at_query_alt()
 	}
 	if (found_sensors[ENV_ID].found_sensor)
 	{
-#if USE_BSEC == 0
+// #if USE_BSEC == 0
 		result = get_alt_rak1906();
-#else
-		result = get_alt_rak1906_bsec();
-#endif
+// #else
+// 		result = get_alt_rak1906_bsec();
+// #endif
 		if (result == 0xFFFF)
 		{
 			return AT_ERRNO_EXEC_FAIL;

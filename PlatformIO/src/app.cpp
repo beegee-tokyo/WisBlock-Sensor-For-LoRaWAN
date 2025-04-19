@@ -122,6 +122,8 @@ void setup_app(void)
 	g_enable_ble = true;
 #endif
 #endif
+
+	sprintf(g_custom_fw_ver, "WisBlock Sensor V%d.%d.%d\n", g_sw_ver_1, g_sw_ver_2, g_sw_ver_3);
 }
 
 /**
@@ -133,7 +135,7 @@ void setup_app(void)
 bool init_app(void)
 {
 	/** Set permanent RX mode for LoRa P2P */
-	// g_lora_p2p_rx_mode = RX_MODE_RX;
+	g_lora_p2p_rx_mode = RX_MODE_RX;
 
 	MYLOG("APP", "init_app");
 
@@ -337,18 +339,20 @@ void app_event_handler(void)
 			}
 		}
 
-		// Just as an example, RAK14008 is used to display the status of the battery
-		uint8_t led_status[10] = {0};
-
-		for (int idx = 9, lev = 1; idx >= 0; idx--, lev++)
+		if (found_sensors[BAR_ID].found_sensor)
 		{
-			if (batt_level_f > (4200 - (lev * 420)))
-			{
-				led_status[idx] = 1;
-			}
-		}
-		set_rak14003(led_status);
+			// Just as an example, RAK14003 is used to display the status of the battery
+			uint8_t led_status[10] = {0};
 
+			for (int idx = 9, lev = 1; idx >= 0; idx--, lev++)
+			{
+				if (batt_level_f > (4200 - (lev * 420)))
+				{
+					led_status[idx] = 1;
+				}
+			}
+			set_rak14003(led_status);
+		}
 		if (!found_sensors[GNSS_ID].found_sensor)
 		{
 			// Get data from the slower sensors

@@ -255,11 +255,11 @@ void find_modules(void)
 		/** Select between Bosch BSEC algorithm for  */
 		/** IAQ index or simple T/H/P readings       */
 		/*********************************************/
-#if USE_BSEC == 1
-		if (init_rak1906_bsec()) // !!! USING Bosch BSEC
-#else
+// #if USE_BSEC == 1
+// 		if (init_rak1906_bsec()) // !!! USING Bosch BSEC
+// #else
 		if (init_rak1906()) // !!! USING SIMPLE READINGS
-#endif
+// #endif
 		{
 			snprintf(g_ble_dev_name, 9, "RAK_ENV");
 		}
@@ -930,20 +930,20 @@ void get_sensor_values(void)
 	/** Select between Bosch BSEC algorithm for  */
 	/** IAQ index or simple T/H/P readings       */
 	/*********************************************/
-#if USE_BSEC == 1
-	if (found_sensors[ENV_ID].found_sensor) // USING BOSCH BSEC
-	{
-		// Get last IAQ
-		read_rak1906_bsec();
-	}
-#else
+// #if USE_BSEC == 1
+// 	if (found_sensors[ENV_ID].found_sensor) // USING BOSCH BSEC
+// 	{
+// 		// Get last IAQ
+// 		read_rak1906_bsec();
+// 	}
+// #else
 							// RAK1906 needs time to get correct value. Reading was already started and results will be gotten in app.cpp
 							// if (found_sensors[ENV_ID].found_sensor)
 							// {
 							// 	// Start reading environment data
 							// 	start_rak1906();
 							// }
-#endif
+// #endif
 	if (found_sensors[FIR_ID].found_sensor)
 	{
 		// Get the MLX90632 sensor values

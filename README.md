@@ -3,10 +3,10 @@
 | :-: | :-: | :-: |     
 
 # Content
-- [Hardware supported](#hardware_supported)
-- [Software used](#software_used)
-- [How to use it](#how_to_use_it)
-- [Packet data format](#packet_data_format)
+- [Hardware supported](#hardware-supported)
+- [Software used](#software-used)
+- [How to use it](#how-to-use-it)
+- [Packet data format](#packet-data-format)
 - [Setup Weather Kits](#setup-weather)
 - [Setup GNSS Kits](#setup-gnss)
 - [Setup Air Quality Kits](#setup-air-quality)
@@ -18,13 +18,13 @@ This firmware is using the [WisBlock API V2](https://github.com/beegee-tokyo/Wis
 This code can be used without changes for    
 | Kit/Solution | Setup Guide |
 | --           | --          |
-| [WisBlock Kit 1](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-1-weather-monitor) ⤴️  | [Setup Kit 1](#setup_weather) |
-| [WisBlock Kit 2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel) ⤴️ | [Setup Kit 2](#setup_gnss) |
-| [WisBlock Kit 3](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-3-gps-tracker) ⤴️ | [Setup Kit 3](#setup_gnss) |
-| [WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor) ⤴️ | [Setup Kit 4](#setup_air_quality) |
-| [RAK Developer Kit](https://store.rakwireless.com/collections/kits-bundles/products/lpwan-gateway-developer-kit) ⤴️ | [Setup Dev Kit 2](#setup_weather)   [Setup Dev Kit 3](#setup_gnss)   [Setup Dev Kit 4](#setup_air_quality) |
-| [Helium Mapper Kit](https://store.rakwireless.com/collections/kits-bundles/products/helium-mapper-kit) ⤴️ | [Setup Helium Mapper](#setup_gnss) |
-| [WisBlock GNSS Tracker for LoRaWAN](https://store.rakwireless.com/collections/wisblock-solutions/products/rak10700-gnss-tracker-for-lorawan) ⤴️ | [Setup GNSS Tracker](#setup_gnss) |
+| [WisBlock Kit 1](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-1-weather-monitor) ⤴️  | [Setup Kit 1](#setup-weather) |
+| [WisBlock Kit 2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel) ⤴️ | [Setup Kit 2](#setup-gnss) |
+| [WisBlock Kit 3](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-3-gps-tracker) ⤴️ | [Setup Kit 3](#setup-gnss) |
+| [WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor) ⤴️ | [Setup Kit 4](#setup-air-quality) |
+| [RAK Developer Kit](https://store.rakwireless.com/collections/kits-bundles/products/lpwan-gateway-developer-kit) ⤴️ | [Setup Dev Kit 2](#setup-weather)   [Setup Dev Kit 3](#setup-gnss)   [Setup Dev Kit 4](#setup_air-quality) |
+| [Helium Mapper Kit](https://store.rakwireless.com/collections/kits-bundles/products/helium-mapper-kit) ⤴️ | [Setup Helium Mapper](#setup-gnss) |
+| [WisBlock GNSS Tracker for LoRaWAN](https://store.rakwireless.com/collections/wisblock-solutions/products/rak10700-gnss-tracker-for-lorawan) ⤴️ | [Setup GNSS Tracker](#setup-gnss) |
 
 ----
 
@@ -141,12 +141,12 @@ In addition, sensors like the MQ gas sensors that are using a heating element wi
 ... to be updated, check platformio.ini for a list of all libraries used
 
 ### _REMARK_     
-The project was developed using Platform IO. ~~But for the users that _**still**_ stick to Arduino IDE, an Arduino IDE compatible copy of the sources is in the ArduinoIDE folder.~~ The code is not compiling on Arduino IDE atm.    
+The project was developed using Platform IO. But for the users that _**still**_ stick to Arduino IDE, an Arduino IDE compatible copy of the sources is in the ArduinoIDE folder.    
 The complete project for PIO is in the PlatformIO folder.    
 
 ### _REMARK_
 When using PlatformIO, the libraries are all listed in the **`platformio.ini`** and are automatically installed when the project is compiled.     
-~~When using Arduino IDE all libraries need to be installed manually using the Arduino Library Manager.~~
+When using Arduino IDE all libraries need to be installed manually using the Arduino Library Manager.
 
 ----
 

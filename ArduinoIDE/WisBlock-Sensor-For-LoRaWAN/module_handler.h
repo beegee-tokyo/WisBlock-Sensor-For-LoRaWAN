@@ -134,11 +134,11 @@ extern WisCayenne g_solution_data;
 #include "RAK1903_light.h"
 #include "RAK1904_acc.h"
 #include "RAK1905_9dof.h"
-#if USE_BSEC == 0
+// #if USE_BSEC == 0
 #include "RAK1906_env.h"
-#else
-#include "RAK1906_bsec.h"
-#endif
+// #else
+// #include "RAK1906_bsec.h"
+// #endif
 #include "RAK1910-RAK12500_gnss.h"
 #include "RAK1921_oled.h"
 #include "RAK5814_ecc.h"
